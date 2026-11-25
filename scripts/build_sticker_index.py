@@ -141,6 +141,16 @@ def load_share_hooks():
     return hooks
 
 
+def read_column(folder):
+    """The source column text as provided, stored verbatim in column.md.
+    This is the set's backdrop information; the site modal shows it first."""
+    path = os.path.join(folder, "column.md")
+    if not os.path.exists(path):
+        return ""
+    with open(path, encoding="utf-8") as f:
+        return f.read().strip()
+
+
 def read_brief(folder):
     path = os.path.join(folder, "brief.md")
     with open(path, encoding="utf-8") as f:
@@ -351,6 +361,7 @@ def main():
             errors.append(f"{slug}: QA score {score} < 7")
             continue
         title, angle, tags, column_md = read_brief(folder)
+        column_source = read_column(folder)
         stickers = read_script(folder)
         if not stickers:
             warnings.append(f"{slug}: no stickers parsed from sticker-script.md")
@@ -387,6 +398,7 @@ def main():
             "ratio": ratio,
             "angle": angle,
             "column_md": column_md,
+            "column_source": column_source,
             "share_title": hook.get("title") or title,
             "share_teaser": hook.get("teaser") or angle,
             "stickers": [{

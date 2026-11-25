@@ -521,7 +521,16 @@
     var rec = state.currentSlug ? findSet(state.currentSlug) : null;
     if (!rec) return;
     $('columnModalTitle').textContent = rec.title;
-    $('columnModalBody').innerHTML = mdToHtml(rec.column_md || '（暂无专栏内容）');
+    // The stored column text is the backdrop: it goes first, verbatim.
+    // The researched brief follows under its own heading.
+    var body = '';
+    if (rec.column_source) {
+      body += '<h3>专栏原文</h3>' + mdToHtml(rec.column_source);
+      if (rec.column_md) body += '<h3>调研简报</h3>' + mdToHtml(rec.column_md);
+    } else {
+      body = mdToHtml(rec.column_md || '（暂无专栏内容）');
+    }
+    $('columnModalBody').innerHTML = body;
     $('columnModal').hidden = false;
     document.body.classList.add('modal-open');
     gaEvent('column_modal', { slug: state.currentSlug || '' });
