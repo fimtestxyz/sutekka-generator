@@ -181,6 +181,14 @@ img { max-width: 100%; display: block; }
 .modal-body li { margin: 3px 0; }
 body.modal-open { overflow: hidden; }
 
+/* Character sheet: collapsed by default, names under the image. */
+.char-sheet { margin: 14px 0 4px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 10px 14px; }
+.char-sheet[hidden] { display: none; }
+.char-sheet summary { cursor: pointer; font-weight: 700; }
+.char-sheet figure { margin: 10px 0 4px; text-align: center; }
+.char-sheet img { max-width: 100%; height: auto; border-radius: var(--radius); }
+.char-sheet figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+
 /* Tappable sticker cells: a finger badge so readers know to tap. */
 .sticker-cell { position: relative; cursor: pointer; }
 .sticker-cell:hover { border-color: var(--accent); }

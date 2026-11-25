@@ -154,6 +154,20 @@ def load_share_hooks():
     return hooks
 
 
+def read_cast(folder):
+    """The house cast line from sticker-script.md (`- 角色：…。见 …`),
+    so the reader can name the characters under the character sheet."""
+    path = os.path.join(folder, "sticker-script.md")
+    if not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as f:
+        txt = f.read()
+    m = re.search(r"- 角色：(.+?)。见", txt, re.S)
+    if not m:
+        return ""
+    return " ".join(m.group(1).split())
+
+
 def read_column(folder):
     """The source column text as provided, stored verbatim in column.md.
     This is the set's backdrop information; the site modal shows it first."""
@@ -377,6 +391,9 @@ def main():
             continue
         title, angle, tags, column_md = read_brief(folder)
         column_source = read_column(folder)
+        cast = read_cast(folder)
+        char_sheet = os.path.join(folder, "character-sheet.png")
+        has_char_sheet = os.path.isfile(char_sheet)
         stickers = read_script(folder)
         if not stickers:
             warnings.append(f"{slug}: no stickers parsed from sticker-script.md")
@@ -414,6 +431,8 @@ def main():
             "angle": angle,
             "column_md": column_md,
             "column_source": column_source,
+            "character_sheet": f"stickers/{slug}/character-sheet.png" if has_char_sheet else None,
+            "cast": cast,
             "share_title": hook.get("title") or title,
             "share_teaser": hook.get("teaser") or angle,
             "stickers": [{
@@ -474,6 +493,10 @@ def main():
         os.makedirs(dst_dir, exist_ok=True)
         if stage_file(src, os.path.join(dst_dir, "sheet.png")):
             staged += 1
+        if r.get("character_sheet"):
+            src_char = os.path.join(STICKERS_DIR, r["slug"], "character-sheet.png")
+            if stage_file(src_char, os.path.join(dst_dir, "character-sheet.png")):
+                staged += 1
         src_stickers = os.path.join(STICKERS_DIR, r["slug"], "stickers")
         dst_stickers = os.path.join(dst_dir, "stickers")
         os.makedirs(dst_stickers, exist_ok=True)

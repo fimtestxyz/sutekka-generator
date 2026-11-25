@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  var LS_KEY = 'sticker-showcase-index-v5';
+  var LS_KEY = 'sticker-showcase-index-v6';
   var LS_TTL_MS = 60 * 60 * 1000; // revalidate after 1 hour
   // DATA_V: bump whenever the shape of data/index.json changes
   // (e.g. a new field per sticker). The fetch URL carries it, so no
@@ -18,7 +18,7 @@
   // above (its key carries the same version) — can serve stale data
   // after a deploy. The ?v= on app.js/styles.css is the same idea
   // for the shell; all three numbers move together.
-  var DATA_V = 5;
+  var DATA_V = 6;
   var PAGE_SIZE = 12;
 
   var state = {
@@ -386,6 +386,16 @@
     zoomBtn.textContent = 'Zoom in';
     zoomBtn.setAttribute('aria-pressed', 'false');
     $('stickerGrid').innerHTML = (c.stickers || []).map(stickerCellHtml).join('');
+    // Character sheet: collapsed by default; the reader's open/close
+    // preference is remembered in localStorage (see init wiring).
+    var cs = $('charSheet');
+    if (c.character_sheet) {
+      cs.hidden = false;
+      $('charSheetImg').src = c.character_sheet;
+      $('charSheetCast').textContent = c.cast || '';
+    } else {
+      cs.hidden = true;
+    }
     $('behindAngle').textContent = c.angle || '';
     $('behindFacts').textContent = c.tags.length ? 'Topics: ' + c.tags.join(', ') : '';
     $('behindQa').textContent = 'QA score ' + c.qa + '/10 — the minimum to publish is 7.';
@@ -602,6 +612,15 @@
     } else {
       done(url);
     }
+  });
+
+  // Character sheet preference: collapsed by default, remembered in
+  // localStorage so the reader's choice sticks across visits.
+  var CHAR_KEY = 'sticker-showcase-charsheet-v1';
+  var csEl = $('charSheet');
+  try { csEl.open = localStorage.getItem(CHAR_KEY) === '1'; } catch (e) { /* default collapsed */ }
+  csEl.addEventListener('toggle', function () {
+    try { localStorage.setItem(CHAR_KEY, csEl.open ? '1' : '0'); } catch (e) { /* ignore */ }
   });
 
   $('columnBtn').addEventListener('click', openColumnModal);
