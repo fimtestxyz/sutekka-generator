@@ -218,16 +218,19 @@ def make_og_image(src, dst):
     """
     if Image is None:
         fail("Pillow is required for OG images: pip install Pillow")
-    if os.path.exists(dst) and os.path.getmtime(dst) >= os.path.getmtime(src):
-        return False
     with Image.open(src) as im:
         im = im.convert("RGB")
         w, h = im.size
         nh = round(h * OG_WIDTH / w)
+        height = min(OG_HEIGHT, nh)
+    if os.path.exists(dst) and os.path.getmtime(dst) >= os.path.getmtime(src):
+        return False, height
+    with Image.open(src) as im:
+        im = im.convert("RGB")
         im = im.resize((OG_WIDTH, nh), Image.LANCZOS)
-        im = im.crop((0, 0, OG_WIDTH, min(OG_HEIGHT, nh)))
+        im = im.crop((0, 0, OG_WIDTH, height))
         im.save(dst, "JPEG", quality=OG_QUALITY, optimize=True)
-    return True
+    return True, height
 
 
 def share_page_html(record):
@@ -244,6 +247,7 @@ def share_page_html(record):
     page_title = html.escape(f"{hook_title} — Sticker Showcase")
     share_url = f"{SITE_URL}/share/{slug}/"
     og_image = f"{SITE_URL}/og/{slug}.jpg"
+    og_height = record.get("og_height", OG_HEIGHT)
     reader_url = f"/#/set/{slug}"
     # JS-only redirect on purpose: no meta refresh, so crawlers stay
     # on this page and read the tags above instead of following away.
@@ -260,7 +264,7 @@ def share_page_html(record):
 <meta property="og:description" content="{esc_desc}">
 <meta property="og:image" content="{og_image}">
 <meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:image:height" content="{og_height}">
 <meta property="og:url" content="{share_url}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc_hook}">
@@ -440,7 +444,8 @@ def main():
                     staged += 1
             else:
                 warnings.append(f"{r['slug']}: missing stickers/{s['n']}.png — not staged")
-        if make_og_image(src, os.path.join(OG_DIR, r["slug"] + ".jpg")):
+        wrote_og, r["og_height"] = make_og_image(src, os.path.join(OG_DIR, r["slug"] + ".jpg"))
+        if wrote_og:
             og_made += 1
         if make_share_page(r):
             share_made += 1
