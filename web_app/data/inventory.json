@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/build_sticker_index.py",
-  "count": 16,
+  "count": 24,
   "stickers": [
     {
       "id": "riemann-rashomon-01",
@@ -193,6 +193,102 @@
       "point": "结论：三维挂谷证明是试金石——它走完了全程；旁边那座 722 篇手稿堆成的山，才是这个时代真正悬而未决的问题。",
       "image": "stickers/kakeya-wang-hong/stickers/08.png",
       "sheet": "stickers/kakeya-wang-hong/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-01",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "01",
+      "title": "1900年，第六问题",
+      "ja": "第6問題！",
+      "zh": "第六问题！",
+      "point": "1900 年，希尔伯特列出 23 个问题；第 6 个问：物理学能不 能像数学一样被公理化——从牛顿定律出发，严格推出流体方程。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/01.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-02",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "02",
+      "title": "牛顿的台球",
+      "ja": "ビリヤード！",
+      "zh": "台球！",
+      "point": "微观世界是一盒按牛顿定律碰撞的硬球——一模一样的球， 弹性碰撞，没有例外。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/02.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-03",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "03",
+      "title": "倒放也一样",
+      "ja": "逆再生でも同じ？",
+      "zh": "倒放也一样？",
+      "point": "牛顿定律时间反演对称——把胶片倒着放，定律照样成立， 物理分不清正放还是倒放。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/03.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-04",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "04",
+      "title": "水不会倒流",
+      "ja": "水は戻らない。",
+      "zh": "水不会倒流。",
+      "point": "可宏观世界有方向：水泼了不会自己回去，蒸汽只往上走， 熵只增不减。微观可逆，宏观不可逆——这就是第六问题的心脏。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/04.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-05",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "05",
+      "title": "玻尔兹曼，1872",
+      "ja": "ボルツマン！",
+      "zh": "玻尔兹曼！",
+      "point": "1872 年，玻尔兹曼写下连接微观与宏观的方程：无数粒子的 统计行为，就是流体的运动规律。方程是桥。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/05.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-06",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "06",
+      "title": "125年",
+      "ja": "125年！",
+      "zh": "125年！",
+      "point": "从 1900 到 2025，等了 125 年。1975 年兰福德只证明了极 短时间内的推导；再碰撞让问题卡了半个世纪。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/06.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-07",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "07",
+      "title": "三个人",
+      "ja": "3人で！",
+      "zh": "三个人！",
+      "point": "2025 年 3 月 3 日，邓煜、马骁、Hani 在 arXiv 发布论文 （arXiv:2503.01800）：硬球到玻尔兹曼再到流体方程的链条，在 周期盒子里接通了。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/07.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "deng-yu-hilbert-sixth-08",
+      "set_slug": "deng-yu-hilbert-sixth",
+      "set_title": "邓煜与希尔伯特第六问题",
+      "n": "08",
+      "title": "安静地闭环",
+      "ja": "静かに閉じた。",
+      "zh": "安静地闭环了。",
+      "point": "没有反转，没有玩笑，没有 722 篇没人读过的手稿。一件 125 年前提出的事，安静地完成了；2026 年 7 月 23 日，菲尔兹奖 确认了它。",
+      "image": "stickers/deng-yu-hilbert-sixth/stickers/08.png",
+      "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
     }
   ]
 }

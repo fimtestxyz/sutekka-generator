@@ -110,5 +110,61 @@
       1600,
       1680
     ]
+  },
+  "deng-yu-hilbert-sixth-01": {
+    "sha256": "513ea993acca35f62100ddd9620e1724ca6a71e6ad3bb39c7411ebfbdc3f1510",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-02": {
+    "sha256": "2b4f95a93694b7d405e8f2eb2124e402e7bdb80c72e5ccff1cc1a1d04f44c779",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-03": {
+    "sha256": "adc6068571018b3ec3654ca2382db8b23d389c29d2cf1c4a2320fad765165d1b",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-04": {
+    "sha256": "776655cacae770bf01867a8e9ef0d8825fbd2b24d3a9126d410770440a3f981b",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-05": {
+    "sha256": "769fdead75c6677878ab13b5388a7ccc125f9d8e613f0a45b0e8083e8252ec29",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-06": {
+    "sha256": "1d38dd07898becd3c5a38f11be111ede465e7274acae44742d3426b1b371cfa0",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-07": {
+    "sha256": "65e63c06151e3dabf3d9ba9f1f493999ee71e0a31bddcf341f444f24ce38e777",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "deng-yu-hilbert-sixth-08": {
+    "sha256": "b800a3453d4d85beb7f8f7b8dd5a5e520386f960579992e0cf77027c2aeb53e9",
+    "size": [
+      1600,
+      1680
+    ]
   }
 }

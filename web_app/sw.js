@@ -20,8 +20,8 @@
  *
  * /api/* is never cached: likes and comments are live data.
  */
-var CACHE = 'sticker-showcase-v9';
-var CORE = ['/', '/index.html', '/app.js?v=8', '/styles.css?v=7', '/data/index.json?v=7', '/data/series.json', '/data/config.json'];
+var CACHE = 'sticker-showcase-v10';
+var CORE = ['/', '/index.html', '/app.js?v=9', '/styles.css?v=8', '/data/index.json?v=8', '/data/series.json', '/data/config.json'];
 var IMAGE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 self.addEventListener('install', function (event) {
