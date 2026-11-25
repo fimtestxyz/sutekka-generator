@@ -166,5 +166,61 @@
       1600,
       1680
     ]
+  },
+  "lauren-tan-20-agents-01": {
+    "sha256": "f883b4dbafd6f0f1cf360445c5ff959b4b2787c91186452ba9601097f5e154f6",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-02": {
+    "sha256": "b7accfbd55ae5986d02d866ee95440c476a2adac398b68768fc485538ee8875a",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-03": {
+    "sha256": "a4ed3a8dca69bb384ef4727241928447256ccf61cc8ee3667ec5b3aa0884bc04",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-04": {
+    "sha256": "6a8052f449335ba5ad2d769fce8a19a1adcf4121364d1929e66bbc21b0baecc1",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-05": {
+    "sha256": "f1251f9d2dd1055f3fcb004255440817b8bb6aff32bf9bd4f91b18c9284f16dc",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-06": {
+    "sha256": "5ffd2d7d2f0ac0b5b427f0c791f840e21678a77e92dc03dbb4a1b5f4a06abe85",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-07": {
+    "sha256": "44c8129ef2299f00b26fd2ad1d63aa083301c6aee65090b7a275c02be82082ee",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "lauren-tan-20-agents-08": {
+    "sha256": "d38c4b787d1f2d2d97b572085a879c1fcd941603d8ead077038a52b3539023a1",
+    "size": [
+      1600,
+      1680
+    ]
   }
 }

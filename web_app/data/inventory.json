@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/build_sticker_index.py",
-  "count": 24,
+  "count": 32,
   "stickers": [
     {
       "id": "riemann-rashomon-01",
@@ -289,6 +289,102 @@
       "point": "没有反转，没有玩笑，没有 722 篇没人读过的手稿。一件 125 年前提出的事，安静地完成了；2026 年 7 月 23 日，菲尔兹奖 确认了它。",
       "image": "stickers/deng-yu-hilbert-sixth/stickers/08.png",
       "sheet": "stickers/deng-yu-hilbert-sixth/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-01",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "01",
+      "title": "一个月 2000 个 PR",
+      "ja": "2000件！",
+      "zh": "一个月2000个PR！",
+      "point": "上个月，她一个人向生产环境合并了 2000 个 PR——演讲的 标题就是这个数字。",
+      "image": "stickers/lauren-tan-20-agents/stickers/01.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-02",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "02",
+      "title": "醒来 20 个已合并",
+      "ja": "起きたら20件！",
+      "zh": "醒来20个已合并！",
+      "point": "某天醒来，20 个 PR 已经自己合并进了主干，还通过了事后 检查。",
+      "image": "stickers/lauren-tan-20-agents/stickers/02.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-03",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "03",
+      "title": "信任曲线",
+      "ja": "信頼カーブ！",
+      "zh": "信任曲线！",
+      "point": "信任不是一下子给的，是一条曲线：起初像微观管理者一样 盯着每一次输出，五个月后醒来收 20 个 PR。",
+      "image": "stickers/lauren-tan-20-agents/stickers/03.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-04",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "04",
+      "title": "护栏",
+      "ja": "ガードレール！",
+      "zh": "护栏！",
+      "point": "她不纠正对话，她改造环境：Agent 每犯一次错，教训就写 进 Lint 规则或 CI 硬性拦截。",
+      "image": "stickers/lauren-tan-20-agents/stickers/04.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-05",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "05",
+      "title": "禁用 useEffect",
+      "ja": "useEffect禁止！",
+      "zh": "禁用useEffect！",
+      "point": "GrokBot 代码库禁用 useEffect，99% 的代码注释被禁，跨层 import 会被 CI 直接打回——最窄的路径就是最好的路径。",
+      "image": "stickers/lauren-tan-20-agents/stickers/05.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-06",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "06",
+      "title": "Dr. Eggbot",
+      "ja": "ドクター・エッグボット！",
+      "zh": "Dr. Eggbot！",
+      "point": "先拉一个 Dr. Eggbot 当 Bot 设计师，来创建和审计其他 Bot。",
+      "image": "stickers/lauren-tan-20-agents/stickers/06.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-07",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "07",
+      "title": "小团队",
+      "ja": "小さなチーム！",
+      "zh": "小团队！",
+      "point": "Bot 团队保持极小，从零技能起步，同一个失败出现两次才 固化成 Skill；每个 Bot 有独立邮箱和账号，像真正的团队成员。",
+      "image": "stickers/lauren-tan-20-agents/stickers/07.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "lauren-tan-20-agents-08",
+      "set_slug": "lauren-tan-20-agents",
+      "set_title": "Lauren Tan 与 20 个 AI Agent",
+      "n": "08",
+      "title": "控制点前移",
+      "ja": "前へ！",
+      "zh": "控制点前移！",
+      "point": "控制点从“代码审查”前移到“环境设计”：与其事后逐行挑 错，不如事前让错误写不出来。",
+      "image": "stickers/lauren-tan-20-agents/stickers/08.png",
+      "sheet": "stickers/lauren-tan-20-agents/sheet.png"
     }
   ]
 }

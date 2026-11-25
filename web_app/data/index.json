@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/build_sticker_index.py",
-  "count": 3,
+  "count": 4,
   "sets": [
     {
       "slug": "riemann-rashomon",
@@ -16,7 +16,10 @@
         "罗生门",
         "挂谷猜想",
         "菲尔兹奖",
-        "希尔伯特第六问题"
+        "希尔伯特第六问题",
+        "Lauren Tan",
+        "AI Agent",
+        "Grok Bot"
       ],
       "qa": 8.3,
       "image": "stickers/riemann-rashomon/sheet.png",
@@ -127,6 +130,9 @@
         "挂谷猜想",
         "菲尔兹奖",
         "希尔伯特第六问题",
+        "Lauren Tan",
+        "AI Agent",
+        "Grok Bot",
         "王虹",
         "AI验证"
       ],
@@ -238,7 +244,10 @@
         "罗生门",
         "挂谷猜想",
         "菲尔兹奖",
-        "希尔伯特第六问题"
+        "希尔伯特第六问题",
+        "Lauren Tan",
+        "AI Agent",
+        "Grok Bot"
       ],
       "qa": 8.6,
       "image": "stickers/deng-yu-hilbert-sixth/sheet.png",
@@ -331,6 +340,119 @@
           "point": "没有反转，没有玩笑，没有 722 篇没人读过的手稿。一件 125 年前提出的事，安静地完成了；2026 年 7 月 23 日，菲尔兹奖 确认了它。",
           "scene": "黎黎、糊糊、团团三人安静地走过一座小桥：桥的一头是 无数小球，另一头是一条河；桥上空一支箭静静指向前方，箭上写着 “1900 → 2025”。",
           "file": "stickers/deng-yu-hilbert-sixth/stickers/08.png"
+        }
+      ]
+    },
+    {
+      "slug": "lauren-tan-20-agents",
+      "title": "Lauren Tan 与 20 个 AI Agent",
+      "lang": "zh",
+      "batch": 1,
+      "batch_title": "Current Affairs Stickers",
+      "date": "2026-11-25",
+      "tags": [
+        "黎曼猜想",
+        "AI",
+        "数学",
+        "罗生门",
+        "挂谷猜想",
+        "菲尔兹奖",
+        "希尔伯特第六问题",
+        "Lauren Tan",
+        "AI Agent",
+        "Grok Bot"
+      ],
+      "qa": 8.6,
+      "image": "stickers/lauren-tan-20-agents/sheet.png",
+      "thumb": "thumbs/lauren-tan-20-agents.jpg",
+      "ratio": 1.986,
+      "angle": "",
+      "column_md": "- 专栏标题：《当工程师开始“管理”20个AI Agent：Lauren Tan的激进实验》\n- 专栏原文：`column.md`（逐字存放，见 SPEC §3）\n- 调研人：Muse（主编）\n- 结论：专栏核心事实**已核实**，一处数字有误、两处数字因讲述版本不同而浮动（见“核实标记”）。\n\n## 已核实的核心事实\n\n1. **Lauren Tan（@poteto）**，Grok Bot 工程师，SpaceX AI；此前 Cursor、\n   Meta React Compiler、Netflix。来源：其演讲实录与多篇报道。\n2. **演讲标题即数字来源**：《How I Shipped 2000 PRs Last Month —\n   Trusting AI Agents》。她原话：“上个月我向生产环境合并了 2000\n   个 PR。”专栏的“2000 到 2500”与此基本一致。\n3. **醒来 20 个 PR 已合并**：她原话——早上醒来，约 20 个 PR 已经\n   合并进主干且通过了事后检查。多来源一致。\n4. **信任曲线**：她的方法论核心词。起初像微观管理者一样盯着每\n   一次输出、无法并行；五个月后醒来收 20 个 PR。曲线本身是她的\n   讲述框架，不是科学测量。\n5. **架构护栏（Dune）**：Grok Bot 的 agent 友好框架（“Electron 应用\n   的 Next.js”）。她用 600+ 个 PR 把 Grok Bot 重构成 Dune。约束包括：\n   产品代码中**禁用 useEffect**（只允许在 Dune 内部 API 中使用）；\n   **99% 的代码注释被禁**（Agent 会拿注释当借口，为错误解法辩护）；\n   ElectronMain 与 ElectronRenderer 之间**禁止跨层 import**，由依赖\n   图分析 + Lint 在 CI 中硬性拦截。\n6. **失败变检查**：Agent 每犯一次错，教训先写进代码库设计或确定\n   性检查（Lint/CI），最后才是文字规则。她的原话逻辑：不要在对话\n   里反复纠正，要让错误写不出来。\n7. **Dr. Eggbot 真实存在**：设计并审计其他 Bot 的 Bot，出自 2026 年\n   10 月 4 日 Behind the Craft 播客（Peng Zheng + Lauren 展示的 14 个\n   Bot 之一），见工作室已有的 Lauren Tan 研究（`lauren-tan-agent-study/\n   GROK-WORK.md`）。x.ai/bot/marketplace/bots/dr-eggbot-v2。\n8. **Netflix 管理背景**：她 2020 年 2 月离开 Netflix 管理岗位回归工程\n   ——确实做过 Engineering Manager（同上研究，AGENT-METHOD.md）。\n9. **小团队与权限隔离**：Bot 团队保持极小，从零技能起步；Bot 有\n   独立邮箱与账号；首席幕僚（Chief of Staff）+ 项目经理 + 执行 Bot\n   的分层见于她的讲述与 X 帖（1 名幕僚长 + 3 名经理 + 11 名执行 =\n   15 名，另一说法为 20+ 名，见标记 3）。\n10. **米其林厨房比喻**：她不用“软件工厂”的说法，而用米其林厨房\n    ——环境（设备、制度、约束）决定产出质量。\n11. **pstack 公开**：github.com/backnotprop/pstack，23 个 Playbook 与\n    20+ 条工程原则，是她这套方法在 Cursor 场景的打包。\n\n## 核实标记（贴纸不得越过这些线）\n\n1. **Token 数字有误，不得印专栏的数字。** 专栏写“每天消耗约\n   150 亿 token”。查到的报道是：她的 Cursor 个人页显示**过去 30\n   天用了 1.5 万亿 token**（约合每天 500 亿），第三方按每百万\n   token 8 美元估算约每天 38.4 万美元、年化 1.32 亿美元。150 亿/天\n   与查到的数字对不上（约为其三分之一）。贴纸上不要出现任何\n   token 消耗数字；如提成本，只写“用量远超普通套餐”这类定性表述。\n2. **PR 月数因讲述版本而浮动。** 同一演讲的不同转述：上月约\n   1000 个、当月 12 天内近 800 个、演讲标题 2000 个、后期报道约\n   3000 个（个人）与 11000 个（全队），团队 revert 率约 0.5%。\n   贴纸只印演讲标题的 **2000**（“上个月 2000 个 PR”），不印 2500\n   或 3000。\n3. **Bot 数量有多个说法。** 专栏写“20 多个”；X 帖一版为 15 名\n   （1 幕僚长 + 3 经理 + 11 执行）；她本人在另一处说“20 多个\n   GrokBot agent”。“20+”是她自己的说法之一，可用；不要印“15”\n   或“25”这类单一数字。\n4. **公司名以她的说法为准。** 她原话是 “Grok Bot at SpaceX AI”；\n   专栏写 xAI。贴纸写 Grok Bot / SpaceX AI，不写 xAI。\n5. **“同一个失败出现两次才固化成 Skill”**：专栏表述，与她“失败\n   变检查”的方法一致；“两次”这个次数未在本次核查中单独找到\n   来源，点文案中可写，但不要作为标题数字。\n6. **不画真人。** Lauren Tan 本人不画可辨认形象；出现时只画通用\n   剪影/背影。本套主角是海洋组三只角色（泡泡/章章/企企）。\n\n## 贴纸上可用的数字与短语（已核实）\n\n- 2000（上个月合并的 PR 数，演讲标题）\n- 20（醒来时已合并的 PR 数）\n- 600+（重构 Grok Bot 到 Dune 的 PR 数）\n- 99%（被禁的代码注释比例）\n- useEffect（禁用）、Dr. Eggbot（设计并审计 Bot 的 Bot）\n- 信任曲线、米其林厨房、护栏、控制点前移\n\n## 来源\n\n- 演讲实录《How I Shipped 2000 PRs Last Month — Trusting AI Agents》\n  （usetranscribe / youtubesummary 转录）\n- 《All Code Is Slop (Except Mine) — Lauren Tan, SpaceXSI》\n  （newsfilter.io，2026-11-14）\n- 《3,000 PRs a Month, But First: Lauren Tan on Turning Agent Mistakes\n  into Checks》（paulkuo.tw，2026-11-19）\n- GrokBot Team: Lauren Tan on Trust, Verification, and Dune\n  （mikesblogdesign.com）\n- 《Burning 1.5 trillion tokens a month…》（eyas.cc，1.5 万亿 token/月）\n- Lauren Tan's multi-agent trust engineering（tenten-skills-knowledge-base）\n- 工作室已有研究：fimtestxyz/lauren-tan-agent-study（GROK-WORK.md、\n  AGENT-METHOD.md、SOURCES.md）",
+      "column_source": "当工程师开始“管理”20个AI Agent：Lauren Tan的激进实验\n\n专栏 · 科技与工程\n\n最近在X上引发广泛讨论的，不是又一个新模型，而是一位工程师的工作方式。xAI工程师Lauren Tan（@poteto）分享了她如何“统领”一支由20多个AI Bot组成的Agent团队：一个月向生产环境合并2000到2500个PR，某天醒来发现20个PR已经被Agent自己合并进了主干。她与公司高层在X上的高频互动，让这套方法论迅速出圈。\n\n这件事真正值得讨论的，不是数字有多夸张，而是一个更深层的问题：当Agent的产出量远超人类逐行审查的能力时，工程质量到底靠什么保证？\n\n一、出圈的不是模型，是“管理术”\n\nLauren Tan的方法论有一个核心词：信任曲线。她坦言最初对AI Agent极度不信任，像微观管理者一样盯着每一次输出，效率极低。转折点在于她不再试图“纠正对话”，而是改造Agent运行的环境。\n\n这听起来像一句口号，但她的实践相当具体：Agent每犯一次错，她不会在对话里反复纠正，而是把这条教训写进Lint规则或CI硬性拦截。她的GrokBot代码库甚至完全禁用useEffect、禁止写代码注释，目录跨层import会被CI直接打回。她把这称为“架构护栏”：最窄的路径就是最好的路径，让Agent在物理上无法写出低质量代码。\n\n换句话说，她不相信“更好的提示词”，她相信更硬的约束。\n\n二、像带团队一样带Agent\n\nLauren Tan在Netflix做过Engineering Manager，她把这套管理经验完整移植到了Agent身上。具体做法包括：先拉一个“Dr. Eggbot”作为Bot设计师，来创建和审计其他Bot；保持极小的Bot团队规模，从零技能起步，同一个失败出现两次才固化成Skill；给Bot配备独立邮箱和账号，实现权限隔离。\n\n在她这里，Agent不是“工具”，而是有身份、有职责边界、需要“入职培训”的团队成员。工程师的角色也随之变化：从写代码的人，变成设计Agent工作环境、制定约束规则、守住最终验证关口的人。\n\n三、争议与边界：PR数量不等于质量\n\n这套方法论引发追捧的同时，也伴随着理性的边界标注。Lauren Tan本人反复强调，PR数量不代表代码质量；公开材料中也没有可供审计的仓库或PR列表。她每天消耗约150亿token的规模，也远超普通用户的套餐能力。另一个被广泛引用的观点是：在AI时代，“永远不要重写代码”这条铁律可能需要被重新审视——她用超过600个PR重构了GrokBot本身，认为在新项目中重写反而是更高效的路径。\n\n这些争议并不削弱讨论价值，反而让它更真实：这不是一套可以无脑复制的模板，而是一个关于责任边界如何重新划分的实验。\n\n四、启示：控制点正在前移\n\nLauren Tan的案例之所以值得一个专栏，是因为它触及了AI编程最深层的焦虑：当Agent产出量爆炸，人类审查成为瓶颈，工程质量靠什么？\n\n她的答案不是更强的模型，也不是更巧的提示词，而是架构约束、自动化验证和信任的渐进式下放。这本质上是在把软件工程的控制点从“代码审查”前移到了“环境设计”：与其事后逐行挑错，不如事前让错误写不出来。\n\n这或许才是她引发广泛讨论的真正原因。工程师不会消失，但“工程师”这三个字的含义正在迁移——从亲手写代码的人，变成设计Agent工作环境并守住最终验证关口的人。Lauren Tan的实验未必是终局，但它至少提供了一个清晰的样本：当Agent成为团队一员，管理Agent的能力，正在成为工程师的新核心技能。",
+      "character_sheet": "stickers/lauren-tan-20-agents/character-sheet.png",
+      "cast": "泡泡（小海獭，怀里抱着海星，大黄铅笔）、章章（紫色小章鱼， 放大镜）、企企（小企鹅，蓝色围巾）",
+      "share_title": "Lauren Tan 与 20 个 AI Agent",
+      "share_teaser": "",
+      "stickers": [
+        {
+          "id": "lauren-tan-20-agents-01",
+          "n": "01",
+          "title": "一个月 2000 个 PR",
+          "ja": "2000件！",
+          "zh": "一个月2000个PR！",
+          "point": "上个月，她一个人向生产环境合并了 2000 个 PR——演讲的 标题就是这个数字。",
+          "scene": "泡泡（小海獭，大黄铅笔）站在一摞高高的 PR 文件旁，文件 堆得比它还高；头顶一个计数牌写着“2000”。",
+          "file": "stickers/lauren-tan-20-agents/stickers/01.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-02",
+          "n": "02",
+          "title": "醒来 20 个已合并",
+          "ja": "起きたら20件！",
+          "zh": "醒来20个已合并！",
+          "point": "某天醒来，20 个 PR 已经自己合并进了主干，还通过了事后 检查。",
+          "scene": "企企（小企鹅，蓝色围巾）刚从床上坐起来，揉着眼睛， 手里拿着手机，屏幕上画着 20 个绿色的“已合并”勾。",
+          "file": "stickers/lauren-tan-20-agents/stickers/02.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-03",
+          "n": "03",
+          "title": "信任曲线",
+          "ja": "信頼カーブ！",
+          "zh": "信任曲线！",
+          "point": "信任不是一下子给的，是一条曲线：起初像微观管理者一样 盯着每一次输出，五个月后醒来收 20 个 PR。",
+          "scene": "章章（紫色小章鱼，放大镜）指着一块白板上的上升曲线， 曲线左端写着“微观管理”，右端写着“自动合并”。",
+          "file": "stickers/lauren-tan-20-agents/stickers/03.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-04",
+          "n": "04",
+          "title": "护栏",
+          "ja": "ガードレール！",
+          "zh": "护栏！",
+          "point": "她不纠正对话，她改造环境：Agent 每犯一次错，教训就写 进 Lint 规则或 CI 硬性拦截。",
+          "scene": "泡泡（小海獭，大黄铅笔）站在一道护栏旁，护栏上挂着 “CI”牌子；一只小 Agent 机器人想抄近路，被护栏挡住，只能走 最窄的那条路。",
+          "file": "stickers/lauren-tan-20-agents/stickers/04.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-05",
+          "n": "05",
+          "title": "禁用 useEffect",
+          "ja": "useEffect禁止！",
+          "zh": "禁用useEffect！",
+          "point": "GrokBot 代码库禁用 useEffect，99% 的代码注释被禁，跨层 import 会被 CI 直接打回——最窄的路径就是最好的路径。",
+          "scene": "章章（紫色小章鱼，放大镜）举着一块“禁止”牌子，牌子 上写着“useEffect”；旁边一个写着注释的纸团被画了叉。",
+          "file": "stickers/lauren-tan-20-agents/stickers/05.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-06",
+          "n": "06",
+          "title": "Dr. Eggbot",
+          "ja": "ドクター・エッグボット！",
+          "zh": "Dr. Eggbot！",
+          "point": "先拉一个 Dr. Eggbot 当 Bot 设计师，来创建和审计其他 Bot。",
+          "scene": "企企（小企鹅，蓝色围巾）站在一只蛋形医生 Bot 旁边， 蛋 Bot 戴着听诊器，正对着一张蓝图设计更小的 Bot。",
+          "file": "stickers/lauren-tan-20-agents/stickers/06.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-07",
+          "n": "07",
+          "title": "小团队",
+          "ja": "小さなチーム！",
+          "zh": "小团队！",
+          "point": "Bot 团队保持极小，从零技能起步，同一个失败出现两次才 固化成 Skill；每个 Bot 有独立邮箱和账号，像真正的团队成员。",
+          "scene": "泡泡、章章、企企三人围坐在一张小桌旁开会，桌上放着 三个名牌和三封小邮件。",
+          "file": "stickers/lauren-tan-20-agents/stickers/07.png"
+        },
+        {
+          "id": "lauren-tan-20-agents-08",
+          "n": "08",
+          "title": "控制点前移",
+          "ja": "前へ！",
+          "zh": "控制点前移！",
+          "point": "控制点从“代码审查”前移到“环境设计”：与其事后逐行挑 错，不如事前让错误写不出来。",
+          "scene": "泡泡、章章、企企三人一起向前走；身后一块路牌写着 “代码审查”，前方一块路牌写着“环境设计”，箭头指向前方。",
+          "file": "stickers/lauren-tan-20-agents/stickers/08.png"
         }
       ]
     }
