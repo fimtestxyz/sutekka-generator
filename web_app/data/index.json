@@ -30,6 +30,7 @@
       "share_teaser": "25万页是个玩笑，98%对问号。最后一张：还没解出来呢。",
       "stickers": [
         {
+          "id": "riemann-rashomon-01",
           "n": "01",
           "title": "1700 万行",
           "ja": "証明できた！",
@@ -39,6 +40,7 @@
           "file": "stickers/riemann-rashomon/stickers/01.png"
         },
         {
+          "id": "riemann-rashomon-02",
           "n": "02",
           "title": "25 万页是个玩笑",
           "ja": "冗談でした。",
@@ -48,6 +50,7 @@
           "file": "stickers/riemann-rashomon/stickers/02.png"
         },
         {
+          "id": "riemann-rashomon-03",
           "n": "03",
           "title": "两派",
           "ja": "信じる？信じない？",
@@ -57,6 +60,7 @@
           "file": "stickers/riemann-rashomon/stickers/03.png"
         },
         {
+          "id": "riemann-rashomon-04",
           "n": "04",
           "title": "编译通过 ≠ 证明成立",
           "ja": "通ったけど…",
@@ -66,6 +70,7 @@
           "file": "stickers/riemann-rashomon/stickers/04.png"
         },
         {
+          "id": "riemann-rashomon-05",
           "n": "05",
           "title": "恒真条件",
           "ja": "いつも True って…",
@@ -75,6 +80,7 @@
           "file": "stickers/riemann-rashomon/stickers/05.png"
         },
         {
+          "id": "riemann-rashomon-06",
           "n": "06",
           "title": "上市次日",
           "ja": "タイミング…",
@@ -84,6 +90,7 @@
           "file": "stickers/riemann-rashomon/stickers/06.png"
         },
         {
+          "id": "riemann-rashomon-07",
           "n": "07",
           "title": "读不懂的证明",
           "ja": "読めない…",
@@ -93,6 +100,7 @@
           "file": "stickers/riemann-rashomon/stickers/07.png"
         },
         {
+          "id": "riemann-rashomon-08",
           "n": "08",
           "title": "罗生门",
           "ja": "まだ解けてない。",
@@ -133,6 +141,7 @@
       "share_teaser": "127 页读了一年半，722 篇一夜没人读完。最后一张：试金石在这儿。",
       "stickers": [
         {
+          "id": "kakeya-wang-hong-01",
           "n": "01",
           "title": "一根针",
           "ja": "針が回る！",
@@ -142,6 +151,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/01.png"
         },
         {
+          "id": "kakeya-wang-hong-02",
           "n": "02",
           "title": "127 页",
           "ja": "127ページ！",
@@ -151,6 +161,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/02.png"
         },
         {
+          "id": "kakeya-wang-hong-03",
           "n": "03",
           "title": "菲尔兹奖",
           "ja": "フィールズ賞！",
@@ -160,6 +171,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/03.png"
         },
         {
+          "id": "kakeya-wang-hong-04",
           "n": "04",
           "title": "读了一年半",
           "ja": "1年半かかった。",
@@ -169,6 +181,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/04.png"
         },
         {
+          "id": "kakeya-wang-hong-05",
           "n": "05",
           "title": "一夜 722 篇",
           "ja": "722篇！",
@@ -178,6 +191,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/05.png"
         },
         {
+          "id": "kakeya-wang-hong-06",
           "n": "06",
           "title": "没人读过",
           "ja": "誰も読んでない。",
@@ -187,6 +201,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/06.png"
         },
         {
+          "id": "kakeya-wang-hong-07",
           "n": "07",
           "title": "两条路",
           "ja": "どっちの道？",
@@ -196,6 +211,7 @@
           "file": "stickers/kakeya-wang-hong/stickers/07.png"
         },
         {
+          "id": "kakeya-wang-hong-08",
           "n": "08",
           "title": "试金石",
           "ja": "試金石はここ。",

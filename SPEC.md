@@ -159,6 +159,13 @@ QA 分、发布状态。发布流程见 §9。
    照片。
 6. **总编辑不点头，不发布。** 流水线只生产草稿与评分，发布是总编辑
    的决定。
+7. **每套有英文 slug，每张贴纸有编号。** 套装 slug 是英文名（如
+   `riemann-rashomon`）；套装里的第 N 张贴纸编号为 `<slug>-NN`（两
+   位数字，如 `riemann-rashomon-01`）。交付给用户的贴纸文件，底部印
+   着这个编号（白底条 + 墨色字，不碰画面），买家凭编号指名要哪一张。
+   编号与库存由 `scripts/build_sticker_index.py` 生成
+   `web_app/data/inventory.json` 登记；打编号用
+   `scripts/tag_stickers.py`，拼版用 `scripts/compose_sheet.py` 重拼。
 
 ## 9. 仓库结构
 
@@ -178,13 +185,19 @@ styles/
   STYLE_GUIDE.md         工作室风格指南：house cast + 配色 + 固定元素
 stickers/                已完成的套装（§6）
 scripts/
-  build_sticker_index.py  生成 stickers.json + 拼版预览索引
+  build_sticker_index.py  生成 index.json + inventory.json（每张贴纸
+                          的编号与库存）+ 拼版预览索引
+  tag_stickers.py         给贴纸文件底部打印编号（§8 规则 7）
+  compose_sheet.py        从贴纸文件重拼 sheet.png（4×2）
 ```
 
 ## 10. 发布流程
 
 1. 总编辑给专栏，流水线跑完 §4，`qa.md` ≥ 7/10。
-2. 总编辑看 `sheet.png` + `qa.md`，决定发布 / 修改 / 放弃。
+2. 打编号：跑 `scripts/tag_stickers.py`（每张贴纸底部印 `<slug>-NN`）
+   与 `scripts/compose_sheet.py`（重拼 `sheet.png`），再跑
+   `scripts/build_sticker_index.py` 更新 `inventory.json`。
+3. 总编辑看 `sheet.png` + `qa.md`，决定发布 / 修改 / 放弃。
 3. 发布 = 加入 `stickers.json`（状态 published）+ 推送；网站画廊
    自动读取索引展示。
 4. 一套 30 张的贴纸包，由多套累积：包的主题、选张、排序由总编辑定，

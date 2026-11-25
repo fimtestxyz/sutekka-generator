@@ -1,0 +1,114 @@
+{
+  "kakeya-wang-hong-01": {
+    "sha256": "66b7f46f2ac283a200e8372375e9307f725735c9a9087d22ce12cbd526684359",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-02": {
+    "sha256": "a2f1816d39fb0200092c7a29814c2b6c34fa02757fa9405a3d7867f875b0d1be",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-03": {
+    "sha256": "59bbdc6b7740fb9dec7e7f37478dcd110775baf5cfe1d573e12020bb629571e9",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-04": {
+    "sha256": "0af2db9ab198f343daca047eac8d6a0ed707a3e854fdae44020e90630af4db33",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-05": {
+    "sha256": "8bd8a08f6008c22752f913553c39d50129db7118f62b6a6d327be5d1a06a0153",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-06": {
+    "sha256": "408ea9b43367064420f4728552b09644d64a84e4a141bb05e03011d8d3f8e6b6",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-07": {
+    "sha256": "286978e23c0353406ab613d438cd28dddac29360dbb696e9036efad4adf57086",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "kakeya-wang-hong-08": {
+    "sha256": "871f8775d8d49787fdbb60a3fe71697c0a35effd673734d99e759b75316ba191",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "riemann-rashomon-01": {
+    "sha256": "c0694f396da83afb80b79381249469eb182bfd1a2dcdfaca427afb5304bd5a2b",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "riemann-rashomon-02": {
+    "sha256": "0ebd08365ca049fb017f0d102ccf9ffaff4033a4d4c646d3bafc16ef5fc29b0f",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "riemann-rashomon-03": {
+    "sha256": "32947e2f5357731cea358d480de1221661f3abc4fe8aed220c2fadabe7e3d4bb",
+    "size": [
+      1920,
+      1344
+    ]
+  },
+  "riemann-rashomon-04": {
+    "sha256": "20a4d72af4875d432a429ac34f5bd8163338c68d1d23cf0e223e4c2f7b976d23",
+    "size": [
+      1584,
+      1697
+    ]
+  },
+  "riemann-rashomon-05": {
+    "sha256": "10d23314c23089275387036b91f7a7107da6e396bfb6dfeaae4a22884b5e43c7",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "riemann-rashomon-06": {
+    "sha256": "24273f476fd1d86c23fe8f0d3b20b0cd4b32587cadfed344874ed849831df191",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "riemann-rashomon-07": {
+    "sha256": "21ca7a8e423c9b4348853d1541b4f8e096486d9519948d1470f041be62d3f4cd",
+    "size": [
+      1584,
+      1697
+    ]
+  },
+  "riemann-rashomon-08": {
+    "sha256": "d7ffd2689d29a1644331a0b4216b66418fd52673487c545bee87d28a22540569",
+    "size": [
+      1600,
+      1680
+    ]
+  }
+}

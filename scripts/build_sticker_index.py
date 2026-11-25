@@ -436,6 +436,7 @@ def main():
             "share_title": hook.get("title") or title,
             "share_teaser": hook.get("teaser") or angle,
             "stickers": [{
+                "id": f"{slug}-{s['n']}",
                 "n": s["n"],
                 "title": s["title"],
                 "ja": s["ja"],
@@ -461,6 +462,24 @@ def main():
              "sets": records}
     index_text = json.dumps(index, ensure_ascii=False, indent=2) + "\n"
 
+    # Inventory: one row per sticker, keyed by its printed id <slug>-NN,
+    # so a buyer can name exactly the sticker they want.
+    inventory = {"generated_by": "scripts/build_sticker_index.py",
+                 "count": sum(len(r["stickers"]) for r in records),
+                 "stickers": [{
+                     "id": s["id"],
+                     "set_slug": r["slug"],
+                     "set_title": r["title"],
+                     "n": s["n"],
+                     "title": s["title"],
+                     "ja": s["ja"],
+                     "zh": s["zh"],
+                     "point": s["point"],
+                     "image": s["file"],
+                     "sheet": r["image"],
+                 } for r in records for s in r["stickers"]]}
+    inventory_text = json.dumps(inventory, ensure_ascii=False, indent=2) + "\n"
+
     if check_only:
         path = os.path.join(DATA_DIR, "index.json")
         if not os.path.isfile(path):
@@ -469,6 +488,13 @@ def main():
             if f.read() != index_text:
                 fail("index.json is stale — run scripts/build_sticker_index.py")
         print(f"index.json is fresh ({len(records)} sets)")
+        inv_path = os.path.join(DATA_DIR, "inventory.json")
+        if not os.path.isfile(inv_path):
+            fail("inventory.json missing — run the build script")
+        with open(inv_path, encoding="utf-8") as f:
+            if f.read() != inventory_text:
+                fail("inventory.json is stale — run scripts/build_sticker_index.py")
+        print(f"inventory.json is fresh ({inventory['count']} stickers)")
         return
 
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -479,6 +505,9 @@ def main():
     with open(os.path.join(DATA_DIR, "index.json"), "w",
               encoding="utf-8") as f:
         f.write(index_text)
+    with open(os.path.join(DATA_DIR, "inventory.json"), "w",
+              encoding="utf-8") as f:
+        f.write(inventory_text)
 
     thumbs_made = 0
     staged = 0

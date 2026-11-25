@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  var LS_KEY = 'sticker-showcase-index-v6';
+  var LS_KEY = 'sticker-showcase-index-v7';
   var LS_TTL_MS = 60 * 60 * 1000; // revalidate after 1 hour
   // DATA_V: bump whenever the shape of data/index.json changes
   // (e.g. a new field per sticker). The fetch URL carries it, so no
@@ -18,7 +18,7 @@
   // above (its key carries the same version) — can serve stale data
   // after a deploy. The ?v= on app.js/styles.css is the same idea
   // for the shell; all three numbers move together.
-  var DATA_V = 6;
+  var DATA_V = 7;
   var PAGE_SIZE = 12;
 
   var state = {
