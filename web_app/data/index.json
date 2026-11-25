@@ -30,6 +30,8 @@
           "title": "1700 万行",
           "ja": "証明できた！",
           "zh": "证明出来了！",
+          "point": "证明只以 Lean 代码发布：175,187 个文件、约 1,740 万行。",
+          "scene": "黎黎高举一张写着“证明了！”的纸，头顶是代码瀑布，数字 `17,000,000` 嵌在瀑布里。",
           "file": "stickers/riemann-rashomon/stickers/01.png"
         },
         {
@@ -37,6 +39,8 @@
           "title": "25 万页是个玩笑",
           "ja": "冗談でした。",
           "zh": "是玩笑啦。",
+          "point": "Alpöge 称文字证明超 25 万页，11-23 承认只是玩笑并道歉。",
+          "scene": "糊糊抱着一摞高到天花板的纸，顶上一个正在漏气的气球， 气球上写 `250,000`。",
           "file": "stickers/riemann-rashomon/stickers/02.png"
         },
         {
@@ -44,6 +48,8 @@
           "title": "两派",
           "ja": "信じる？信じない？",
           "zh": "信？还是不信？",
+          "point": "学界分裂：积极派（Maynard 称 98% 把握）vs 质疑派 （Granville 称材料混乱）。",
+          "scene": "黎黎举着 `98%` 的牌子，团团举着 `？` 的牌子，两人对峙， 中间一道闪电。",
           "file": "stickers/riemann-rashomon/stickers/03.png"
         },
         {
@@ -51,6 +57,8 @@
           "title": "编译通过 ≠ 证明成立",
           "ja": "通ったけど…",
           "zh": "是通过了，不过……",
+          "point": "Lean 只确认代码与所声称命题一致；编译通过不等于人类意义 上的证明成立。",
+          "scene": "糊糊用放大镜看代码，屏幕上大大的 `✓ コンパイル通過`， 旁边一个问号比屏幕还大。",
           "file": "stickers/riemann-rashomon/stickers/04.png"
         },
         {
@@ -58,6 +66,8 @@
           "title": "恒真条件",
           "ja": "いつも True って…",
           "zh": "永远都是 True 啊……",
+          "point": "Nielsen 指出代码里 `anyGeometry` 恒为真，论证疑似同义反复。",
+          "scene": "团团指着一个开关，开关上写着 `True`，另一边贴着 `anyGeometry` 的标签；开关永远拨在“开”上。",
           "file": "stickers/riemann-rashomon/stickers/05.png"
         },
         {
@@ -65,6 +75,8 @@
           "title": "上市次日",
           "ja": "タイミング…",
           "zh": "这个时机……",
+          "point": "发布时机与 Anthropic 上市次日重合，商业与学术的张力。",
+          "scene": "黎黎抱着一枚大金币，背后一本日历，11-19 那天画着圈， 11-20 那天画着星星。",
           "file": "stickers/riemann-rashomon/stickers/06.png"
         },
         {
@@ -72,6 +84,8 @@
           "title": "读不懂的证明",
           "ja": "読めない…",
           "zh": "读不懂……",
+          "point": "证明体量远超人类可阅读极限，同行评议与可理解性的基础受 挑战。",
+          "scene": "黎黎站在一堵比自己高百倍的墙（墙上密密麻麻全是代码） 前发呆，墙顶看不见。",
           "file": "stickers/riemann-rashomon/stickers/07.png"
         },
         {
@@ -79,6 +93,8 @@
           "title": "罗生门",
           "ja": "まだ解けてない。",
           "zh": "还没解出来呢。",
+          "point": "结论：黎曼猜想并未在 2026 年 11 月被解决；这是一场关于 AI 时代知识生产、验证与权威归属的元事件。",
+          "scene": "黎黎、糊糊、团团三只各说各话（三个小气泡各一个词：证明 了 / 没证明 / 不知道），中间一个大大的 `？`。",
           "file": "stickers/riemann-rashomon/stickers/08.png"
         }
       ]

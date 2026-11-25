@@ -90,6 +90,19 @@ STICKER_BLOCK_RE = re.compile(
 JA_RE = re.compile(r"\*\*日文\*\*[：:]\s*(.+?)\s*$", re.M)
 ZH_RE = re.compile(r"\*\*中文对照\*\*[：:]\s*(.+?)\s*$", re.M)
 
+
+def _field(body, name):
+    """Value after `- **<name>**：`, possibly wrapped over lines,
+    up to the next `- **` field or the end of the block."""
+    m = re.search(r"- \*\*" + name + r"\*\*[：:]\s*", body)
+    if not m:
+        return ""
+    rest = body[m.end():]
+    cut = re.search(r"\n- \*\*", rest)
+    if cut:
+        rest = rest[:cut.start()]
+    return " ".join(line.strip() for line in rest.splitlines() if line.strip())
+
 THUMB_WIDTH = 640
 THUMB_QUALITY = 78
 OG_WIDTH = 1200
@@ -212,6 +225,8 @@ def read_script(folder):
             "title": title,
             "ja": ja.group(1).strip() if ja else "",
             "zh": zh.group(1).strip() if zh else "",
+            "point": _field(body, "点"),
+            "scene": _field(body, "画面"),
         })
     return stickers
 
@@ -406,6 +421,8 @@ def main():
                 "title": s["title"],
                 "ja": s["ja"],
                 "zh": s["zh"],
+                "point": s.get("point", ""),
+                "scene": s.get("scene", ""),
                 "file": f"stickers/{slug}/stickers/{s['n']}.png",
             } for s in stickers],
             "order": order,

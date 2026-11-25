@@ -352,8 +352,9 @@
   }
 
   function stickerCellHtml(s) {
-    return '<figure class="sticker-cell">' +
+    return '<figure class="sticker-cell tappable" tabindex="0" role="button" data-n="' + esc(s.n) + '" aria-label="' + esc(s.title) + ' — 点开看这张贴纸的脚本">' +
       '<img src="' + s.file + '" alt="' + esc(s.title) + '" loading="lazy" decoding="async">' +
+      '<span class="tap-badge">👆 点我</span>' +
       '<figcaption><span class="sticker-ja">' + esc(s.ja) + '</span>' +
       '<span class="sticker-zh">' + esc(s.zh) + '</span></figcaption></figure>';
   }
@@ -541,6 +542,34 @@
     document.body.classList.remove('modal-open');
   }
 
+  /* ---------- sticker modal ---------- */
+  /* Tapping one sticker pops up that sticker's script: the big image,
+   * its Japanese line + Chinese, the point it makes and the scene. */
+
+  function openStickerModal(n) {
+    var rec = state.currentSlug ? findSet(state.currentSlug) : null;
+    if (!rec) return;
+    var s = null;
+    (rec.stickers || []).forEach(function (x) { if (String(x.n) === String(n)) s = x; });
+    if (!s) return;
+    $('stickerModalTitle').textContent = s.title;
+    var img = $('stickerModalImg');
+    img.src = s.file;
+    img.alt = s.title;
+    $('stickerModalJa').textContent = s.ja || '';
+    $('stickerModalZh').textContent = s.zh || '';
+    $('stickerModalPoint').textContent = s.point || '';
+    $('stickerModalScene').textContent = s.scene || '';
+    $('stickerModal').hidden = false;
+    document.body.classList.add('modal-open');
+    gaEvent('sticker_modal', { slug: state.currentSlug || '', n: String(n) });
+  }
+
+  function closeStickerModal() {
+    $('stickerModal').hidden = true;
+    document.body.classList.remove('modal-open');
+  }
+
   $('shareBtn').addEventListener('click', function () {
     // Clean share URL, not the hash URL: crawlers never see the
     // fragment, so /share/<slug>/ is the page with the OG tags.
@@ -571,8 +600,21 @@
   $('columnBtn').addEventListener('click', openColumnModal);
   $('columnModalClose').addEventListener('click', closeColumnModal);
   $('columnModalBackdrop').addEventListener('click', closeColumnModal);
+  $('stickerModalClose').addEventListener('click', closeStickerModal);
+  $('stickerModalBackdrop').addEventListener('click', closeStickerModal);
+  $('stickerGrid').addEventListener('click', function (e) {
+    var cell = e.target.closest ? e.target.closest('.sticker-cell') : null;
+    if (cell) openStickerModal(cell.getAttribute('data-n'));
+  });
+  $('stickerGrid').addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('sticker-cell')) {
+      e.preventDefault();
+      openStickerModal(e.target.getAttribute('data-n'));
+    }
+  });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !$('columnModal').hidden) closeColumnModal();
+    if (e.key === 'Escape' && !$('stickerModal').hidden) closeStickerModal();
   });
 
   document.addEventListener('click', function (e) {

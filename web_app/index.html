@@ -10,7 +10,7 @@
 <meta property="og:title" content="Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸">
 <meta property="og:description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
 <meta property="og:url" content="https://sutekka-generator.vercel.app/">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <header class="top">
@@ -113,7 +113,7 @@
   <p>Sticker Showcase · built from <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a> · new sticker sets appear automatically after each push. · <a href="#/about">Send feedback</a></p>
 </footer>
 
-<script src="app.js?v=3" defer></script>
+<script src="app.js?v=4" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>
@@ -121,6 +121,19 @@
     <button id="columnModalClose" class="modal-close" aria-label="Close">×</button>
     <h2 id="columnModalTitle"></h2>
     <div id="columnModalBody" class="modal-body"></div>
+  </div>
+</div>
+
+<div id="stickerModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="stickerModalTitle">
+  <div class="modal-backdrop" id="stickerModalBackdrop"></div>
+  <div class="modal-box">
+    <button id="stickerModalClose" class="modal-close" aria-label="Close">×</button>
+    <h2 id="stickerModalTitle"></h2>
+    <img id="stickerModalImg" alt="" class="sticker-modal-img">
+    <p class="sticker-modal-ja" id="stickerModalJa"></p>
+    <p class="sticker-modal-zh" id="stickerModalZh"></p>
+    <p><strong>这张讲什么：</strong><span id="stickerModalPoint"></span></p>
+    <p><strong>画面：</strong><span id="stickerModalScene"></span></p>
   </div>
 </div>
 </body>
