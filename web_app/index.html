@@ -10,7 +10,7 @@
 <meta property="og:title" content="Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸">
 <meta property="og:description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
 <meta property="og:url" content="https://sutekka-generator.vercel.app/">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 <header class="top">
@@ -55,7 +55,7 @@
   <div class="reader-tools">
     <button id="zoomBtn" aria-pressed="false">Zoom in</button>
     <button id="shareBtn">Share this set</button>
-    <button id="columnBtn">📰 专栏原文</button>
+    <button id="columnBtn" class="tap-me">👆 📰 专栏原文</button>
     <span id="shareMsg" class="share-msg" aria-live="polite"></span>
   </div>
   <section id="stickerGrid" class="stickers-grid" aria-label="Stickers in this set"></section>
@@ -113,7 +113,7 @@
   <p>Sticker Showcase · built from <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a> · new sticker sets appear automatically after each push. · <a href="#/about">Send feedback</a></p>
 </footer>
 
-<script src="app.js?v=5" defer></script>
+<script src="app.js?v=6" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>

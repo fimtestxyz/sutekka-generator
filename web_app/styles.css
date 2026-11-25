@@ -196,6 +196,9 @@ body.modal-open { overflow: hidden; }
   50% { transform: translateY(-3px); }
 }
 
+/* The column button gets the same click-me treatment as the stickers. */
+.tap-me { animation: tap-nudge 1.6s ease-in-out infinite; }
+
 /* Sticker modal: big image, lines, and the script behind it. */
 .sticker-modal-img {
   width: 100%; max-width: 420px; display: block;
