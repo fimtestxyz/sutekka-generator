@@ -1,0 +1,85 @@
+{
+  "generated_by": "scripts/build_sticker_index.py",
+  "count": 1,
+  "sets": [
+    {
+      "slug": "riemann-rashomon",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》",
+      "lang": "zh",
+      "batch": 1,
+      "batch_title": "Current Affairs Stickers",
+      "date": "2026-11-25",
+      "tags": [
+        "黎曼猜想",
+        "AI",
+        "数学",
+        "罗生门"
+      ],
+      "qa": 8.3,
+      "image": "stickers/riemann-rashomon/sheet.png",
+      "thumb": "thumbs/riemann-rashomon.jpg",
+      "ratio": 1.986,
+      "angle": "一张没人读过的证明，让所有人各说各话——这就是罗生门。",
+      "share_title": "《罗生门》：1700万行代码证明了黎曼猜想，但没人读过",
+      "share_teaser": "25万页是个玩笑，98%对问号。最后一张：还没解出来呢。",
+      "stickers": [
+        {
+          "n": "01",
+          "title": "1700 万行",
+          "ja": "証明できた！",
+          "zh": "证明出来了！",
+          "file": "stickers/riemann-rashomon/stickers/01.png"
+        },
+        {
+          "n": "02",
+          "title": "25 万页是个玩笑",
+          "ja": "冗談でした。",
+          "zh": "是玩笑啦。",
+          "file": "stickers/riemann-rashomon/stickers/02.png"
+        },
+        {
+          "n": "03",
+          "title": "两派",
+          "ja": "信じる？信じない？",
+          "zh": "信？还是不信？",
+          "file": "stickers/riemann-rashomon/stickers/03.png"
+        },
+        {
+          "n": "04",
+          "title": "编译通过 ≠ 证明成立",
+          "ja": "通ったけど…",
+          "zh": "是通过了，不过……",
+          "file": "stickers/riemann-rashomon/stickers/04.png"
+        },
+        {
+          "n": "05",
+          "title": "恒真条件",
+          "ja": "いつも True って…",
+          "zh": "永远都是 True 啊……",
+          "file": "stickers/riemann-rashomon/stickers/05.png"
+        },
+        {
+          "n": "06",
+          "title": "上市次日",
+          "ja": "タイミング…",
+          "zh": "这个时机……",
+          "file": "stickers/riemann-rashomon/stickers/06.png"
+        },
+        {
+          "n": "07",
+          "title": "读不懂的证明",
+          "ja": "読めない…",
+          "zh": "读不懂……",
+          "file": "stickers/riemann-rashomon/stickers/07.png"
+        },
+        {
+          "n": "08",
+          "title": "罗生门",
+          "ja": "まだ解けてない。",
+          "zh": "还没解出来呢。",
+          "file": "stickers/riemann-rashomon/stickers/08.png"
+        }
+      ]
+    }
+  ]
+}
