@@ -476,6 +476,62 @@
     }
   });
 
+  /* ---------- column modal ---------- */
+  /* The news column is the backdrop of a set: the reader's 专栏原文
+   * button opens the full researched column (brief.md, via the
+   * record's column_md) as a modal overlay. */
+
+  function mdInline(s) {
+    return esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  function mdToHtml(md) {
+    var out = [], inList = false;
+    function flushList() { if (inList) { out.push('</ul>'); inList = false; } }
+    String(md || '').split('\n').forEach(function (raw) {
+      var line = raw.trim();
+      if (!line) { flushList(); return; }
+      if (line.indexOf('## ') === 0) { flushList(); out.push('<h3>' + mdInline(line.slice(3)) + '</h3>'); return; }
+      if (line.indexOf('### ') === 0) { flushList(); out.push('<h4>' + mdInline(line.slice(4)) + '</h4>'); return; }
+      if (line.indexOf('|') === 0) {
+        var cells = line.split('|').slice(1, -1).map(function (c) { return c.trim(); });
+        if (cells.length && cells.every(function (c) { return /^[:\- ]*$/.test(c); })) return;
+        flushList();
+        out.push('<p>' + (cells.length > 1 ? '<strong>' + esc(cells[0]) + '</strong> — ' + mdInline(cells.slice(1).join(' ')) : mdInline(cells[0] || '')) + '</p>');
+        return;
+      }
+      if (line.indexOf('- ') === 0 || line.indexOf('· ') === 0) {
+        if (!inList) { out.push('<ul>'); inList = true; }
+        out.push('<li>' + mdInline(line.slice(2)) + '</li>');
+        return;
+      }
+      if (/^\d+[.、]\s/.test(line)) {
+        if (!inList) { out.push('<ul>'); inList = true; }
+        out.push('<li>' + mdInline(line.replace(/^\d+[.、]\s*/, '')) + '</li>');
+        return;
+      }
+      flushList();
+      out.push('<p>' + mdInline(line) + '</p>');
+    });
+    flushList();
+    return out.join('');
+  }
+
+  function openColumnModal() {
+    var rec = state.currentSlug ? findSet(state.currentSlug) : null;
+    if (!rec) return;
+    $('columnModalTitle').textContent = rec.title;
+    $('columnModalBody').innerHTML = mdToHtml(rec.column_md || '（暂无专栏内容）');
+    $('columnModal').hidden = false;
+    document.body.classList.add('modal-open');
+    gaEvent('column_modal', { slug: state.currentSlug || '' });
+  }
+
+  function closeColumnModal() {
+    $('columnModal').hidden = true;
+    document.body.classList.remove('modal-open');
+  }
+
   $('shareBtn').addEventListener('click', function () {
     // Clean share URL, not the hash URL: crawlers never see the
     // fragment, so /share/<slug>/ is the page with the OG tags.
@@ -501,6 +557,13 @@
     } else {
       done(url);
     }
+  });
+
+  $('columnBtn').addEventListener('click', openColumnModal);
+  $('columnModalClose').addEventListener('click', closeColumnModal);
+  $('columnModalBackdrop').addEventListener('click', closeColumnModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !$('columnModal').hidden) closeColumnModal();
   });
 
   document.addEventListener('click', function (e) {

@@ -156,7 +156,17 @@ def read_brief(folder):
     m = TAGS_RE.search(txt)
     if m:
         tags = [t.strip() for t in m.group(1).split(",") if t.strip()]
-    return title, angle, tags
+    # The news column itself, for the reader modal: the full brief minus
+    # its title line and the file-metadata bullets.
+    column_lines = []
+    for line in txt.splitlines():
+        if line.startswith("# "):
+            continue
+        if line.startswith("- 专栏来源") or line.startswith("- 套装 slug"):
+            continue
+        column_lines.append(line)
+    column_md = "\n".join(column_lines).strip()
+    return title, angle, tags, column_md
 
 
 def read_qa(folder):
@@ -340,7 +350,7 @@ def main():
         if score < 7:
             errors.append(f"{slug}: QA score {score} < 7")
             continue
-        title, angle, tags = read_brief(folder)
+        title, angle, tags, column_md = read_brief(folder)
         stickers = read_script(folder)
         if not stickers:
             warnings.append(f"{slug}: no stickers parsed from sticker-script.md")
@@ -376,6 +386,7 @@ def main():
             "thumb": f"thumbs/{slug}.jpg",
             "ratio": ratio,
             "angle": angle,
+            "column_md": column_md,
             "share_title": hook.get("title") or title,
             "share_teaser": hook.get("teaser") or angle,
             "stickers": [{

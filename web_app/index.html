@@ -55,6 +55,7 @@
   <div class="reader-tools">
     <button id="zoomBtn" aria-pressed="false">Zoom in</button>
     <button id="shareBtn">Share this set</button>
+    <button id="columnBtn">📰 专栏原文</button>
     <span id="shareMsg" class="share-msg" aria-live="polite"></span>
   </div>
   <section id="stickerGrid" class="stickers-grid" aria-label="Stickers in this set"></section>
@@ -113,5 +114,14 @@
 </footer>
 
 <script src="app.js" defer></script>
+
+<div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
+  <div class="modal-backdrop" id="columnModalBackdrop"></div>
+  <div class="modal-box">
+    <button id="columnModalClose" class="modal-close" aria-label="Close">×</button>
+    <h2 id="columnModalTitle"></h2>
+    <div id="columnModalBody" class="modal-body"></div>
+  </div>
+</div>
 </body>
 </html>
