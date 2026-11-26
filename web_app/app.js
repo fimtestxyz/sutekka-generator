@@ -10,15 +10,20 @@
 (function () {
   'use strict';
 
-  var LS_KEY = 'sticker-showcase-index-v10';
+  var LS_KEY = 'sticker-showcase-index-v11';
   var LS_TTL_MS = 60 * 60 * 1000; // revalidate after 1 hour
-  // DATA_V: bump whenever the shape of data/index.json changes
-  // (e.g. a new field per sticker). The fetch URL carries it, so no
-  // cache layer — HTTP, service worker, or the localStorage copy
-  // above (its key carries the same version) — can serve stale data
-  // after a deploy. The ?v= on app.js/styles.css is the same idea
-  // for the shell; all three numbers move together.
-  var DATA_V = 10;
+  // DATA_V: bump whenever data/index.json changes in ANY way that must
+  // reach users — not just a shape change. A content change (new batch,
+  // new tags, a new set) leaves the old file in the localStorage copy
+  // and the service-worker cache under the same ?v=, so browsers keep
+  // rendering stale data after a deploy (seen 2026-11-26: the batch
+  // split shipped but the homepage still showed one batch until this
+  // bump). The fetch URL carries it, so no cache layer — HTTP, service
+  // worker, or the localStorage copy above (its key carries the same
+  // version) — can serve stale data after a deploy. The ?v= on
+  // app.js/styles.css is the same idea for the shell; all three
+  // numbers move together.
+  var DATA_V = 11;
   var PAGE_SIZE = 12;
 
   var state = {
