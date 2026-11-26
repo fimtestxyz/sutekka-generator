@@ -1404,10 +1404,10 @@
         var thumbHtml = thumb
           ? '<a href="' + esc(thumb.href) + '" class="cart-thumb-link"><img class="cart-thumb" src="' + esc(thumb.src) + '" alt="' + esc(thumb.alt) + '" loading="lazy" decoding="async"></a>'
           : '';
-        return '<li>' + thumbHtml + '<div class="cart-info"><strong>' + esc(title) + '</strong><br><span class="meta">SKU ' + esc(it.itemId) + ' · ' + cartItemLabel(it.type) + (entry ? ' · ' + priceLabel(entry.amount) + ' each' : '') + '</span></div>' +
-          '<div class="cart-line"><span class="qty-stepper"><button data-qty-dec="' + esc(it.itemId) + '" aria-label="One fewer">−</button><span class="qty-count">' + qty + '</span><button data-qty-inc="' + esc(it.itemId) + '" aria-label="One more">+</button></span> ' +
-          '<span>' + (entry ? priceLabel(entry.amount * qty) : '') + '</span> ' +
-          '<button data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
+        return '<li>' + thumbHtml + '<div class="cart-info"><strong class="cart-title">' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + '</span></div>' +
+          '<span class="cart-price">' + (entry ? priceLabel(entry.amount * qty) : '') + '</span>' +
+          '<div class="cart-line"><span class="qty-stepper"><button data-qty-dec="' + esc(it.itemId) + '" aria-label="One fewer">−</button><span class="qty-count">' + qty + '</span><button data-qty-inc="' + esc(it.itemId) + '" aria-label="One more">+</button></span>' +
+          '<button class="cart-remove" data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
       }).join('') + '</ul>' +
       '<p><strong>Subtotal: ' + priceLabel(cartTotal()) + ' SGD</strong></p>' +
       packProgressHtml() +

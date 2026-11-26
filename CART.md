@@ -72,6 +72,37 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.4 — cart layout rebuilt for phones (2026-11-27)
+
+The user (via a screenshot + a critique they forwarded) found the
+v1.3 cart broken on phones: the title wrapped one word per line.
+The critique was right, and the cause was mine: the cart line was
+one `nowrap` flex row — the stepper + price + Remove button took a
+fixed ~260 px, so on a ~360 px screen the title column collapsed
+to almost zero width.
+
+- **Mobile-first stacking, exactly as the critique prescribed:**
+  top row = thumbnail | title + price; bottom row = stepper
+  (left) | Remove (right). The controls wrap to their own row
+  (`flex: 1 1 100%`), so they can never starve the title again.
+  On ≥640 px the row goes back to one line.
+- **Title clamps to 2 lines** (`-webkit-line-clamp: 2`) with an
+  ellipsis. **SKU removed from the cart line** (it stays on the
+  order record / admin, where it is actually useful — the cart is
+  a customer surface). **"each" dropped** — the line total is the
+  price. **Remove is now a small muted text link**, not a grey
+  button. Thumbnail 56 → 64 px.
+- **Verified at real phone width before deploying:** local
+  headless Chromium at 390 px, 3-line cart (set + 2× single +
+  pack, subtotal S$52) — every title column 204–213 px wide,
+  titles exactly 2 lines, controls on the second row, all 3
+  thumbnails loaded, no SKU / "each" text. Same page at 1280 px:
+  clean single-row lines. Screenshots in /tmp (cart-mobile.png,
+  cart-desktop.png — ephemeral, not committed).
+- Shell app.js?v=29 / styles.css?v=23, SW v30 (no index change,
+  DATA_V stays 12). Tests 155/155, typecheck clean. Live verify:
+  (pending — browser check running)
+
 ## v1.3 — cart lines show thumbnail + SKU + name (2026-11-27)
 
 User request: "cart page display show the sku id sticker name

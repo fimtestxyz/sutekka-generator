@@ -404,17 +404,31 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .qty-stepper .qty-count { min-width: 28px; text-align: center; font-weight: 700; }
 .qty-stepper[hidden] { display: none; }
 
-/* Cart line thumbnail: 56 px, small JPEG (see build script). */
-.cart-info { flex: 1; min-width: 0; }
+/* Cart line thumbnail: 64 px, small JPEG (see build script). */
+.cart-info { flex: 1 1 140px; min-width: 0; }
+/* Long set titles clamp to two lines with an ellipsis. */
+.cart-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cart-price { flex: none; font-weight: 700; white-space: nowrap; }
 .cart-thumb-link { flex: none; }
-.cart-thumb { display: block; width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background: #fff; }
+.cart-thumb { display: block; width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background: #fff; }
+/* Cart lines: mobile-first stacking. Top row is thumbnail | title |
+ * price; the stepper + Remove link wrap to a second row, so the
+ * fixed-width controls can never squeeze the title to zero (the
+ * v1.3 bug: a nowrap control row starved the title column on
+ * phones and the title wrapped one word per line). On wider
+ * screens the row stays on one line. */
 .cart-list { list-style: none; padding: 0; margin: 12px 0; }
 .cart-list li {
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 10px 14px; margin: 8px 0;
 }
-.cart-line { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.cart-line { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cart-remove { background: none; border: none; padding: 4px 0; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 14px; }
+@media (min-width: 640px) {
+  .cart-list li { flex-wrap: nowrap; }
+  .cart-line { flex: none; justify-content: flex-end; }
+}
 
 /* Announcement banner (admin-controlled, #/kangle settings). */
 .announcement {
