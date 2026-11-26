@@ -259,3 +259,11 @@ body.modal-open { overflow: hidden; }
   background: var(--surface); color: var(--text);
 }
 .sort-row button.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* ---------- Flaticon UICONS (Bold Rounded, fi-br) ---------- */
+/* Functional icons only — decorative icons are Kawaii SVGs (see ICONS.md).
+   Loaded from the jsDelivr CDN in index.html; the free licence asks for
+   the "Uicons by Flaticon" footer attribution (already in the footer). */
+.fi { font-size: 1.05em; line-height: 1; vertical-align: -0.12em; }
+button .fi, summary .fi, h2 .fi, p .fi { margin-right: 0.35em; }
+#bookmarkBtn[data-bookmarked="true"] .fi { color: var(--accent); }

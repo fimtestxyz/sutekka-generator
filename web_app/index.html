@@ -21,7 +21,8 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=9">
+<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
 <header class="top">
@@ -68,12 +69,12 @@
   <div class="reader-tools">
     <button id="zoomBtn" aria-pressed="false">Zoom in</button>
     <button id="shareBtn">Share this set</button>
-    <button id="bookmarkBtn" aria-pressed="false">🔖 Bookmark</button>
-    <button id="columnBtn" class="tap-me">👆 📰 专栏原文</button>
+    <button id="bookmarkBtn" aria-pressed="false"><i class="fi fi-br-bookmark"></i> Bookmark</button>
+    <button id="columnBtn" class="tap-me"><i class="fi fi-br-newspaper"></i> 专栏原文</button>
     <span id="shareMsg" class="share-msg" aria-live="polite"></span>
   </div>
   <details id="charSheet" class="char-sheet">
-    <summary>🎭 角色介绍 · Character sheet</summary>
+    <summary><i class="fi fi-br-users"></i> 角色介绍 · Character sheet</summary>
     <figure>
       <img id="charSheetImg" alt="Character sheet" decoding="async">
       <figcaption id="charSheetCast"></figcaption>
@@ -82,12 +83,12 @@
   <section id="stickerGrid" class="stickers-grid" aria-label="Stickers in this set"></section>
   <section class="engage" aria-label="Reactions and comments">
     <div class="like-row">
-      <button id="likeBtn" aria-pressed="false">♥ Like</button>
+      <button id="likeBtn" aria-pressed="false"><i class="fi fi-br-heart"></i> Like</button>
       <span id="likeCount" class="like-count"></span>
       <span id="likeNote" class="like-note" aria-live="polite"></span>
     </div>
     <div id="comments" class="comments">
-      <h2>Comments</h2>
+      <h2><i class="fi fi-br-comment"></i> Comments</h2>
       <div id="commentList" class="comment-list"></div>
       <p id="commentMsg" class="comment-msg" aria-live="polite"></p>
       <p id="replyHint" class="reply-hint" hidden></p>
@@ -146,10 +147,10 @@
 </main>
 
 <footer class="foot">
-  <p>Sticker Showcase · built from <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a> · new sticker sets appear automatically after each push. · <a href="#/about">Send feedback</a></p>
+  <p>Sticker Showcase · built from <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a> · new sticker sets appear automatically after each push. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a></p>
 </footer>
 
-<script src="app.js?v=13" defer></script>
+<script src="app.js?v=14" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>

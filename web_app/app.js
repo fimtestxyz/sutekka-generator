@@ -295,7 +295,7 @@
   function renderLike(count, liked, localOnly) {
     var btn = $('likeBtn'), countEl = $('likeCount'), note = $('likeNote');
     if (!btn) return;
-    btn.textContent = liked ? '♥ Liked' : '♥ Like';
+    btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? 'Liked' : 'Like');
     btn.setAttribute('aria-pressed', String(liked));
     countEl.textContent = count > 0 ? count + (count === 1 ? ' like' : ' likes') : 'No likes yet';
     note.textContent = localOnly ? 'Saved on this device only.' : '';
@@ -531,7 +531,7 @@
   function renderBookmarkBtn(bookmarked) {
     var btn = $('bookmarkBtn');
     if (!btn) return;
-    btn.textContent = bookmarked ? '🔖 Saved' : '🔖 Bookmark';
+    btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Saved' : 'Bookmark');
     btn.setAttribute('aria-pressed', String(bookmarked));
     btn.setAttribute('data-bookmarked', String(bookmarked));
   }
@@ -605,7 +605,7 @@
         body.innerHTML = sortHtml +
           (cards
             ? '<div class="grid">' + cards + '</div>'
-            : '<p class="empty">No bookmarks yet. Open a set and tap 🔖 Bookmark to save it here.</p>');
+            : '<p class="empty">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
       })
       .catch(function () {
         body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
@@ -781,7 +781,7 @@
   function stickerCellHtml(s) {
     return '<figure class="sticker-cell tappable" tabindex="0" role="button" data-n="' + esc(s.n) + '" aria-label="' + esc(s.title) + ' — 点开看这张贴纸的脚本">' +
       '<img src="' + s.file + '" alt="' + esc(s.title) + '" loading="lazy" decoding="async">' +
-      '<span class="tap-badge">👆 点我</span>' +
+      '<span class="tap-badge"><i class="fi fi-br-cursor-finger"></i> 点我</span>' +
       '<figcaption><span class="sticker-ja">' + esc(s.ja) + '</span>' +
       '<span class="sticker-zh">' + esc(s.zh) + '</span></figcaption></figure>';
   }
