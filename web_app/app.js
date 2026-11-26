@@ -33,11 +33,13 @@
     gaReady: false,
     lastSentHash: null,
     currentSlug: null,
-    engageReady: null // null = unknown, true = API up, false = API down
+    engageReady: null, // null = unknown, true = API up, false = API down
+    session: null, // Auth.js session user, or null when signed out
+    authAvailable: null // null = unknown, true = /api/auth up, false = not configured
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -72,6 +74,77 @@
       document.head.appendChild(s);
       trackPageView();
     }).catch(function () { /* no analytics configured — the site still works */ });
+  }
+
+  /* ---------- auth session ---------- */
+
+  function loadSession() {
+    fetch('/api/auth/session', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (r.status === 503) { state.authAvailable = false; return null; }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        state.authAvailable = true;
+        return r.json();
+      })
+      .then(function (d) {
+        state.session = d && d.user ? d.user : null;
+        renderAuthArea();
+        if ((location.hash || '#/') === '#/login') renderLogin();
+      })
+      .catch(function () {
+        state.authAvailable = false;
+        renderAuthArea();
+      });
+  }
+
+  function renderAuthArea() {
+    var el = $('authArea');
+    if (!el) return;
+    var u = state.session;
+    if (!u) { el.innerHTML = '<a href="#/login">Sign in</a>'; return; }
+    el.innerHTML = '';
+    if (u.image) {
+      var img = document.createElement('img');
+      img.src = u.image; img.alt = ''; img.className = 'auth-avatar';
+      el.appendChild(img);
+    }
+    var name = document.createElement('span');
+    name.className = 'auth-name';
+    name.textContent = u.name || u.email || 'Signed in';
+    el.appendChild(name);
+    var out = document.createElement('a');
+    out.href = '/api/auth/signout';
+    out.textContent = 'Sign out';
+    el.appendChild(out);
+  }
+
+  function renderLogin() {
+    var body = $('loginBody');
+    if (!body) return;
+    var u = state.session;
+    if (u) {
+      body.innerHTML = '';
+      var p = document.createElement('p');
+      p.textContent = 'Signed in as ' + (u.name || u.email || '') + '.';
+      body.appendChild(p);
+      var out = document.createElement('a');
+      out.href = '/api/auth/signout';
+      out.className = 'btn';
+      out.textContent = 'Sign out';
+      body.appendChild(out);
+      return;
+    }
+    if (state.authAvailable === null) {
+      body.innerHTML = '<p>Checking sign-in…</p>';
+      return;
+    }
+    if (state.authAvailable === false) {
+      body.innerHTML = '<p>Sign-in is not set up yet — the site works fine without an account. Likes and comments save on this device only for now.</p>';
+      return;
+    }
+    body.innerHTML = '<p>Sign in to like, comment and bookmark sticker sets. Browsing works without an account.</p>' +
+      '<p><a class="btn" href="/api/auth/signin/google?callbackUrl=%2F">Continue with Google</a></p>' +
+      '<p class="meta">Google is only used to identify you here — no posts, no contacts. Sign-in asks for your Google profile and email, nothing else.</p>';
   }
 
   function lsGet(key) {
@@ -279,6 +352,7 @@
     }
 
     loadConfig();
+    loadSession();
   }
 
   /* ---------- filtering ---------- */
@@ -426,6 +500,7 @@
     homeEl.hidden = name !== 'home';
     readerEl.hidden = name !== 'reader';
     aboutEl.hidden = name !== 'about';
+    loginEl.hidden = name !== 'login';
   }
 
   function route() { routeInner(); trackPageView(); }
@@ -435,6 +510,7 @@
     var parts = hash.replace(/^#\//, '').split('/');
     if (parts[0] === 'set' && parts[1]) { openSet(parts[1]); return; }
     if (parts[0] === 'about') { showView('about'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'login') { renderLogin(); showView('login'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'batch' && parts[1]) {
       state.batch = parts[1]; state.topic = null; state.shown = PAGE_SIZE;
       renderChips(); renderTopics(); renderGrid(); showView('home'); return;
