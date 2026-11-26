@@ -552,6 +552,91 @@ Manual test matrix (agent must run and record in PR description):
 
 ---
 
+## 17. Baseline v0.1.0 & chief-engineer adaptation (2026-11-26)
+
+### 17.1 Baseline
+
+`v0.1.0` (tag, commit `343fe5c`) is the pre-auth baseline: the static
+sticker showcase as it stands — 5 sets live, SEO/GEO files, the
+auto-regenerate GitHub Actions workflow. Anything the auth work breaks
+can be diffed against this tag.
+
+### 17.2 Decision: adapt the plan to the static site — do NOT migrate to Next.js
+
+The plan as written assumes a Next.js app. The real site is a static
+vanilla-JS SPA: `web_app/index.html` + `app.js`, no `package.json`, no
+framework. The Vercel project root is the repo root, `outputDirectory`
+is `web_app`, and serverless functions already live at repo-root `api/`
+(`api/engage.js` — likes/comments today).
+
+Migrating the reader, homepage grid, search, service worker, share-page
+pipeline and OG generation to Next.js just to get auth would be a large,
+risky rewrite of a working site, for no user-facing gain. So:
+
+- **Keep the static frontend.** No framework migration in this change.
+- **Keep every locked decision in §2** (Auth.js v5, Google first,
+  Prisma, Neon Postgres, JWT with `uid`, `cuid()` ids, Node runtime).
+  Only the framework shell changes: Auth.js runs as its
+  framework-agnostic core (`@auth/core`) inside Vercel serverless
+  functions, not as Next.js route handlers.
+- **API routes move to repo-root `api/`** (the existing pattern), not
+  `web_app/app/api/`. The static frontend calls the same paths the plan
+  specifies (`/api/auth/*`, `/api/me/*`, `/api/stickers/*/like`,
+  `/api/stickers/*/comments`, `/api/comments/*`).
+- **UI becomes static-JS sections** in `web_app/app.js` (sign-in button,
+  user menu, like/bookmark buttons, comment thread) instead of React
+  components. The existing `/api/engage` (Vercel KV) likes/comments are
+  replaced by the Postgres-backed endpoints; existing single-device
+  localStorage likes/comments do not migrate.
+- **`middleware.ts` becomes per-handler auth checks**: every function
+  calls the shared `requireUser()` helper first; there is no
+  framework middleware in a static site.
+- **Seed source correction**: the plan's §4.3 seeds from `stickers.json`,
+  which does not exist. Seed from the generated
+  `web_app/data/index.json` (+ `inventory.json`) instead.
+- **Build**: add a repo-root `package.json` (dependencies + a
+  `postinstall` running `prisma generate`); the Vercel build already
+  installs npm dependencies automatically when `package.json` exists
+  at the project root. The Python build script is untouched.
+
+### 17.3 Path mapping (plan → adapted)
+
+| Plan (§) | Adapted location |
+|---|---|
+| `auth.ts` (§5.1) | `api/auth/[...auth].js` — Auth.js core handler |
+| `app/api/auth/[...nextauth]` (§5.3) | same `api/auth/*` functions |
+| `lib/prisma.ts` (§4.4) | `api/_lib/prisma.js` |
+| `lib/require-user.ts` (§6.3) | `api/_lib/require-user.js` |
+| `lib/schemas.ts` (§10) | `api/_lib/schemas.js` (Zod) |
+| `types/next-auth.d.ts` (§5.2) | not needed (no TS framework types); session shape documented in `api/_lib/session.js` |
+| `app/api/me/*`, `app/api/stickers/*`, `app/api/comments/*` (§6–9) | `api/me/*`, `api/stickers/*`, `api/comments/*` |
+| `middleware.ts` (§10) | per-handler `requireUser()` |
+| `components/*`, `app/*/page.tsx` (§5.4, §6.2, §9.2) | sections in `web_app/app.js` + static views |
+| `prisma/schema.prisma` (§4.2) | `prisma/schema.prisma` (unchanged from the plan) |
+| CI (§13) | extend `.github/workflows/seo-geo.yml` or add `ci.yml`: `prisma validate`, `prisma generate`, `tsc --noEmit` |
+
+### 17.4 Branching
+
+Auth work lands on branch `auth-db-v0.2`, not `main`, until it is
+verified end to end against a real Neon database and Google OAuth
+client. `main` stays on the v0.1.0 static site until then.
+
+### 17.5 Blockers (need the owner — no agent can do these)
+
+1. **Neon project**: create a project at neon.tech (or reuse an
+   existing one) and supply `DATABASE_URL` (pooled) + `DIRECT_URL`.
+   No Neon credentials are on file here.
+2. **Google OAuth client**: in Google Cloud Console, create an OAuth
+   client ID/secret with the redirect URIs from §3, and supply
+   `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` (+ `AUTH_SECRET`).
+   No Google Cloud credentials are on file here.
+
+Until both exist, the code can be written, typechecked and
+schema-validated, but no login can be verified live.
+
+
+---
+
 ### A few notes on the plan itself
 
 - **Session strategy inconsistency, called out:** In my previous answer I said "recommended JWT." The plan keeps JWT as primary but explicitly explains *why* (fewer roundtrips) and notes the database-session fallback since the `Session` table is already in the schema. That keeps the earlier advice consistent while leaving the door open.
