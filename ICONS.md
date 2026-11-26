@@ -43,6 +43,8 @@ Current mapping (live since commit 473e95e):
 | Character sheet | `fi-br-users` + 角色介绍 |
 | Comments heading | `fi-br-comment` + Comments |
 | Bookmarks empty state | inline `fi-br-bookmark` in the text |
+| Zoom in / Zoom out | `fi-br-zoom-in` / `fi-br-zoom-out` (JS rewrites the button's innerHTML on every toggle, so the icon survives state changes) |
+| Share this set | `fi-br-share` |
 | Cart / payment (when e-commerce lands) | `fi-br-shopping-cart`, `fi-br-credit-card` (Regular weight if clarity needs it) |
 | Success page | one Sticker-style celebration icon from Layer 2, not a UICON |
 
@@ -64,9 +66,33 @@ category labels. They carry the "cute, hand-drawn, warm" feeling.
 Decorative picks are chosen on Flaticon and shown to the owner before they go
 live; they are not deployed unseen.
 
+## Decorative picks in use (2026-11-26)
+
+All four are the same grey-blue chibi cat, author **Stickers** (Flaticon's
+in-house author), style **Tomomi The Cat Lineal Color** — thick rounded
+outlines, flat pastels, white die-cut borders. Files live in
+`web_app/icons/` and are pre-cached by the service worker.
+
+| Use | File | Icon |
+| --- | --- | --- |
+| Empty bookmarks | `icons/education.png` | [Education](https://www.flaticon.com/free-sticker/education_11116689) — cat with round glasses reading a book |
+| Empty comments | `icons/chat.png` | [Chat](https://www.flaticon.com/free-sticker/chat_14985008) — cat with pink phone + speech bubbles |
+| Profile decoration | `icons/smile.png` | [Smile](https://www.flaticon.com/free-sticker/smile_11172333) — cat face close-up, eyes closed |
+| Feedback success | `icons/party.png` | [Party](https://www.flaticon.com/free-sticker/party_13474434) — joyful cat face + confetti |
+
+**Free vs Premium (decided 2026-11-26, owner chose free PNGs):** SVG
+download is Premium (crown icon); the free download is PNG 512px only.
+So the planned recolour-to-brand-pastels step does not apply — the PNGs
+ship as-is (their teal/pink pastels are already close to the brand palette)
+with attribution to Stickers/Flaticon in the footer. If the owner later
+opens Premium, the SVGs can replace the PNGs and be recoloured then.
+
 ## History
 
 - 2026-11-26: strategy adopted (owner supplied the brief); functional layer
   implemented (commit 473e95e, deploy dpl_2yi1qR94oA5aza5hH7wsUCj3tanw),
-  replacing 5 emoji spots (♥, 🔖, 👆, 📰, 🎭). Decorative picks pending
-  owner's review.
+  replacing 5 emoji spots (♥, 🔖, 👆, 📰, 🎭). Decorative picks chosen the
+  same evening (commit 1dd672e, deploy dpl_4gpjxv3Z4Ctt5sgPs8qo5rsNd4sF):
+  four Tomomi cat PNGs (free 512px) in the empty states, profile and
+  feedback success, plus `fi-br-zoom-in`/`fi-br-zoom-out` on the Zoom
+  button and `fi-br-share` on Share this set.
