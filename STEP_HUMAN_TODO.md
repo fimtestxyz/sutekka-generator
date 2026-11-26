@@ -1,7 +1,7 @@
 # STEP_HUMAN_TODO.md — Human steps to ship Google sign-in (Sutekka)
 
-> Created: **2026-11-26 12:37 SGT (Thursday)** · Last updated: 2026-11-26 12:37 SGT
-> Owner: Bed · Repo: `fimtestxyz/sutekka-generator` · Branch: `auth-db-v0.2`
+> Created: **2026-11-26 12:37 SGT (Thursday)** · Last updated: 2026-11-26 21:19 SGT
+> Owner: Bed · Repo: `fimtestxyz/sutekka-generator` · Branch: `main` (auth-db-v0.2 merged 21:02, commit ad2c4b8)
 > Scope: everything only the human can do. Muse already wrote the code; it
 > cannot create a Google Cloud project or read your Neon/Vercel dashboards.
 > Each step has a `Completed at` line. Fill it in when you finish the step.
@@ -13,7 +13,13 @@
 | 2026-11-26 ~11:30 | Auth code finished on branch `auth-db-v0.2` (8 commits, 40 files) | Done, verified by Muse: schema valid, typecheck clean, 64/64 tests pass |
 | 2026-11-26 ~11:47 | Neon project `sutekka-generator` created (Singapore, Postgres only) | Done |
 | 2026-11-26 ~12:15 | Neon API key stored (`custom.neon`) | Done |
-| 2026-11-26 12:21 | `api.neon.tech` still unreachable from this VM (TLS closes after proxy CONNECT) | Blocked; one retry set for ~14:20 SGT today, then the manual route below |
+| 2026-11-26 ~14:35 | Pooled Neon string supplied; `DATABASE_URL` + derived `DIRECT_URL` set on Vercel (production + preview) | Done |
+| 2026-11-26 ~17:45 | Neon DB live via Vercel build (migration applied, 5 sets seeded) | Done |
+| 2026-11-26 ~21:00 | Google OAuth client supplied; `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` / `AUTH_URL` / generated `AUTH_SECRET` set on Vercel (production + preview) | Done |
+| 2026-11-26 ~21:02 | `auth-db-v0.2` merged to `main`, production deploy READY | Done |
+| 2026-11-26 ~21:05 | Live check found `/api/auth/*` → 400 (Auth.js `basePath` defaults to `/auth`); fixed with `basePath: "/api/auth"` + regression tests, redeployed | Done |
+| 2026-11-26 ~21:13 | Live check found `/api/auth/signin/google` → 404 (Vercel catch-all is single-segment) + login page used GET (Auth.js needs POST + CSRF); fixed with explicit provider routes + POST form, redeployed; live POST → 302 to accounts.google.com verified | Done |
+| 2026-11-26 21:19 | Still open: your browser click-through (Google account pick → callback → session) + likes/comments/bookmarks persistence check | Pending — you |
 
 ## Step 1 — Google Cloud project
 
@@ -23,7 +29,7 @@
 - [ ] Project name: `sutekka-generator`. Leave organisation and location as-is.
       Click **Create** and wait for it to finish, then make sure it is the
       selected project.
-- [ ] Completed at (SGT): ______
+- [x] Completed at (SGT): ~21:00
 
 ## Step 2 — OAuth consent screen
 
@@ -42,7 +48,7 @@
 - [ ] Back on the consent screen, click **Publish App** so anyone can sign
       in (not just test users). This needs only the fields above; no Google
       verification is required for these three scopes.
-- [ ] Completed at (SGT): ______
+- [x] Completed at (SGT): ~21:00
 
 ## Step 3 — Create the OAuth client (Google SSO)
 
@@ -67,7 +73,7 @@
 - [ ] Click **Create**. A panel shows your **Client ID** and **Client
       secret**. Copy both somewhere safe for Step 4. You can re-open them
       later under Credentials, but the secret is only shown on that panel.
-- [ ] Completed at (SGT): ______
+- [x] Completed at (SGT): ~21:00
 
 ## Step 4 — Neon connection strings (manual route)
 
@@ -79,7 +85,7 @@
       `DIRECT_URL`. No `-pooler` in the hostname.
 - [ ] Do not paste either string in chat. They go straight into Vercel in
       Step 5.
-- [ ] Completed at (SGT): ______
+- [x] Completed at (SGT): ~14:35
 
 ## Step 5 — Vercel environment variables
 
@@ -98,7 +104,7 @@
       | `AUTH_GOOGLE_SECRET` | Client secret from Step 3 |
 
 - [ ] Save each variable. Nothing else changes in Vercel.
-- [ ] Completed at (SGT): ______
+- [x] Completed at (SGT): ~21:00
 
 ## Step 6 — Tell Muse, then verify live
 
@@ -112,7 +118,7 @@
         after choosing, your name shows in the header.
   - [ ] Like a sticker set, post a comment, bookmark a set, then reload:
         all three stick to your account.
-- [ ] Completed at (SGT): ______
+- [ ] Completed at (SGT): ______ (Muse's part done 21:13 — merge, deploy, migrate/seed, live verify; your click-through + likes/comments/bookmarks check still open)
 
 ## Values cheat-sheet (copy-paste)
 
