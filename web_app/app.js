@@ -1490,6 +1490,10 @@
 
   document.addEventListener('keydown', function (e) {
     if (readerEl.hidden) return;
+    // When a modal is open, the arrow keys belong to the modal (the
+    // sticker lightbox), not to the set underneath — otherwise one
+    // keypress moves both the modal and the page behind it.
+    if (!$('stickerModal').hidden || !$('columnModal').hidden) return;
     if (e.key === 'ArrowLeft' && !$('prevLink').hasAttribute('aria-disabled')) location.hash = $('prevLink').getAttribute('href');
     if (e.key === 'ArrowRight' && !$('nextLink').hasAttribute('aria-disabled')) location.hash = $('nextLink').getAttribute('href');
   });
