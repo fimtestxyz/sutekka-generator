@@ -104,7 +104,12 @@ the count too.
   Old saved carts and drafts without a qty field read as 1.
 - Shell app.js?v=27 / styles.css?v=21, SW v28. Tests 155/155
   (was 153; + quantity validation + metadata-qty parsing),
-  typecheck clean. Live verify: (pending — browser check running)
+  typecheck clean. Live verify 2026-11-27 ~05:33: ALL PASS — set
+  stepper 0 → 2 (badge Cart 2), modal stepper → 1 (badge Cart 3),
+  cart lines 2 × S$15 = S$30 + 1 × S$4 = S$4, subtotal S$34;
+  + on the set line → 3 × S$15 = S$45, subtotal S$49; − on the
+  sticker line (1 → 0) removes it; progress box shows the
+  over-threshold state; refund line still visible.
 
 ## v1.1 — pack progress bar + refund policy line (2026-11-27)
 
