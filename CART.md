@@ -87,7 +87,19 @@ Everything above is built. Tests 153/153 (was 142), typecheck clean.
   `POST /api/orders/checkout` answers 503 `checkout_not_configured`
   (the route is live, the key is genuinely absent); the two old test
   orders still look up; the migration left existing rows intact.
-- **Live, verified in the browser:** (pending — cart UI check running)
+- **Live, verified in the browser:** (first check, 2026-11-27 ~00:34)
+  cart page, draft save/restore, clear, checkout message and item
+  removal all pass — but two bugs: (1) the single-sticker Add to
+  cart never appeared in the modal; (2) the set Add to cart only
+  appeared after a full reload, not on SPA hash navigation; (3) the
+  empty-cart badge showed "Cart 0" instead of hiding. Cause: openSet
+  called renderBuyButtons but not renderCartButtons, openStickerModal
+  called renderStickerBuyBtn but not renderCartButtons (loadLinks had
+  hidden the modal button while no sticker was selected), and
+  `.cart-count { display: inline-block }` beat the `[hidden]`
+  default. Fixed in commit 5a1efd0 (app.js?v=25 / styles.css?v=19,
+  deploy dpl_FVTNdaWnRQBGQADRJBMsyR7SAt3Y READY); browser re-check
+  of the three fixes running.
 - **Still open — the one step only the owner can do:** create a
   Stripe **restricted key** (Checkout Sessions: write) in the Stripe
   Dashboard and add it as `STRIPE_SECRET_KEY` on Vercel (production
