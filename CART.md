@@ -99,7 +99,10 @@ Everything above is built. Tests 153/153 (was 142), typecheck clean.
   `.cart-count { display: inline-block }` beat the `[hidden]`
   default. Fixed in commit 5a1efd0 (app.js?v=25 / styles.css?v=19,
   deploy dpl_FVTNdaWnRQBGQADRJBMsyR7SAt3Y READY); browser re-check
-  of the three fixes running.
+  2026-11-27 ~00:37: ALL PASS — set button appears on SPA navigation,
+  modal button present (and survives next/prev), two-item cart
+  subtotals S$19, empty-cart badge hidden. Cart v1 fully verified
+  live except cart checkout itself, which waits on the key.
 - **Still open — the one step only the owner can do:** create a
   Stripe **restricted key** (Checkout Sessions: write) in the Stripe
   Dashboard and add it as `STRIPE_SECRET_KEY` on Vercel (production
