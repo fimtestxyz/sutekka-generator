@@ -1456,7 +1456,36 @@
     var items = state.cart;
     var html = '';
     if (!items.length) {
-      html += '<p>Your cart is empty. Add a sticker, a set, or the complete pack — the buttons sit next to every Buy button.</p>';
+      html += '<div class="empty-cart">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit peeking out of an empty shopping bag">' +
+        '<path d="M48,34 L50.5,39.5 L56,42 L50.5,44.5 L48,50 L45.5,44.5 L40,42 L45.5,39.5 Z" fill="#f5c542"/>' +
+        '<path d="M176,30 L178,35 L183,37 L178,39 L176,44 L174,39 L169,37 L174,35 Z" fill="#f5c542"/>' +
+        '<ellipse cx="88" cy="32" rx="10" ry="24" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 88 32)"/>' +
+        '<ellipse cx="88" cy="34" rx="4.5" ry="16" fill="#f7b8c4" transform="rotate(-14 88 34)"/>' +
+        '<ellipse cx="134" cy="38" rx="10" ry="22" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(24 134 38)"/>' +
+        '<ellipse cx="134" cy="40" rx="4.5" ry="15" fill="#f7b8c4" transform="rotate(24 134 40)"/>' +
+        '<circle cx="110" cy="60" r="30" fill="#fff" stroke="#2b2620" stroke-width="4"/>' +
+        '<circle cx="98" cy="56" r="8" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<circle cx="122" cy="56" r="8" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<line x1="106" y1="56" x2="114" y2="56" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M93,58 Q98,51 103,58" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M117,58 Q122,51 127,58" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<ellipse cx="91" cy="64" rx="4" ry="2.5" fill="#f7b8c4"/>' +
+        '<ellipse cx="129" cy="64" rx="4" ry="2.5" fill="#f7b8c4"/>' +
+        '<path d="M106,66 Q110,69 114,66" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M60,70 L160,70 L154,160 Q154,164 150,164 L70,164 Q66,164 66,160 Z" fill="#f6ecd7" stroke="#2b2620" stroke-width="4" stroke-linejoin="round"/>' +
+        '<line x1="63" y1="86" x2="157" y2="86" stroke="#2b2620" stroke-width="3" stroke-dasharray="6 5" opacity="0.45"/>' +
+        '<g transform="translate(150,28) rotate(20)">' +
+        '<rect x="-5" y="-12" width="10" height="12" rx="2" fill="#f08080" stroke="#2b2620" stroke-width="3"/>' +
+        '<rect x="-5" y="0" width="10" height="52" fill="#f5c542" stroke="#2b2620" stroke-width="3"/>' +
+        '<polygon points="0,64 -5,52 5,52" fill="#f6e3c5" stroke="#2b2620" stroke-width="3" stroke-linejoin="round"/>' +
+        '<polygon points="0,64 -2,58 2,58" fill="#2b2620"/>' +
+        '</g></svg>' +
+        '<p class="empty-title">Nothing in here yet!</p>' +
+        '<p class="empty-text">Lili peeked inside — just echoes. Add a sticker, a set, or the complete pack, and she’ll tuck it in for you.</p>' +
+        '<p class="empty-hint">The buttons sit next to every Buy button.</p>' +
+        '<button id="emptyCartBrowse" class="btn">Browse stickers</button>' +
+        '</div>';
     } else {
       html += '<ul class="cart-list">' + items.map(function (it) {
         var entry = cartEntry(it.itemId, it.type);
@@ -2710,6 +2739,7 @@
     var del = t.closest ? t.closest('[data-draft-delete]') : null;
     if (del) { deleteDraft(parseInt(del.getAttribute('data-draft-delete'), 10)); return; }
     if (t.id === 'clearCartBtn') { openRemoveModal('clear'); return; }
+    if (t.id === 'emptyCartBrowse') { closeCartDrawer(); return; }
     if (t.id === 'checkoutBtn') { checkoutCart(); return; }
   });
   $('cartBody').addEventListener('submit', function (e) {
