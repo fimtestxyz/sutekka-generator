@@ -71,7 +71,7 @@ async function lookupHandler(req, res, deps = {}) {
         data: { status: "delivered" },
       });
       if (row.count === 0) {
-        const exists = await prisma.order.findUnique({
+        const exists = await prisma.order.findFirst({
           where: { stripeSessionId: sessionId },
         });
         if (!exists) {
@@ -79,10 +79,14 @@ async function lookupHandler(req, res, deps = {}) {
           return;
         }
       }
-      const updated = await prisma.order.findUnique({
+      const updated = await prisma.order.findMany({
         where: { stripeSessionId: sessionId },
+        orderBy: { createdAt: "asc" },
       });
-      sendJson(res, 200, { order: updated ? publicOrder(updated) : null });
+      sendJson(res, 200, {
+        order: updated[0] ? publicOrder(updated[0]) : null,
+        orders: updated.map(publicOrder),
+      });
       return;
     }
 
@@ -91,14 +95,20 @@ async function lookupHandler(req, res, deps = {}) {
     const orderId = query.get("order_id");
     const email = query.get("email");
     if (sessionId) {
-      const row = await prisma.order.findUnique({
+      // A session may own several Order rows (a cart checkout) — the
+      // lookup returns all of them, first row first.
+      const rows = await prisma.order.findMany({
         where: { stripeSessionId: sessionId },
+        orderBy: { createdAt: "asc" },
       });
-      if (!row) {
+      if (!rows.length) {
         sendJson(res, 404, { error: "order_not_found" });
         return;
       }
-      sendJson(res, 200, { order: publicOrder(row) });
+      sendJson(res, 200, {
+        order: publicOrder(rows[0]),
+        orders: rows.map(publicOrder),
+      });
       return;
     }
     if (orderId) {

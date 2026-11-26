@@ -26,8 +26,12 @@ const ORDER = {
   shippingAddress: null,
 };
 
-function mockPrisma({ order = ORDER, invoiceRequest = null } = {}) {
+/**
+ * @param {{ order?: any, invoiceRequest?: any, sessionRows?: any[] }} [opts]
+ */
+function mockPrisma({ order = ORDER, invoiceRequest = null, sessionRows } = {}) {
   const calls = { orderUpdate: [], invoiceUpsert: [], orderInvoiceUpdate: [] };
+  const rows = sessionRows !== undefined ? sessionRows : order ? [order] : [];
   return {
     calls,
     order: {
@@ -35,6 +39,12 @@ function mockPrisma({ order = ORDER, invoiceRequest = null } = {}) {
         if (where.stripeSessionId) return order && order.stripeSessionId === where.stripeSessionId ? order : null;
         if (where.id) return order && order.id === where.id ? order : null;
         return null;
+      },
+      findMany: async ({ where }) => {
+        if (where.stripeSessionId) {
+          return rows.filter((r) => r.stripeSessionId === where.stripeSessionId);
+        }
+        return rows;
       },
       update: async ({ where, data }) => {
         calls.orderUpdate.push({ where, data });
@@ -160,6 +170,24 @@ describe("POST /api/orders/shipping", () => {
       { prisma },
     );
     assert.equal(res.statusCode, 400);
+  });
+
+  it("answers 400 when a session id covers several items (cart)", async () => {
+    const second = { ...ORDER, id: "ord_2", itemId: "kakeya-wang-hong", itemType: "set" };
+    const prisma = mockPrisma({ sessionRows: [ORDER, second] });
+    const res = mockRes();
+    await shippingHandler(
+      mockReq({
+        method: "POST",
+        url: "/api/orders/shipping",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sessionId: "cs_1", email: "buyer@example.com", name: "X", address: ADDRESS }),
+      }),
+      res,
+      { prisma },
+    );
+    assert.equal(res.statusCode, 400);
+    assert.equal((await res.json()).error, "ambiguous_session");
   });
 });
 

@@ -21,12 +21,16 @@ const ORDER = {
 };
 
 function mockPrismaOrder({ found = ORDER, list = [ORDER] } = {}) {
-  const calls = { findUnique: [], findMany: [], updateMany: [] };
+  const calls = { findUnique: [], findFirst: [], findMany: [], updateMany: [] };
   return {
     calls,
     order: {
       findUnique: async (args) => {
         calls.findUnique.push(args);
+        return found;
+      },
+      findFirst: async (args) => {
+        calls.findFirst.push(args);
         return found;
       },
       findMany: async (args) => {
@@ -63,7 +67,7 @@ describe("GET /api/orders/lookup", () => {
   });
 
   it("answers 404 for an unknown session id", async () => {
-    const prisma = mockPrismaOrder({ found: null });
+    const prisma = mockPrismaOrder({ found: null, list: [] });
     const res = mockRes();
     await lookupHandler(
       mockReq({ method: "GET", url: "/api/orders/lookup?session_id=cs_nope" }),
@@ -72,6 +76,22 @@ describe("GET /api/orders/lookup", () => {
     );
     assert.equal(res.statusCode, 404);
     assert.equal((await res.json()).error, "order_not_found");
+  });
+
+  it("returns all rows of a cart session, first row first", async () => {
+    const second = { ...ORDER, id: "ord_xyz", itemId: "kakeya-wang-hong", itemType: "set", amountTotal: 1500 };
+    const prisma = mockPrismaOrder({ list: [ORDER, second] });
+    const res = mockRes();
+    await lookupHandler(
+      mockReq({ method: "GET", url: "/api/orders/lookup?session_id=cs_test_cart" }),
+      res,
+      { prisma },
+    );
+    assert.equal(res.statusCode, 200);
+    const body = await res.json();
+    assert.equal(body.order.id, "ord_abc");
+    assert.equal(body.orders.length, 2);
+    assert.equal(body.orders[1].itemId, "kakeya-wang-hong");
   });
 
   it("returns an order by order id", async () => {
@@ -136,7 +156,9 @@ describe("POST /api/orders/lookup", () => {
       stripeSessionId: "cs_test_123",
       status: "paid",
     });
-    assert.equal((await res.json()).order.id, "ord_abc");
+    const body = await res.json();
+    assert.equal(body.order.id, "ord_abc");
+    assert.equal(body.orders.length, 1);
   });
 
   it("answers 404 for an unknown session id and 400 without one", async () => {

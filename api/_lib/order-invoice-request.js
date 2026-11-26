@@ -50,9 +50,32 @@ async function invoiceRequestHandler(req, res, deps = {}) {
       return;
     }
     const prisma = deps.prisma || getPrisma();
-    const order = sessionId
-      ? await prisma.order.findUnique({ where: { stripeSessionId: sessionId } })
-      : await prisma.order.findUnique({ where: { id: orderId } });
+    let order = null;
+    if (sessionId) {
+      // A cart session owns one row per item, so a session id alone
+      // does not identify one order — the buyer must use the order
+      // id (the download page links each item to its own order page).
+      const rows = await prisma.order.findMany({
+        where: { stripeSessionId: sessionId },
+        take: 2,
+      });
+      if (rows.length === 0) {
+        sendJson(res, 404, { error: "order_not_found" });
+        return;
+      }
+      if (rows.length > 1) {
+        sendJson(res, 400, {
+          error: "ambiguous_session",
+          details: [
+            "this payment covers several items — use the order id",
+          ],
+        });
+        return;
+      }
+      order = rows[0];
+    } else {
+      order = await prisma.order.findUnique({ where: { id: orderId } });
+    }
     if (!order) {
       sendJson(res, 404, { error: "order_not_found" });
       return;

@@ -90,9 +90,36 @@ function resolveOrderItem(session, linkMap) {
   return null;
 }
 
+/**
+ * The items a cart Checkout Session bought, from the metadata the
+ * cart checkout stamped on it (cart_count + cart_0… + cart_type_0…).
+ * Returns null when the session is not a cart session, or the
+ * metadata is malformed — the caller then falls back to the
+ * single-item resolution above.
+ *
+ * @param {any} session a checkout.session object
+ * @returns {{ itemId: string, itemType: string }[] | null}
+ */
+function resolveCartItems(session) {
+  const meta = session && session.metadata ? session.metadata : {};
+  const count = parseInt(meta.cart_count, 10);
+  if (!count || Number.isNaN(count) || count <= 0 || count > 50) {
+    return null;
+  }
+  const items = [];
+  for (let i = 0; i < count; i++) {
+    const itemId = meta[`cart_${i}`];
+    const itemType = meta[`cart_type_${i}`];
+    if (!itemId || !itemType) return null;
+    items.push({ itemId, itemType });
+  }
+  return items;
+}
+
 module.exports = {
   readRawBody,
   verifyStripeSignature,
   resolveOrderItem,
+  resolveCartItems,
   SIGNATURE_TOLERANCE_SEC,
 };

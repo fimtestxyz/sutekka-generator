@@ -53,11 +53,13 @@
     admin: null, // admin session user ({ username }) or null
     adminSetupNeeded: false,
     adminOrdersPage: 1,
-    adminOrdersFilter: { status: '', q: '' }
+    adminOrdersFilter: { status: '', q: '' },
+    cart: [], // [{ itemId, type }] — one of each item; localStorage (CART.md)
+    cartDrafts: [] // [{ name, items, createdAt }] — named snapshots, localStorage
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download'), adminEl = $('admin');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download'), adminEl = $('admin'), cartEl = $('cart');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -851,6 +853,7 @@
 
     loadConfig();
     loadSession();
+    loadCart();
     loadLinks();
     loadSettings();
   }
@@ -1016,8 +1019,9 @@
     collectionsEl.hidden = name !== 'collections';
     downloadEl.hidden = name !== 'download';
     adminEl.hidden = name !== 'admin';
+    cartEl.hidden = name !== 'cart';
     // Active nav state: the reader lives under Latest.
-    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about' }[name] || null;
+    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about', cart: 'cart' }[name] || null;
     document.querySelectorAll('.topnav a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-nav') === nav);
     });
@@ -1035,6 +1039,7 @@
     var query = new URLSearchParams(hashParts[1] || '');
     var parts = hashParts[0].replace(/^#\//, '').split('/');
     if (parts[0] === 'download') { renderDownload(query); showView('download'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'cart') { renderCart(); showView('cart'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'kangle') { renderAdmin(parts.slice(1)); showView('admin'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'set' && parts[1]) {
       openSet(parts[1]);
@@ -1076,6 +1081,7 @@
       state.links = d;
       renderPackCard();
       renderBuyButtons();
+      renderCartButtons();
       if (state.currentSticker) renderStickerBuyBtn();
     }).catch(function () {
       /* Shop links unavailable — the Buy buttons stay hidden and
@@ -1099,6 +1105,7 @@
         }
         renderPackCard();
         renderBuyButtons();
+        renderCartButtons();
         if (state.currentSticker) renderStickerBuyBtn();
       })
       .catch(function () { /* settings unavailable — the shop stays open */ });
@@ -1173,6 +1180,224 @@
     var btn = $('packBuyBtn');
     btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy the pack — ' + priceLabel(pack.amount);
     card.hidden = false;
+  }
+
+  /* ---------- cart ---------- */
+  /* A cart holds one of each item (digital files — no quantities).
+   * It auto-saves to localStorage on every change, so it survives
+   * closing the page on the same device; named drafts are explicit
+   * snapshots the buyer can restore or delete. Checkout creates one
+   * Stripe Checkout Session for the whole cart (CART.md) — that step
+   * needs STRIPE_SECRET_KEY on the server, and without it the page
+   * says so instead of failing silently. */
+  var CART_KEY = 'sutekka-cart-v1';
+  var CART_DRAFTS_KEY = 'sutekka-cart-drafts-v1';
+
+  function loadCart() {
+    try {
+      var raw = localStorage.getItem(CART_KEY);
+      var items = raw ? JSON.parse(raw) : [];
+      state.cart = Array.isArray(items) ? items.filter(function (it) {
+        return it && typeof it.itemId === 'string' && (it.type === 'single' || it.type === 'set' || it.type === 'pack');
+      }) : [];
+    } catch (e) { state.cart = []; }
+    try {
+      var draw = localStorage.getItem(CART_DRAFTS_KEY);
+      var drafts = draw ? JSON.parse(draw) : [];
+      state.cartDrafts = Array.isArray(drafts) ? drafts : [];
+    } catch (e) { state.cartDrafts = []; }
+    updateCartBadge();
+  }
+
+  function saveCart() {
+    try { localStorage.setItem(CART_KEY, JSON.stringify(state.cart)); } catch (e) { /* private mode */ }
+    updateCartBadge();
+  }
+
+  function saveDrafts() {
+    try { localStorage.setItem(CART_DRAFTS_KEY, JSON.stringify(state.cartDrafts)); } catch (e) { /* private mode */ }
+  }
+
+  function updateCartBadge() {
+    var badge = $('cartCount');
+    if (!badge) return;
+    var n = state.cart.length;
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+  }
+
+  function cartEntry(itemId, type) {
+    if (!state.links) return null;
+    if (type === 'single') return state.links.singles[itemId] || null;
+    if (type === 'set') return state.links.sets[itemId] || null;
+    if (type === 'pack') return state.links.pack || null;
+    return null;
+  }
+
+  function cartItemLabel(type) {
+    return type === 'single' ? 'Single sticker' : type === 'set' ? 'Full set' : 'Complete pack';
+  }
+
+  function isInCart(itemId) {
+    return state.cart.some(function (it) { return it.itemId === itemId; });
+  }
+
+  function cartTotal(items) {
+    var list = items || state.cart;
+    return list.reduce(function (sum, it) {
+      var entry = cartEntry(it.itemId, it.type);
+      return sum + (entry ? entry.amount : 0);
+    }, 0);
+  }
+
+  function toggleCart(type, itemId) {
+    if (shopClosed() || itemHidden(itemId)) return;
+    if (isInCart(itemId)) {
+      state.cart = state.cart.filter(function (it) { return it.itemId !== itemId; });
+    } else {
+      if (!cartEntry(itemId, type)) return;
+      state.cart.push({ itemId: itemId, type: type });
+    }
+    saveCart();
+    renderCartButtons();
+    gaEvent('cart_toggle', { type: type, item: itemId, in_cart: isInCart(itemId) });
+  }
+
+  function removeFromCart(itemId) {
+    state.cart = state.cart.filter(function (it) { return it.itemId !== itemId; });
+    saveCart();
+    renderCartButtons();
+    renderCart();
+  }
+
+  function clearCart() {
+    state.cart = [];
+    saveCart();
+    renderCartButtons();
+    renderCart();
+  }
+
+  function cartButtonLabel(btn, itemId) {
+    btn.innerHTML = isInCart(itemId)
+      ? '<i class="fi fi-br-shopping-cart"></i> In cart ✓'
+      : '<i class="fi fi-br-shopping-cart"></i> Add to cart';
+  }
+
+  function renderCartButtons() {
+    var setBtn = $('cartSetBtn');
+    if (setBtn) {
+      var setEntry = state.links && state.currentSlug ? state.links.sets[state.currentSlug] : null;
+      if (!setEntry || shopClosed() || itemHidden(state.currentSlug)) setBtn.hidden = true;
+      else { setBtn.hidden = false; cartButtonLabel(setBtn, state.currentSlug); }
+    }
+    var stBtn = $('stickerCartBtn');
+    var s = state.currentSticker;
+    if (stBtn) {
+      var stEntry = state.links && s ? state.links.singles[s.id] : null;
+      if (!stEntry || !s || shopClosed() || itemHidden(s.id)) stBtn.hidden = true;
+      else { stBtn.hidden = false; cartButtonLabel(stBtn, s.id); }
+    }
+    var packBtn = $('packCartBtn');
+    if (packBtn) {
+      if (!state.links || !state.links.pack || shopClosed() || itemHidden('complete-pack-30')) packBtn.hidden = true;
+      else { packBtn.hidden = false; cartButtonLabel(packBtn, 'complete-pack-30'); }
+    }
+  }
+
+  function renderCart() {
+    var body = $('cartBody');
+    if (!body) return;
+    var items = state.cart;
+    var html = '';
+    if (!items.length) {
+      html += '<p>Your cart is empty. Add a sticker, a set, or the complete pack — the buttons sit next to every Buy button.</p>';
+    } else {
+      html += '<ul class="cart-list">' + items.map(function (it) {
+        var entry = cartEntry(it.itemId, it.type);
+        var title = entry ? entry.title : it.itemId;
+        return '<li><div><strong>' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + '</span></div>' +
+          '<div class="cart-line"><span>' + (entry ? priceLabel(entry.amount) : '') + '</span> ' +
+          '<button data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
+      }).join('') + '</ul>' +
+      '<p><strong>Subtotal: ' + priceLabel(cartTotal()) + ' SGD</strong></p>' +
+      '<p class="meta">One payment on Stripe — card, PayNow or Link. The files land on your download page right after payment.</p>' +
+      '<p><button id="checkoutBtn">Checkout — ' + priceLabel(cartTotal()) + '</button> ' +
+      '<button id="clearCartBtn">Clear cart</button></p>' +
+      '<p id="checkoutMsg" class="comment-msg" aria-live="polite"></p>' +
+      '<div class="order-card"><p><strong>Save this cart as a draft</strong></p>' +
+      '<p class="meta">Come back later and restore it — on this device.</p>' +
+      '<form id="draftForm" class="comment-form" onsubmit="return false;">' +
+      '<input id="draftName" type="text" placeholder="Draft name (e.g. for mum)" maxlength="60" aria-label="Draft name">' +
+      '<button type="submit">Save draft</button></form></div>';
+    }
+    var drafts = state.cartDrafts;
+    if (drafts.length) {
+      html += '<h2>Saved drafts</h2><ul class="cart-list">' + drafts.map(function (d, i) {
+        return '<li><div><strong>' + esc(d.name || 'Untitled draft') + '</strong><br><span class="meta">' + d.items.length + (d.items.length === 1 ? ' item' : ' items') + ' · ' + priceLabel(cartTotal(d.items)) + ' · ' + esc(new Date(d.createdAt).toLocaleDateString()) + '</span></div>' +
+          '<div class="cart-line"><button data-draft-restore="' + i + '">Restore</button> ' +
+          '<button data-draft-delete="' + i + '">Delete</button></div></li>';
+      }).join('') + '</ul>';
+    }
+    body.innerHTML = html;
+  }
+
+  function saveDraft() {
+    var input = $('draftName');
+    var name = input ? (input.value || '').trim() : '';
+    if (!state.cart.length) return;
+    state.cartDrafts.push({ name: name || 'Untitled draft', items: state.cart.slice(), createdAt: new Date().toISOString() });
+    saveDrafts();
+    renderCart();
+  }
+
+  function restoreDraft(i) {
+    var d = state.cartDrafts[i];
+    if (!d) return;
+    state.cart = d.items.filter(function (it) { return it && typeof it.itemId === 'string'; });
+    saveCart();
+    renderCartButtons();
+    renderCart();
+  }
+
+  function deleteDraft(i) {
+    state.cartDrafts.splice(i, 1);
+    saveDrafts();
+    renderCart();
+  }
+
+  function checkoutCart() {
+    var msg = $('checkoutMsg');
+    var btn = $('checkoutBtn');
+    if (!state.cart.length) return;
+    if (btn) btn.disabled = true;
+    if (msg) msg.textContent = 'Creating your checkout…';
+    fetch('/api/orders/checkout', {
+      method: 'POST', credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: state.cart })
+    }).then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.status === 200 && x.d.url) {
+          gaEvent('checkout_start', { items: state.cart.length });
+          location.href = x.d.url;
+          return;
+        }
+        if (btn) btn.disabled = false;
+        if (!msg) return;
+        if (x.status === 503 && x.d.error === 'checkout_not_configured') {
+          msg.textContent = 'Checkout is not connected yet — the shop owner is adding the payment key. Your cart is saved; come back a little later.';
+        } else if (x.status === 400 && x.d.error === 'unknown_item') {
+          msg.textContent = 'One item in your cart is no longer sold — remove it and try again.';
+        } else if (x.status === 429) {
+          msg.textContent = 'Too many tries — wait a minute and try again.';
+        } else {
+          msg.textContent = 'Checkout could not start right now. Try again in a moment.';
+        }
+      })
+      .catch(function () {
+        if (btn) btn.disabled = false;
+        if (msg) msg.textContent = 'Checkout could not start right now. Try again in a moment.';
+      });
   }
 
   function findStickerRecord(id) {
@@ -1260,7 +1485,7 @@
         })
         .then(function (d) {
           if (token !== downloadToken) return;
-          renderOrderDownload(d.order, sessionId);
+          renderOrdersDownload(d.orders || [d.order], sessionId);
         })
         .catch(function (e) {
           if (token !== downloadToken) return;
@@ -1274,6 +1499,46 @@
             : '<p>Could not load that order right now. Try again in a moment.</p>';
         });
     })();
+  }
+
+  /* A cart payment owns one Order row per item (CART.md). One item
+   * renders exactly like a single purchase; several items render one
+   * card each, with their own files. The invoice/shipping forms live
+   * on each item's own order page, linked from its card. */
+  function renderOrdersDownload(orders, sessionId) {
+    var body = $('downloadBody');
+    var list = (orders || []).filter(Boolean);
+    if (!list.length) {
+      body.innerHTML = '<p>No order found.</p>';
+      return;
+    }
+    if (list.length === 1) {
+      renderOrderDownload(list[0], sessionId);
+      return;
+    }
+    if (!state.sets.length) {
+      body.innerHTML = '<p>Payment confirmed — loading your files…</p>';
+      setTimeout(function () { renderOrdersDownload(list, sessionId); }, 500);
+      return;
+    }
+    var total = list.reduce(function (s, o) { return s + (o.amountTotal || 0); }, 0);
+    var html = '<p><strong>' + list.length + ' items · ' + priceLabel(total) + ' · paid in one payment.</strong></p>';
+    list.forEach(function (order) {
+      var ids = orderFileIds(order);
+      var files = ids.map(findStickerRecord).filter(Boolean);
+      html += '<div class="order-card"><p><strong>' + esc(orderTitle(order)) + '</strong></p>' +
+        '<p class="meta">' + priceLabel(order.amountTotal) + ' · ' + esc(order.currency.toUpperCase()) +
+        ' · Order ' + esc(order.id) + ' · ' + esc(order.status) + '</p>';
+      if (files.length) {
+        html += '<ul class="download-list">' + files.map(function (f) {
+          return '<li><a href="' + esc(f.file) + '" download>' + esc(f.title) + ' — Download PNG</a></li>';
+        }).join('') + '</ul>';
+      }
+      html += '<p class="meta"><a href="#/download?order_id=' + encodeURIComponent(order.id) + '">Order page</a> — invoice requests and print shipping for this item live there.</p></div>';
+    });
+    html += '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>';
+    body.innerHTML = html;
+    if (sessionId && list.some(function (o) { return o.status === 'paid'; })) markDelivered(sessionId);
   }
 
   function renderOrderDownload(order, sessionId) {
@@ -2216,6 +2481,24 @@
   $('buySetBtn').addEventListener('click', function () { openBuyLink('set', state.currentSlug); });
   $('stickerBuyBtn').addEventListener('click', function () { var s = state.currentSticker; if (s) openBuyLink('single', s.id); });
   $('packBuyBtn').addEventListener('click', function () { openBuyLink('pack', 'complete-pack-30'); });
+  $('cartSetBtn').addEventListener('click', function () { if (state.currentSlug) toggleCart('set', state.currentSlug); });
+  $('stickerCartBtn').addEventListener('click', function () { var s = state.currentSticker; if (s) toggleCart('single', s.id); });
+  $('packCartBtn').addEventListener('click', function () { toggleCart('pack', 'complete-pack-30'); });
+  // Cart page actions are delegated — renderCart rebuilds the body.
+  $('cartBody').addEventListener('click', function (e) {
+    var t = e.target;
+    var remove = t.closest ? t.closest('[data-cart-remove]') : null;
+    if (remove) { removeFromCart(remove.getAttribute('data-cart-remove')); return; }
+    var restore = t.closest ? t.closest('[data-draft-restore]') : null;
+    if (restore) { restoreDraft(parseInt(restore.getAttribute('data-draft-restore'), 10)); return; }
+    var del = t.closest ? t.closest('[data-draft-delete]') : null;
+    if (del) { deleteDraft(parseInt(del.getAttribute('data-draft-delete'), 10)); return; }
+    if (t.id === 'clearCartBtn') { clearCart(); return; }
+    if (t.id === 'checkoutBtn') { checkoutCart(); return; }
+  });
+  $('cartBody').addEventListener('submit', function (e) {
+    if (e.target && e.target.id === 'draftForm') { e.preventDefault(); saveDraft(); }
+  });
 
   // Character sheet preference: collapsed by default, remembered in
   // localStorage so the reader's choice sticks across visits.

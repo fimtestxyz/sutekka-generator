@@ -9,6 +9,7 @@
 //   GET / POST /api/orders/lookup          — tracked-order lookup
 //   POST /api/orders/shipping             — buyer shipping address
 //   POST /api/orders/invoice-request      — buyer invoice request
+//   POST /api/orders/checkout             — cart → Stripe Checkout Session
 "use strict";
 
 const { sendJson } = require("../_lib/http");
@@ -16,6 +17,7 @@ const { getPathSegments } = require("../_lib/http");
 const lookupHandler = require("../_lib/order-lookup");
 const shippingHandler = require("../_lib/order-shipping");
 const invoiceRequestHandler = require("../_lib/order-invoice-request");
+const checkoutHandler = require("../_lib/order-checkout");
 
 /**
  * @param {import("http").IncomingMessage} req
@@ -37,6 +39,10 @@ async function orderRouter(req, res, deps = {}) {
     }
     if (route === "invoice-request") {
       await invoiceRequestHandler(req, res, deps);
+      return;
+    }
+    if (route === "checkout") {
+      await checkoutHandler(req, res, deps);
       return;
     }
     sendJson(res, 404, { error: "order_route_not_found" });

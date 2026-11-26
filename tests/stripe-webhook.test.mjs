@@ -11,6 +11,7 @@ import webhookHandler from "../api/stripe/webhook.js";
 import {
   verifyStripeSignature,
   resolveOrderItem,
+  resolveCartItems,
 } from "../api/_lib/stripe-webhook.js";
 import { resetLinksCache } from "../api/_lib/admin-orders.js";
 import {
@@ -134,6 +135,34 @@ describe("resolveOrderItem", () => {
   });
 });
 
+describe("resolveCartItems", () => {
+  it("reads the cart metadata", () => {
+    assert.deepEqual(
+      resolveCartItems({
+        metadata: {
+          cart_count: "2",
+          cart_0: "ai-agent-four-faces-03",
+          cart_type_0: "single",
+          cart_1: "riemann-rashomon",
+          cart_type_1: "set",
+        },
+      }),
+      [
+        { itemId: "ai-agent-four-faces-03", itemType: "single" },
+        { itemId: "riemann-rashomon", itemType: "set" },
+      ],
+    );
+  });
+  it("returns null for a non-cart session or malformed metadata", () => {
+    assert.equal(resolveCartItems({ metadata: { shop_item: "x-01" } }), null);
+    assert.equal(resolveCartItems({ metadata: {} }), null);
+    assert.equal(
+      resolveCartItems({ metadata: { cart_count: "2", cart_0: "x-01", cart_type_0: "single" } }),
+      null,
+    );
+  });
+});
+
 describe("POST /api/stripe/webhook", () => {
   it("records an order from a completed session (metadata path)", async () => {
     const prisma = mockPrismaOrder();
@@ -239,6 +268,46 @@ describe("POST /api/stripe/webhook", () => {
     );
     assert.equal(res.statusCode, 200);
     assert.equal(prisma.calls.upsert[0].create.itemId, "unknown");
+  });
+
+  it("records one order per item for a cart session", async () => {
+    const prisma = mockPrismaOrder();
+    const raw = sessionEvent({
+      payment_link: null,
+      amount_total: 1900, // the whole cart — per-item amounts come from the catalogue
+      metadata: {
+        shop_type: "cart",
+        cart_count: "2",
+        cart_0: "ai-agent-four-faces-03",
+        cart_type_0: "single",
+        cart_1: "riemann-rashomon",
+        cart_type_1: "set",
+      },
+    });
+    const res = mockRes();
+    await webhookHandler(
+      mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
+      res,
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
+    );
+    assert.equal(res.statusCode, 200);
+    assert.equal((await res.json()).received, true);
+    assert.equal(prisma.calls.upsert.length, 2);
+    const [single, set] = prisma.calls.upsert.map((u) => u.create);
+    assert.equal(single.itemId, "ai-agent-four-faces-03");
+    assert.equal(single.amountTotal, 400); // catalogue price, not the cart total
+    assert.equal(single.filesJson.length, 1);
+    assert.equal(set.itemId, "riemann-rashomon");
+    assert.equal(set.amountTotal, 1500);
+    assert.equal(set.filesJson.length, 8);
+    // The upsert key is (session, item): a redelivery is idempotent
+    // per item and cannot collapse two items into one row.
+    assert.deepEqual(prisma.calls.upsert[0].where, {
+      stripeSessionId_itemId: { stripeSessionId: "cs_test_123", itemId: "ai-agent-four-faces-03" },
+    });
+    assert.deepEqual(prisma.calls.upsert[1].where, {
+      stripeSessionId_itemId: { stripeSessionId: "cs_test_123", itemId: "riemann-rashomon" },
+    });
   });
 
   it("ignores other event types without touching the database", async () => {

@@ -168,7 +168,7 @@ model Comment {
 
 model Order {
   id                    String   @id @default(cuid())
-  stripeSessionId       String   @unique
+  stripeSessionId       String
   stripePaymentLinkId   String?
   stripePaymentIntentId String?
   buyerEmail            String?
@@ -199,6 +199,8 @@ model Order {
 
   invoiceRequest InvoiceRequest?
 
+  @@unique([stripeSessionId, itemId])
+  @@index([stripeSessionId])
   @@index([buyerEmail])
   @@index([createdAt])
   @@index([printStatus])

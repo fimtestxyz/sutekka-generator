@@ -143,6 +143,18 @@ const buyerInvoiceRequestSchema = z.object({
   email: z.string().trim().email().max(254),
 });
 
+const cartCheckoutSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        itemId: z.string().trim().min(1).max(100),
+        type: z.enum(["single", "set", "pack"]),
+      }),
+    )
+    .min(1)
+    .max(50),
+});
+
 /**
  * Validate `body` against a schema. Returns a flat result object
  * (not a discriminated union — tsc does not narrow the union form
@@ -184,5 +196,6 @@ module.exports = {
   adminSettingsSchema,
   buyerShippingSchema,
   buyerInvoiceRequestSchema,
+  cartCheckoutSchema,
   parseBody,
 };
