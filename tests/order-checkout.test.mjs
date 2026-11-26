@@ -99,12 +99,12 @@ describe("POST /api/orders/checkout", () => {
     }
   });
 
-  it("creates one session with the cart's Price IDs and metadata", async () => {
+  it("creates one session with the cart's Price IDs, quantities and metadata", async () => {
     const stripe = stripeMock();
     const res = mockRes();
     await checkoutHandler(
       cartReq([
-        { itemId: SINGLE, type: "single" },
+        { itemId: SINGLE, type: "single", quantity: 3 },
         { itemId: SET, type: "set" },
       ]),
       res,
@@ -124,13 +124,16 @@ describe("POST /api/orders/checkout", () => {
     const params = new URLSearchParams(stripe.calls[0].opts.body);
     assert.equal(params.get("mode"), "payment");
     assert.equal(params.get("line_items[0][price]"), LINKS_DATA.singles[SINGLE].price_id);
-    assert.equal(params.get("line_items[0][quantity]"), "1");
+    assert.equal(params.get("line_items[0][quantity]"), "3");
     assert.equal(params.get("line_items[1][price]"), LINKS_DATA.sets[SET].price_id);
+    assert.equal(params.get("line_items[1][quantity]"), "1");
     assert.equal(params.get("metadata[cart_count]"), "2");
     assert.equal(params.get("metadata[cart_0]"), SINGLE);
     assert.equal(params.get("metadata[cart_type_0]"), "single");
+    assert.equal(params.get("metadata[cart_qty_0]"), "3");
     assert.equal(params.get("metadata[cart_1]"), SET);
     assert.equal(params.get("metadata[cart_type_1]"), "set");
+    assert.equal(params.get("metadata[cart_qty_1]"), "1");
     assert.equal(params.get("metadata[shop_type]"), "cart");
     assert.equal(params.get("automatic_tax[enabled]"), "true");
     assert.equal(
@@ -145,8 +148,8 @@ describe("POST /api/orders/checkout", () => {
     const res = mockRes();
     await checkoutHandler(
       cartReq([
-        { itemId: SINGLE, type: "single" },
-        { itemId: SINGLE, type: "single" },
+        { itemId: SINGLE, type: "single", quantity: 2 },
+        { itemId: SINGLE, type: "single", quantity: 5 },
         { itemId: "complete-pack-30", type: "pack" },
       ]),
       res,
@@ -156,7 +159,21 @@ describe("POST /api/orders/checkout", () => {
     const params = new URLSearchParams(stripe.calls[0].opts.body);
     assert.equal(params.get("metadata[cart_count]"), "2");
     assert.equal(params.get("line_items[0][price]"), LINKS_DATA.singles[SINGLE].price_id);
+    assert.equal(params.get("line_items[0][quantity]"), "2"); // first line wins
     assert.equal(params.get("line_items[1][price]"), LINKS_DATA.pack.price_id);
+  });
+
+  it("rejects out-of-range quantities with 400", async () => {
+    for (const quantity of [0, 100, 1.5, "3"]) {
+      const res = mockRes();
+      await checkoutHandler(
+        cartReq([{ itemId: SINGLE, type: "single", quantity }]),
+        res,
+        { stripeSecret: "sk_test_cart", fetchFn: linksFetchFn, stripeFetchFn: stripeMock().fetchFn },
+      );
+      assert.equal(res.statusCode, 400, `quantity ${quantity} should be rejected`);
+      assert.equal((await res.json()).error, "invalid_body");
+    }
   });
 
   it("answers 502 when Stripe answers with an error", async () => {

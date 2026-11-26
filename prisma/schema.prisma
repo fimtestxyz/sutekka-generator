@@ -175,6 +175,10 @@ model Order {
   itemId                String
   itemType              String
   amountTotal           Int
+  // Quantity bought of this item (cart steppers, CART.md v1.2).
+  // Single-link purchases are always 1. amountTotal is the line
+  // total: unit price x quantity.
+  quantity              Int      @default(1)
   currency              String   @default("sgd")
   status                String   @default("paid")
   // Admin / print / invoice fields (ADMIN.md §5). Stripe-owned facts

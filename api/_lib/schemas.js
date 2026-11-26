@@ -149,6 +149,11 @@ const cartCheckoutSchema = z.object({
       z.object({
         itemId: z.string().trim().min(1).max(100),
         type: z.enum(["single", "set", "pack"]),
+        // DCHToons-style quantity: how many copies of this item.
+        // Digital files — the download is still the one PNG; the
+        // quantity multiplies the price and is recorded on the Order
+        // (it also doubles as the print count if physical comes later).
+        quantity: z.number().int().min(1).max(99).default(1),
       }),
     )
     .min(1)

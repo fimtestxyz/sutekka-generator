@@ -150,7 +150,7 @@ async function webhookHandler(req, res, deps = {}) {
     // in the metadata; a Payment Link session resolves to one item.
     // The upsert key is (session, item), so a redelivery is
     // idempotent per item.
-    const bought = cartItems || (resolved ? [resolved] : [{ itemId: "unknown", itemType: "unknown" }]);
+    const bought = cartItems || (resolved ? [{ ...resolved, quantity: 1 }] : [{ itemId: "unknown", itemType: "unknown", quantity: 1 }]);
     const orderIds = [];
     try {
       for (const item of bought) {
@@ -162,7 +162,8 @@ async function webhookHandler(req, res, deps = {}) {
             "— order recorded without a file pin",
           );
         }
-        const amount = amountFor(item.itemId, item.itemType, linksData);
+        const quantity = item.quantity || 1;
+        const unitAmount = amountFor(item.itemId, item.itemType, linksData);
         const createData = {
           stripeSessionId: session.id,
           stripePaymentLinkId: session.payment_link || null,
@@ -170,12 +171,14 @@ async function webhookHandler(req, res, deps = {}) {
           buyerEmail,
           itemId: item.itemId,
           itemType: item.itemType,
+          quantity,
           // Cart items are priced from the catalogue (the session
-          // total is the whole cart); a single-link session prices
-          // from Stripe, falling back to the catalogue.
+          // total is the whole cart), unit price x quantity; a
+          // single-link session prices from Stripe, falling back to
+          // the catalogue.
           amountTotal:
             cartItems || typeof session.amount_total !== "number"
-              ? amount
+              ? unitAmount * quantity
               : session.amount_total,
           currency,
           status: "paid",
@@ -185,13 +188,15 @@ async function webhookHandler(req, res, deps = {}) {
         // The update branch is Stripe-owned facts ONLY. It never
         // touches status, printStatus, filesJson or any admin-managed
         // field, so a Stripe redelivery cannot undo a refund, a print
-        // status or the pinned files.
+        // status or the pinned files. Quantity is a Stripe-owned fact
+        // (it comes from the session metadata), so it belongs here.
         const updateData = {
           stripePaymentLinkId: createData.stripePaymentLinkId,
           stripePaymentIntentId: createData.stripePaymentIntentId,
           buyerEmail: createData.buyerEmail,
           itemId: createData.itemId,
           itemType: createData.itemType,
+          quantity: createData.quantity,
           amountTotal: createData.amountTotal,
           currency: createData.currency,
         };

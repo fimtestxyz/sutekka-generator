@@ -72,6 +72,40 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.2 — quantity steppers (2026-11-27)
+
+The user sent a screenshot of dchtoons.com's product cards
+("− 0 +" / "− 3 +" steppers under each sticker) and asked for the
+same: a buy count shown on the item, and the cart able to change
+the count too.
+
+- **Steppers replace the Add to cart toggles** beside every Buy
+  button: set page (`cartSetStepper`), sticker modal
+  (`stickerCartStepper`), homepage pack card (`packCartStepper`).
+  The count shown is the cart quantity, 0 when not in the cart;
+  minus is disabled at 0, plus caps at 99. The nav badge now sums
+  quantities, not lines.
+- **Cart lines have steppers too** (plus the line total and the
+  existing Remove button); stepping a line to 0 removes it.
+- **Semantics, stated plainly:** a quantity multiplies the price.
+  The download is still the one PNG file per item — buying 3 copies
+  of a digital sticker pays 3× and downloads the same file once.
+  The quantity is recorded on the Order row, so it doubles as the
+  print count if physical printing comes later.
+- **Backend:** `Order.quantity Int @default(1)` (migration
+  `20261127010000_cart_orders` lesson applied: additive
+  `ADD COLUMN`, no constraint surgery);
+  `cartCheckoutSchema` gains `quantity` (int 1–99, default 1);
+  checkout sends `line_items[][quantity]` + `metadata[cart_qty_N]`;
+  the webhook records one Order row per line with
+  `amountTotal = unit × quantity` (single-link purchases stay
+  quantity 1); `publicOrder` / `adminOrder` serializers include
+  `quantity`; the download page shows "× N" when quantity > 1.
+  Old saved carts and drafts without a qty field read as 1.
+- Shell app.js?v=27 / styles.css?v=21, SW v28. Tests 155/155
+  (was 153; + quantity validation + metadata-qty parsing),
+  typecheck clean. Live verify: (pending — browser check running)
+
 ## v1.1 — pack progress bar + refund policy line (2026-11-27)
 
 From the DCHToons note the user supplied (dchtoons.com, SG Shopify

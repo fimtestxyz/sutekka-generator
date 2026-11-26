@@ -27,6 +27,7 @@ function publicOrder(row) {
     itemId: row.itemId,
     itemType: row.itemType,
     amountTotal: row.amountTotal,
+    quantity: row.quantity ?? 1,
     currency: row.currency,
     status: row.status,
     createdAt: row.createdAt,

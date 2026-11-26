@@ -148,8 +148,30 @@ describe("resolveCartItems", () => {
         },
       }),
       [
-        { itemId: "ai-agent-four-faces-03", itemType: "single" },
-        { itemId: "riemann-rashomon", itemType: "set" },
+        { itemId: "ai-agent-four-faces-03", itemType: "single", quantity: 1 },
+        { itemId: "riemann-rashomon", itemType: "set", quantity: 1 },
+      ],
+    );
+  });
+  it("reads quantities, defaulting to 1 when absent or malformed", () => {
+    assert.deepEqual(
+      resolveCartItems({
+        metadata: {
+          cart_count: "3",
+          cart_0: "ai-agent-four-faces-03",
+          cart_type_0: "single",
+          cart_qty_0: "3",
+          cart_1: "riemann-rashomon",
+          cart_type_1: "set",
+          cart_2: "kakeya-wang-hong",
+          cart_type_2: "set",
+          cart_qty_2: "abc",
+        },
+      }),
+      [
+        { itemId: "ai-agent-four-faces-03", itemType: "single", quantity: 3 },
+        { itemId: "riemann-rashomon", itemType: "set", quantity: 1 },
+        { itemId: "kakeya-wang-hong", itemType: "set", quantity: 1 },
       ],
     );
   });
@@ -180,6 +202,7 @@ describe("POST /api/stripe/webhook", () => {
     assert.equal(data.stripeSessionId, "cs_test_123");
     assert.equal(data.itemId, "ai-agent-four-faces-03");
     assert.equal(data.itemType, "single");
+    assert.equal(data.quantity, 1); // Payment Link purchases are always one copy
     assert.equal(data.amountTotal, 400);
     assert.equal(data.buyerEmail, "buyer@example.com");
     assert.equal(data.status, "paid");
@@ -274,12 +297,13 @@ describe("POST /api/stripe/webhook", () => {
     const prisma = mockPrismaOrder();
     const raw = sessionEvent({
       payment_link: null,
-      amount_total: 1900, // the whole cart — per-item amounts come from the catalogue
+      amount_total: 2700, // the whole cart — per-item amounts come from the catalogue
       metadata: {
         shop_type: "cart",
         cart_count: "2",
         cart_0: "ai-agent-four-faces-03",
         cart_type_0: "single",
+        cart_qty_0: "3",
         cart_1: "riemann-rashomon",
         cart_type_1: "set",
       },
@@ -295,9 +319,12 @@ describe("POST /api/stripe/webhook", () => {
     assert.equal(prisma.calls.upsert.length, 2);
     const [single, set] = prisma.calls.upsert.map((u) => u.create);
     assert.equal(single.itemId, "ai-agent-four-faces-03");
-    assert.equal(single.amountTotal, 400); // catalogue price, not the cart total
+    assert.equal(single.quantity, 3);
+    assert.equal(single.amountTotal, 1200); // 3 x S$4 catalogue price, not the cart total
     assert.equal(single.filesJson.length, 1);
+    assert.equal(prisma.calls.upsert[0].update.quantity, 3);
     assert.equal(set.itemId, "riemann-rashomon");
+    assert.equal(set.quantity, 1);
     assert.equal(set.amountTotal, 1500);
     assert.equal(set.filesJson.length, 8);
     // The upsert key is (session, item): a redelivery is idempotent

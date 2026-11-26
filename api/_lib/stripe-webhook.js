@@ -92,13 +92,14 @@ function resolveOrderItem(session, linkMap) {
 
 /**
  * The items a cart Checkout Session bought, from the metadata the
- * cart checkout stamped on it (cart_count + cart_0… + cart_type_0…).
- * Returns null when the session is not a cart session, or the
- * metadata is malformed — the caller then falls back to the
- * single-item resolution above.
+ * cart checkout stamped on it (cart_count + cart_0… + cart_type_0…
+ * + cart_qty_0…). Quantities default to 1 when absent or malformed
+ * (older sessions predate them). Returns null when the session is
+ * not a cart session, or the metadata is malformed — the caller then
+ * falls back to the single-item resolution above.
  *
  * @param {any} session a checkout.session object
- * @returns {{ itemId: string, itemType: string }[] | null}
+ * @returns {{ itemId: string, itemType: string, quantity: number }[] | null}
  */
 function resolveCartItems(session) {
   const meta = session && session.metadata ? session.metadata : {};
@@ -111,7 +112,13 @@ function resolveCartItems(session) {
     const itemId = meta[`cart_${i}`];
     const itemType = meta[`cart_type_${i}`];
     if (!itemId || !itemType) return null;
-    items.push({ itemId, itemType });
+    const qty = parseInt(meta[`cart_qty_${i}`], 10);
+    items.push({
+      itemId,
+      itemType,
+      quantity:
+        !qty || Number.isNaN(qty) ? 1 : Math.max(1, Math.min(99, qty)),
+    });
   }
   return items;
 }

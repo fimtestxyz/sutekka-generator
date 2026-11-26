@@ -1194,18 +1194,34 @@
   var CART_KEY = 'sutekka-cart-v1';
   var CART_DRAFTS_KEY = 'sutekka-cart-drafts-v1';
 
+  /* Quantities are clamped 1–99; older saved carts and drafts
+   * predate them and have no qty field, so they read as 1. */
+  function clampQty(q) {
+    q = parseInt(q, 10);
+    if (!q || Number.isNaN(q)) return 1;
+    return Math.max(1, Math.min(99, q));
+  }
+
+  function normaliseCartItems(items) {
+    return items.filter(function (it) {
+      return it && typeof it.itemId === 'string' && (it.type === 'single' || it.type === 'set' || it.type === 'pack');
+    }).map(function (it) {
+      return { itemId: it.itemId, type: it.type, qty: clampQty(it.qty) };
+    });
+  }
+
   function loadCart() {
     try {
       var raw = localStorage.getItem(CART_KEY);
       var items = raw ? JSON.parse(raw) : [];
-      state.cart = Array.isArray(items) ? items.filter(function (it) {
-        return it && typeof it.itemId === 'string' && (it.type === 'single' || it.type === 'set' || it.type === 'pack');
-      }) : [];
+      state.cart = Array.isArray(items) ? normaliseCartItems(items) : [];
     } catch (e) { state.cart = []; }
     try {
       var draw = localStorage.getItem(CART_DRAFTS_KEY);
       var drafts = draw ? JSON.parse(draw) : [];
-      state.cartDrafts = Array.isArray(drafts) ? drafts : [];
+      state.cartDrafts = Array.isArray(drafts) ? drafts.map(function (d) {
+        return { name: d.name || 'Untitled draft', items: Array.isArray(d.items) ? normaliseCartItems(d.items) : [], createdAt: d.createdAt || new Date().toISOString() };
+      }) : [];
     } catch (e) { state.cartDrafts = []; }
     updateCartBadge();
   }
@@ -1222,7 +1238,7 @@
   function updateCartBadge() {
     var badge = $('cartCount');
     if (!badge) return;
-    var n = state.cart.length;
+    var n = state.cart.reduce(function (s, it) { return s + (it.qty || 1); }, 0);
     badge.textContent = String(n);
     badge.hidden = n === 0;
   }
@@ -1247,21 +1263,40 @@
     var list = items || state.cart;
     return list.reduce(function (sum, it) {
       var entry = cartEntry(it.itemId, it.type);
-      return sum + (entry ? entry.amount : 0);
+      return sum + (entry ? entry.amount * (it.qty || 1) : 0);
     }, 0);
   }
 
-  function toggleCart(type, itemId) {
+  function findCartItem(itemId) {
+    var found = null;
+    state.cart.forEach(function (it) { if (it.itemId === itemId) found = it; });
+    return found;
+  }
+
+  function cartQty(itemId) {
+    var it = findCartItem(itemId);
+    return it ? (it.qty || 1) : 0;
+  }
+
+  /* The DCHToons-style quantity stepper: 0 means "not in the cart".
+   * Setting 0 removes the line. Quantities multiply the price; the
+   * download is still the one PNG file per item. */
+  function setQty(type, itemId, qty) {
     if (shopClosed() || itemHidden(itemId)) return;
-    if (isInCart(itemId)) {
-      state.cart = state.cart.filter(function (it) { return it.itemId !== itemId; });
+    qty = Math.max(0, Math.min(99, qty | 0));
+    var it = findCartItem(itemId);
+    if (qty === 0) {
+      if (it) state.cart = state.cart.filter(function (x) { return x.itemId !== itemId; });
+    } else if (it) {
+      it.qty = qty;
     } else {
       if (!cartEntry(itemId, type)) return;
-      state.cart.push({ itemId: itemId, type: type });
+      state.cart.push({ itemId: itemId, type: type, qty: qty });
     }
     saveCart();
     renderCartButtons();
-    gaEvent('cart_toggle', { type: type, item: itemId, in_cart: isInCart(itemId) });
+    renderCart();
+    gaEvent('cart_qty', { type: type, item: itemId, qty: qty });
   }
 
   function removeFromCart(itemId) {
@@ -1278,31 +1313,27 @@
     renderCart();
   }
 
-  function cartButtonLabel(btn, itemId) {
-    btn.innerHTML = isInCart(itemId)
-      ? '<i class="fi fi-br-shopping-cart"></i> In cart ✓'
-      : '<i class="fi fi-br-shopping-cart"></i> Add to cart';
+  /* One stepper per buyable item — the count shown is the cart
+   * quantity, 0 when it is not in the cart. */
+  function setStepper(el, itemId, type) {
+    if (!el) return;
+    var entry = itemId && state.links ? cartEntry(itemId, type) : null;
+    if (!entry || shopClosed() || itemHidden(itemId)) { el.hidden = true; return; }
+    el.hidden = false;
+    var q = cartQty(itemId);
+    var count = el.querySelector('.qty-count');
+    if (count) count.textContent = String(q);
+    var dec = el.querySelector('[data-step="dec"]');
+    if (dec) dec.disabled = q === 0;
+    var inc = el.querySelector('[data-step="inc"]');
+    if (inc) inc.disabled = q >= 99;
   }
 
   function renderCartButtons() {
-    var setBtn = $('cartSetBtn');
-    if (setBtn) {
-      var setEntry = state.links && state.currentSlug ? state.links.sets[state.currentSlug] : null;
-      if (!setEntry || shopClosed() || itemHidden(state.currentSlug)) setBtn.hidden = true;
-      else { setBtn.hidden = false; cartButtonLabel(setBtn, state.currentSlug); }
-    }
-    var stBtn = $('stickerCartBtn');
+    setStepper($('cartSetStepper'), state.currentSlug, 'set');
     var s = state.currentSticker;
-    if (stBtn) {
-      var stEntry = state.links && s ? state.links.singles[s.id] : null;
-      if (!stEntry || !s || shopClosed() || itemHidden(s.id)) stBtn.hidden = true;
-      else { stBtn.hidden = false; cartButtonLabel(stBtn, s.id); }
-    }
-    var packBtn = $('packCartBtn');
-    if (packBtn) {
-      if (!state.links || !state.links.pack || shopClosed() || itemHidden('complete-pack-30')) packBtn.hidden = true;
-      else { packBtn.hidden = false; cartButtonLabel(packBtn, 'complete-pack-30'); }
-    }
+    setStepper($('stickerCartStepper'), s ? s.id : null, 'single');
+    setStepper($('packCartStepper'), 'complete-pack-30', 'pack');
   }
 
   function refundLineHtml() {
@@ -1345,8 +1376,10 @@
       html += '<ul class="cart-list">' + items.map(function (it) {
         var entry = cartEntry(it.itemId, it.type);
         var title = entry ? entry.title : it.itemId;
-        return '<li><div><strong>' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + '</span></div>' +
-          '<div class="cart-line"><span>' + (entry ? priceLabel(entry.amount) : '') + '</span> ' +
+        var qty = it.qty || 1;
+        return '<li><div><strong>' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + (entry ? ' · ' + priceLabel(entry.amount) + ' each' : '') + '</span></div>' +
+          '<div class="cart-line"><span class="qty-stepper"><button data-qty-dec="' + esc(it.itemId) + '" aria-label="One fewer">−</button><span class="qty-count">' + qty + '</span><button data-qty-inc="' + esc(it.itemId) + '" aria-label="One more">+</button></span> ' +
+          '<span>' + (entry ? priceLabel(entry.amount * qty) : '') + '</span> ' +
           '<button data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
       }).join('') + '</ul>' +
       '<p><strong>Subtotal: ' + priceLabel(cartTotal()) + ' SGD</strong></p>' +
@@ -1440,6 +1473,10 @@
       });
     });
     return found;
+  }
+
+  function orderQtySuffix(order) {
+    return order.quantity && order.quantity > 1 ? ' ×' + order.quantity : '';
   }
 
   function orderTitle(order) {
@@ -1558,7 +1595,7 @@
     list.forEach(function (order) {
       var ids = orderFileIds(order);
       var files = ids.map(findStickerRecord).filter(Boolean);
-      html += '<div class="order-card"><p><strong>' + esc(orderTitle(order)) + '</strong></p>' +
+      html += '<div class="order-card"><p><strong>' + esc(orderTitle(order)) + orderQtySuffix(order) + '</strong></p>' +
         '<p class="meta">' + priceLabel(order.amountTotal) + ' · ' + esc(order.currency.toUpperCase()) +
         ' · Order ' + esc(order.id) + ' · ' + esc(order.status) + '</p>';
       if (files.length) {
@@ -1589,7 +1626,7 @@
     }
     var ids = orderFileIds(order);
     var files = ids.map(findStickerRecord).filter(Boolean);
-    var html = '<div class="order-card"><p><strong>' + esc(orderTitle(order)) + '</strong></p>' +
+    var html = '<div class="order-card"><p><strong>' + esc(orderTitle(order)) + orderQtySuffix(order) + '</strong></p>' +
       '<p class="meta">' + priceLabel(order.amountTotal) + ' · ' + esc(order.currency.toUpperCase()) +
       ' · Order ' + esc(order.id) + ' · ' + esc(order.status) + '</p></div>';
     if (!files.length) {
@@ -2516,18 +2553,37 @@
   $('buySetBtn').addEventListener('click', function () { openBuyLink('set', state.currentSlug); });
   $('stickerBuyBtn').addEventListener('click', function () { var s = state.currentSticker; if (s) openBuyLink('single', s.id); });
   $('packBuyBtn').addEventListener('click', function () { openBuyLink('pack', 'complete-pack-30'); });
-  $('cartSetBtn').addEventListener('click', function () { if (state.currentSlug) toggleCart('set', state.currentSlug); });
-  $('stickerCartBtn').addEventListener('click', function () { var s = state.currentSticker; if (s) toggleCart('single', s.id); });
-  $('packCartBtn').addEventListener('click', function () { toggleCart('pack', 'complete-pack-30'); });
+  /* Stepper wiring: one listener per stepper container; the item it
+   * refers to is resolved at click time (current set / sticker). */
+  function wireStepper(elId, getItem) {
+    var el = $(elId);
+    if (!el) return;
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      var btn = t.closest ? t.closest('[data-step]') : null;
+      if (!btn) return;
+      var ref = getItem();
+      if (!ref) return;
+      var q = cartQty(ref.itemId);
+      setQty(ref.type, ref.itemId, btn.getAttribute('data-step') === 'inc' ? q + 1 : q - 1);
+    });
+  }
+  wireStepper('cartSetStepper', function () { return state.currentSlug ? { type: 'set', itemId: state.currentSlug } : null; });
+  wireStepper('stickerCartStepper', function () { var s = state.currentSticker; return s ? { type: 'single', itemId: s.id } : null; });
+  wireStepper('packCartStepper', function () { return { type: 'pack', itemId: 'complete-pack-30' }; });
   // Cart page actions are delegated — renderCart rebuilds the body.
   $('cartBody').addEventListener('click', function (e) {
     var t = e.target;
     var remove = t.closest ? t.closest('[data-cart-remove]') : null;
     if (remove) { removeFromCart(remove.getAttribute('data-cart-remove')); return; }
+    var dec = t.closest ? t.closest('[data-qty-dec]') : null;
+    if (dec) { var dId = dec.getAttribute('data-qty-dec'); var dIt = findCartItem(dId); if (dIt) setQty(dIt.type, dId, (dIt.qty || 1) - 1); return; }
+    var inc = t.closest ? t.closest('[data-qty-inc]') : null;
+    if (inc) { var iId = inc.getAttribute('data-qty-inc'); var iIt = findCartItem(iId); if (iIt) setQty(iIt.type, iId, (iIt.qty || 1) + 1); return; }
     var packAdd = t.closest ? t.closest('[data-pack-add]') : null;
     if (packAdd) {
       var pack = state.links && state.links.pack;
-      if (pack) { toggleCart('pack', pack.item_id); renderCart(); }
+      if (pack) { setQty('pack', pack.item_id, 1); }
       return;
     }
     var restore = t.closest ? t.closest('[data-draft-restore]') : null;

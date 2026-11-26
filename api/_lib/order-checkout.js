@@ -12,8 +12,9 @@
 // cart and drafts keep working. The secret is never logged.
 //
 // The session carries metadata.cart_count + cart_0…cart_N-1 (item
-// ids) + cart_type_0… (types) + shop_type "cart", which the webhook
-// reads to record one Order row per item.
+// ids) + cart_type_0… (types) + cart_qty_0… (quantities) +
+// shop_type "cart", which the webhook reads to record one Order row
+// per cart line, amount = unit price x quantity.
 "use strict";
 
 const {
@@ -94,11 +95,11 @@ async function checkoutHandler(req, res, deps = {}) {
       sendJson(res, 429, { error: "too_many_attempts" });
       return;
     }
-    // Dedup by item id, keeping the first type seen — the cart holds
-    // one of each item (digital files, no quantities).
+    // Dedup by item id, keeping the first line seen (with its
+    // quantity) — the cart holds one line per item.
     const seen = new Map();
     for (const item of parsed.data.items) {
-      if (!seen.has(item.itemId)) seen.set(item.itemId, item.type);
+      if (!seen.has(item.itemId)) seen.set(item.itemId, item);
     }
     if (seen.size > MAX_ITEMS) {
       sendJson(res, 400, {
@@ -117,13 +118,18 @@ async function checkoutHandler(req, res, deps = {}) {
     }
     const linksData = await fetchLinksData({ fetchFn: deps.fetchFn });
     const resolved = [];
-    for (const [itemId, type] of seen) {
-      const entry = resolveCartEntry(itemId, type, linksData);
+    for (const item of seen.values()) {
+      const entry = resolveCartEntry(item.itemId, item.type, linksData);
       if (!entry || !entry.price_id) {
-        sendJson(res, 400, { error: "unknown_item", details: [itemId] });
+        sendJson(res, 400, { error: "unknown_item", details: [item.itemId] });
         return;
       }
-      resolved.push({ itemId, type, priceId: entry.price_id });
+      resolved.push({
+        itemId: item.itemId,
+        type: item.type,
+        quantity: item.quantity,
+        priceId: entry.price_id,
+      });
     }
     const params = new URLSearchParams();
     params.set("mode", "payment");
@@ -135,13 +141,14 @@ async function checkoutHandler(req, res, deps = {}) {
     params.set("automatic_tax[enabled]", "true");
     resolved.forEach((item, i) => {
       params.set(`line_items[${i}][price]`, item.priceId);
-      params.set(`line_items[${i}][quantity]`, "1");
+      params.set(`line_items[${i}][quantity]`, String(item.quantity));
     });
     params.set("metadata[cart_count]", String(resolved.length));
     params.set("metadata[shop_type]", "cart");
     resolved.forEach((item, i) => {
       params.set(`metadata[cart_${i}]`, item.itemId);
       params.set(`metadata[cart_type_${i}]`, item.type);
+      params.set(`metadata[cart_qty_${i}]`, String(item.quantity));
     });
     const stripeFetch = deps.stripeFetchFn || fetch;
     let stripeRes;
