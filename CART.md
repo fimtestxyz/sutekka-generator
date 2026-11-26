@@ -72,6 +72,56 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.6 — cart drawer + nav icons (2026-11-27)
+
+User request (with a DCHToons cart screenshot): "Make the cart
+slide from right. Cart shall be shopping bag icon. Same to About
+in the navbar. All items in navbar shall have ocon. What u think"
+
+- **The cart is now a drawer sliding in from the right**
+  (DCHToons-style): 420 px panel, full height, dimmed backdrop,
+  "Your cart" heading + ×, body scroll locked while open. The
+  bag button opens it over whatever page is showing; the #/cart
+  route (deep links, Stripe cancel URL) opens it over the home
+  view and restores `#/` on close. Close by ×, backdrop click,
+  or Escape (one press closes the topmost layer only — the
+  Escape handler is now an else-if chain over column / sticker /
+  image modals / drawer). The old `#/cart` page view is gone:
+  `renderCart` now renders into the drawer's `#cartBody`
+  (items, steppers, progress bar, refund line, checkout,
+  drafts — unchanged, just housed in the drawer).
+- **Every navbar item carries a Flaticon UICONS Bold Rounded
+  icon** (classes verified present in the font CSS *and* their
+  codepoints present in the shipped woff2 — the local headless
+  browser cannot reach the font CDN, so the glyphs were checked
+  that way instead): Latest home, Bookmarks bookmark,
+  Collections folder, Cart shopping-bag (with the count badge),
+  About info, Sign in user. Icon + label on desktop; icon only
+  under 719 px, where the labels would push the row off-screen.
+  Sign in gets its icon in `renderAuthArea` too, since that
+  function rewrites the user area (the static HTML icon alone
+  would be replaced on load).
+- **Layering:** drawer z-40 / backdrop z-39, below the image
+  lightbox (z-50) so a thumbnail opened from the drawer still
+  shows its full-size image above it; closing the lightbox while
+  the drawer is open keeps the page locked.
+- Shell app.js?v=31 / styles.css?v=25, SW v32 (no index change,
+  DATA_V stays 12). Tests 155/155, typecheck clean. Local
+  headless check at 390/1280 px before deploying: drawer slides
+  in (right edge = viewport edge), subtotal S$52, Escape closes,
+  deep link #/cart opens the drawer, hash restores to #/ on
+  close; labels hidden at 390 px, visible at 1280 px. Live
+  verify 2026-11-27 ~06:21: ALL PASS — all six icons render
+  (enlarged navbar crop), badge 2 → 3 as items were added,
+  drawer 420 px with 2 lines + subtotal S$34 + progress bar +
+  Checkout, scroll lock held, × and Escape close, #/cart deep
+  link opens the drawer over home. Minor notes (not fixed):
+  long Chinese titles clamp harder in the 420 px drawer than
+  on the old full-width cart page (2-line clamp, by design);
+  the × sits 12 px from the drawer's right edge, which is the
+  viewport edge — the checker read it as "close to clipped"
+  but it is fully clickable.
+
 ## v1.5 — cart thumbnails open a full-size lightbox (2026-11-27)
 
 User request: "In cart when user click the thumbnail image,
