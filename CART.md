@@ -92,8 +92,12 @@ modal display original size image shown."
   clicks both close and clear the image. Screenshot in /tmp
   (cart-modal-single.png — ephemeral).
 - Shell app.js?v=30 / styles.css?v=24, SW v31 (no index change,
-  DATA_V stays 12). Tests 155/155, typecheck clean. Live verify:
-  (pending — browser check running)
+  DATA_V stays 12). Tests 155/155, typecheck clean. Live verify
+  2026-11-27 ~05:55: ALL PASS — single thumb → full 1600 px PNG
+  with title + × (closed by ×), set thumb → full 8-sticker sheet
+  (closed by backdrop), pack thumb → first sticker's full PNG
+  (closed by Escape); cart intact after all three, subtotal S$48,
+  no navigation away from #/cart.
 
 ## v1.4 — cart layout rebuilt for phones (2026-11-27)
 
