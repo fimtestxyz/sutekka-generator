@@ -392,6 +392,10 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 /* An author display rule beats the [hidden] default, so the badge
  * needs its own hidden rule or it shows "0" on an empty cart. */
 .cart-count[hidden] { display: none; }
+
+/* Pack progress bar (cart page): the threshold nudge. */
+.pack-bar { height: 8px; border-radius: 4px; background: var(--accent-soft); overflow: hidden; margin: 8px 0; }
+.pack-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
 .cart-list { list-style: none; padding: 0; margin: 12px 0; }
 .cart-list li {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;

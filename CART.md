@@ -72,6 +72,34 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.1 — pack progress bar + refund policy line (2026-11-27)
+
+From the DCHToons note the user supplied (dchtoons.com, SG Shopify
+sticker shop): its AOV mechanics are a pinned promo banner and a
+free-delivery threshold; its controversy is a refund policy (unboxing
+video required) never disclosed before payment.
+
+- **Pack progress bar** (`#/cart`, `packProgressHtml` in app.js):
+  the digital equivalent of the free-delivery threshold. Under the
+  S$29 complete pack it shows "S$X away from the complete pack" with
+  a fill bar and an "Add the pack" button (adds via the normal cart
+  toggle); at or over S$29 without the pack it says the cart is
+  already worth more than the pack; with the pack in the cart it
+  shows "Complete pack in your cart ✓". Savings are computed from
+  the catalogue (30 singles × S$4 − S$29 = S$91), not hard-coded.
+  The every-page banner part needs no code — the admin announcement
+  setting (`#/kangle` → Settings) already exists; suggested copy:
+  "Complete 30-sticker pack — S$29 · save S$91 vs singles".
+- **Refund policy line** (`refundLineHtml`): on the cart page under
+  the Stripe line and on the download page (single + multi-order
+  renders). Wording from MONETISE.md §7, verbatim policy: digital
+  files can't be returned once downloaded; refunds only for
+  duplicate charges or a corrupt file, within 7 days — write in via
+  the feedback form on the About page. Prices include GST (also
+  MONETISE.md §7: say so on the checkout page).
+- Shell app.js?v=26 / styles.css?v=20, SW v27. Tests 153/153,
+  typecheck clean. Live verify: (pending — browser check running)
+
 ## Build status (v1 — built 2026-11-27, deploy dpl_AA8dk9oHinUqi2dgiYAGgn1UyHKA READY)
 
 Everything above is built. Tests 153/153 (was 142), typecheck clean.

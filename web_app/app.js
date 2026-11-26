@@ -1305,6 +1305,35 @@
     }
   }
 
+  function refundLineHtml() {
+    return '<p class="meta">Refund policy: digital files can\'t be returned once downloaded. We refund duplicate charges or a corrupt file, within 7 days of purchase — write in via the feedback form on the About page. Prices include GST.</p>';
+  }
+
+  /* Pack progress: the DCHToons-style threshold nudge — the complete
+   * pack is the digital equivalent of a free-delivery minimum. */
+  function packProgressHtml() {
+    var pack = state.links && state.links.pack;
+    if (!pack) return '';
+    var total = cartTotal();
+    var pct = Math.min(100, Math.round(total / pack.amount * 100));
+    var bar = '<div class="pack-bar"><div class="pack-bar-fill" style="width:' + pct + '%"></div></div>';
+    if (isInCart(pack.item_id)) {
+      return '<div class="order-card"><p><strong>Complete pack in your cart ✓</strong></p>' +
+        '<p class="meta">All ' + pack.stickers.length + ' stickers — the whole collection in one payment.</p>' + bar + '</div>';
+    }
+    var singles = state.links.singles || {};
+    var keys = Object.keys(singles);
+    var singleAmt = keys.length ? singles[keys[0]].amount : 400;
+    var saving = pack.stickers.length * singleAmt - pack.amount;
+    var addBtn = '<button data-pack-add="1">Add the pack — ' + priceLabel(pack.amount) + '</button>';
+    if (total >= pack.amount) {
+      return '<div class="order-card"><p><strong>Your cart is already worth ' + priceLabel(total) + '.</strong></p>' +
+        '<p class="meta">The complete ' + pack.stickers.length + '-sticker pack is ' + priceLabel(pack.amount) + ' — every sticker, one payment, save ' + priceLabel(saving) + ' vs buying singles.</p>' + bar + '<p>' + addBtn + '</p></div>';
+    }
+    return '<div class="order-card"><p><strong>' + priceLabel(pack.amount - total) + ' away from the complete pack</strong></p>' +
+      '<p class="meta">The ' + pack.stickers.length + '-sticker pack is ' + priceLabel(pack.amount) + ' — save ' + priceLabel(saving) + ' vs buying singles one by one.</p>' + bar + '<p>' + addBtn + '</p></div>';
+  }
+
   function renderCart() {
     var body = $('cartBody');
     if (!body) return;
@@ -1321,7 +1350,9 @@
           '<button data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
       }).join('') + '</ul>' +
       '<p><strong>Subtotal: ' + priceLabel(cartTotal()) + ' SGD</strong></p>' +
+      packProgressHtml() +
       '<p class="meta">One payment on Stripe — card, PayNow or Link. The files land on your download page right after payment.</p>' +
+      refundLineHtml() +
       '<p><button id="checkoutBtn">Checkout — ' + priceLabel(cartTotal()) + '</button> ' +
       '<button id="clearCartBtn">Clear cart</button></p>' +
       '<p id="checkoutMsg" class="comment-msg" aria-live="polite"></p>' +
@@ -1538,6 +1569,7 @@
       html += '<p class="meta"><a href="#/download?order_id=' + encodeURIComponent(order.id) + '">Order page</a> — invoice requests and print shipping for this item live there.</p></div>';
     });
     html += '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>';
+    html += refundLineHtml();
     body.innerHTML = html;
     if (sessionId && list.some(function (o) { return o.status === 'paid'; })) markDelivered(sessionId);
   }
@@ -1567,7 +1599,8 @@
         files.map(function (f) {
           return '<li><a href="' + esc(f.file) + '" download>' + esc(f.title) + ' — Download PNG</a></li>';
         }).join('') + '</ul>' +
-        '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>';
+        '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>' +
+        refundLineHtml();
     }
     // Fulfilment: print status + tracking, formal invoice, print
     // shipping address. The buyer proves the order with the email
@@ -2491,6 +2524,12 @@
     var t = e.target;
     var remove = t.closest ? t.closest('[data-cart-remove]') : null;
     if (remove) { removeFromCart(remove.getAttribute('data-cart-remove')); return; }
+    var packAdd = t.closest ? t.closest('[data-pack-add]') : null;
+    if (packAdd) {
+      var pack = state.links && state.links.pack;
+      if (pack) { toggleCart('pack', pack.item_id); renderCart(); }
+      return;
+    }
     var restore = t.closest ? t.closest('[data-draft-restore]') : null;
     if (restore) { restoreDraft(parseInt(restore.getAttribute('data-draft-restore'), 10)); return; }
     var del = t.closest ? t.closest('[data-draft-delete]') : null;
