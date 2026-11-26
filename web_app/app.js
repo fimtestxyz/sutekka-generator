@@ -59,7 +59,7 @@
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download'), adminEl = $('admin');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), galleryEl = $('gallery'), downloadEl = $('download'), adminEl = $('admin');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -839,6 +839,138 @@
       });
   }
 
+  /* ---------- personal gallery ---------- */
+
+  function renderGallery() {
+    var body = $('galleryBody');
+    if (!body) return;
+    if (!state.session) {
+      body.innerHTML = '<p>Sign in first to see your gallery.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      return;
+    }
+    if (state.authAvailable === false) {
+      body.innerHTML = '<p>Gallery is not set up yet — the site works fine without an account.</p>';
+      return;
+    }
+    body.innerHTML = '<p>Loading…</p>';
+    fetch('/api/me/photos', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { renderGalleryList(d.photos || []); })
+      .catch(function () {
+        body.innerHTML = '<p>Could not load your gallery. Check your connection and reload.</p>';
+      });
+  }
+
+  function renderGalleryList(photos) {
+    var body = $('galleryBody');
+    if (!body) return;
+    var enabled = uploadsEnabled();
+    var uploadBtn = enabled
+      ? '<label class="btn" for="photoFile">Upload a photo</label><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>'
+      : '<p class="meta">Photo uploads are turned off right now.</p>';
+    var uploadFirstBtn = enabled
+      ? '<label class="btn" for="photoFile">Upload your first photo</label><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>'
+      : '<p class="meta">Photo uploads are turned off right now.</p>';
+    var msgHtml = '<p id="photoMsg" class="comment-msg" aria-live="polite"></p>';
+    if (!photos.length) {
+      body.innerHTML = msgHtml + '<div class="empty-saved">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit framed like a photo">' +
+        '<path d="M36,44 L38.5,49.5 L44,52 L38.5,54.5 L36,60 L33.5,54.5 L28,52 L33.5,49.5 Z" fill="#f5c542"/>' +
+        '<path d="M186,102 L188,107 L193,109 L188,111 L186,116 L184,111 L179,109 L184,107 Z" fill="#f5c542"/>' +
+        '<ellipse cx="92" cy="28" rx="8" ry="20" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 92 28)"/>' +
+        '<ellipse cx="92" cy="30" rx="3.5" ry="12" fill="#f7b8c4" transform="rotate(-14 92 30)"/>' +
+        '<ellipse cx="128" cy="32" rx="8" ry="18" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(20 128 32)"/>' +
+        '<ellipse cx="128" cy="34" rx="3.5" ry="11" fill="#f7b8c4" transform="rotate(20 128 34)"/>' +
+        '<rect x="45" y="30" width="130" height="110" rx="10" fill="#fff" stroke="#2b2620" stroke-width="4"/>' +
+        '<rect x="57" y="42" width="106" height="86" rx="4" fill="#f6e8e4"/>' +
+        '<circle cx="110" cy="88" r="24" fill="#fff" stroke="#2b2620" stroke-width="4"/>' +
+        '<circle cx="100" cy="86" r="7" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<circle cx="120" cy="86" r="7" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<line x1="107" y1="86" x2="113" y2="86" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M95,88 Q100,81 105,88" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M115,88 Q120,81 125,88" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<ellipse cx="94" cy="94" rx="3.5" ry="2" fill="#f7b8c4"/>' +
+        '<ellipse cx="126" cy="94" rx="3.5" ry="2" fill="#f7b8c4"/>' +
+        '<path d="M106,98 Q110,101 114,98" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M166,32 L168,38 L174,40 L168,42 L166,48 L164,42 L158,40 L164,38 Z" fill="#f5c542"/>' +
+        '</svg>' +
+        '<p class="empty-title">No photos yet!</p>' +
+        '<p class="empty-text">Your gallery is empty — no snapshots tucked in here. Upload a photo of your stickers (or anything you love) and it’ll live right here, just for you.</p>' +
+        '<p class="empty-hint">Only you can see your photos — this gallery is yours alone.</p>' +
+        uploadFirstBtn +
+        '</div>';
+      return;
+    }
+    body.innerHTML = '<div class="upload-row">' + uploadBtn +
+      '<button type="button" class="text-btn" data-clear-photos>Clear all photos</button></div>' + msgHtml +
+      '<div class="gallery-grid">' + photos.map(function (p) {
+        return '<figure class="photo-card">' +
+          '<button type="button" class="photo-view" data-photo-view="' + esc(p.url) + '" data-photo-title="' + esc(p.filename) + '" aria-label="View photo: ' + esc(p.filename) + '"><img src="' + esc(p.url) + '" alt="' + esc(p.filename) + '" loading="lazy" decoding="async"></button>' +
+          '<button type="button" class="photo-del" data-photo-del="' + esc(p.id) + '" aria-label="Delete photo: ' + esc(p.filename) + '">×</button>' +
+          '<figcaption>' + esc(p.filename) + '</figcaption></figure>';
+      }).join('') + '</div>';
+  }
+
+  function uploadPhoto(file) {
+    var msg = $('photoMsg');
+    if (!file) return;
+    if (file.type !== 'image/jpeg' && file.type !== 'image/png' && file.type !== 'image/webp' && file.type !== 'image/gif') {
+      if (msg) msg.textContent = 'That file is not a photo — JPEG, PNG, WebP or GIF only.';
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      if (msg) msg.textContent = 'That photo is over 4 MB — pick a smaller one.';
+      return;
+    }
+    if (msg) msg.textContent = 'Uploading…';
+    fetch('/api/me/photos', {
+      method: 'POST', credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': file.type, 'X-Filename': file.name },
+      body: file
+    })
+      .then(function (r) {
+        if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
+        if (!r.ok) return r.json().then(function (d) { throw new Error(d.error || 'HTTP ' + r.status); });
+        return r.json();
+      })
+      .then(function () {
+        gaEvent('photo_uploaded');
+        renderGallery();
+      })
+      .catch(function (e) {
+        if (e.message === 'signed out') return;
+        if (msg) {
+          msg.textContent = e.message === 'uploads_disabled' ? 'Photo uploads are turned off right now.'
+            : e.message === 'uploads_not_configured' ? 'Photo uploads aren’t set up yet — the shop owner is adding the storage key.'
+            : e.message === 'photo_limit_reached' ? 'Your gallery is full (20 photos) — delete one first.'
+            : e.message === 'photo_too_large' ? 'That photo is over 4 MB — pick a smaller one.'
+            : 'Could not upload that photo — check your connection and try again.';
+        }
+        var input = $('photoFile');
+        if (input) input.value = '';
+      });
+  }
+
+  function deletePhoto(id) {
+    fetch('/api/me/photos?id=' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function () { renderGallery(); })
+      .catch(function () {
+        var msg = $('photoMsg');
+        if (msg) msg.textContent = 'Could not delete that photo — check your connection and try again.';
+      });
+  }
+
+  function clearPhotos() {
+    fetch('/api/me/photos?scope=all', { method: 'DELETE', credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function () { renderGallery(); })
+      .catch(function () {
+        var msg = $('photoMsg');
+        if (msg) msg.textContent = 'Could not clear your gallery — check your connection and try again.';
+      });
+  }
+
   function postFeedback(e) {
     e.preventDefault();
     var text = $('feedbackText').value.trim();
@@ -1091,11 +1223,12 @@
     profileEl.hidden = name !== 'profile';
     bookmarksEl.hidden = name !== 'bookmarks';
     collectionsEl.hidden = name !== 'collections';
+    galleryEl.hidden = name !== 'gallery';
     downloadEl.hidden = name !== 'download';
     adminEl.hidden = name !== 'admin';
     // Active nav state: the reader lives under Latest. The cart is a
     // drawer, not a page, so it never takes the active state.
-    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about' }[name] || null;
+    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', gallery: 'gallery', about: 'about' }[name] || null;
     document.querySelectorAll('.topnav a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-nav') === nav);
     });
@@ -1127,6 +1260,7 @@
     if (parts[0] === 'profile') { renderProfile(); showView('profile'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'bookmarks') { renderBookmarks(); showView('bookmarks'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'collections') { renderCollections(); showView('collections'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'gallery') { renderGallery(); showView('gallery'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'batch' && parts[1]) {
       state.batch = parts[1]; state.topic = null; state.shown = PAGE_SIZE;
       renderChips(); renderTopics(); renderGrid(); showView('home'); return;
@@ -1180,12 +1314,14 @@
         renderPackCard();
         renderBuyButtons();
         renderCartButtons();
+        if ((location.hash || '') === '#/gallery') renderGallery();
         if (state.currentSticker) renderStickerBuyBtn();
       })
       .catch(function () { /* settings unavailable — the shop stays open */ });
   }
 
   function shopClosed() { return !!(state.siteSettings && state.siteSettings.shopClosed); }
+  function uploadsEnabled() { return !!(state.siteSettings && state.siteSettings.uploadsEnabled); }
   function itemHidden(itemId) {
     return !!(state.siteSettings && state.siteSettings.hiddenItems && state.siteSettings.hiddenItems.indexOf(itemId) !== -1);
   }
@@ -1396,10 +1532,11 @@
    * extra step of friction, so a stray tap can never delete. The
    * stepper reaching 0 is NOT gated — that is N deliberate taps
    * with the count visibly falling, not an accidental delete. */
-  var pendingRemoval = null; // { kind: 'line', itemId } | { kind: 'clear' } | { kind: 'bookmarks' } | { kind: 'collections' }
+  var pendingRemoval = null; // { kind: 'line', itemId } | { kind: 'clear' } | { kind: 'bookmarks' } | { kind: 'collections' } | { kind: 'photo', photoId } | { kind: 'photos-clear' }
   function openRemoveModal(kind, itemId, title) {
     if (kind === 'clear') pendingRemoval = { kind: 'clear' };
-    else if (kind === 'bookmarks' || kind === 'collections') pendingRemoval = { kind: kind };
+    else if (kind === 'bookmarks' || kind === 'collections' || kind === 'photos-clear') pendingRemoval = { kind: kind };
+    else if (kind === 'photo') pendingRemoval = { kind: 'photo', photoId: itemId };
     else pendingRemoval = { kind: 'line', itemId: itemId };
     if (kind === 'clear') {
       $('removeModalTitle').textContent = 'Whoa — the whole bag?';
@@ -1416,6 +1553,16 @@
       $('removeModalText').innerHTML = '“Every sticker you collected — gone in one tap. Sure?”<br>— Lili 🐰';
       $('removeModalKeep').textContent = 'Keep them';
       $('removeModalConfirm').textContent = 'Yes, clear them';
+    } else if (kind === 'photo') {
+      $('removeModalTitle').textContent = 'Delete this photo?';
+      $('removeModalText').innerHTML = '“This one’s yours — once it’s gone, it’s gone. Sure?”<br>— Lili 🐰';
+      $('removeModalKeep').textContent = 'Keep it';
+      $('removeModalConfirm').textContent = 'Yes, delete it';
+    } else if (kind === 'photos-clear') {
+      $('removeModalTitle').textContent = 'Clear your whole gallery?';
+      $('removeModalText').innerHTML = '“Every photo you uploaded — gone in one tap. Sure?”<br>— Lili 🐰';
+      $('removeModalKeep').textContent = 'Keep them';
+      $('removeModalConfirm').textContent = 'Yes, clear them';
     } else {
       $('removeModalTitle').textContent = 'Wait — let me ask first?';
       $('removeModalText').innerHTML = '“You picked ' + esc(title) + ' — I already tucked it into your bag. Are you sure you want to let it go?”<br>— Lili 🐰';
@@ -1424,7 +1571,7 @@
     }
     $('removeModal').hidden = false;
     document.body.classList.add('modal-open');
-    gaEvent(kind === 'bookmarks' || kind === 'collections' ? 'saved_clear_prompt' : 'cart_remove_prompt');
+    gaEvent(kind === 'photo' ? 'photo_delete_prompt' : kind === 'photos-clear' ? 'gallery_clear_prompt' : kind === 'bookmarks' || kind === 'collections' ? 'saved_clear_prompt' : 'cart_remove_prompt');
     $('removeModalKeep').focus();
   }
   function closeRemoveModal() {
@@ -2322,6 +2469,7 @@
       body.innerHTML = adminNav('settings') +
         '<form id="adminSettingsForm" class="comment-form" onsubmit="return false;">' +
         '<label><input id="adminShopClosed" type="checkbox"' + (s.shopClosed ? ' checked' : '') + '> Shop closed (hides every Buy button)</label>' +
+        '<label><input id="adminUploadsEnabled" type="checkbox"' + (s.uploadsEnabled ? ' checked' : '') + '> Allow photo uploads (personal gallery)</label>' +
         '<input id="adminAnnouncement" type="text" maxlength="280" placeholder="Announcement banner (optional)" value="' + esc(s.announcement || '') + '" aria-label="Announcement banner">' +
         '<p class="meta">Hide Buy buttons for:</p>' +
         setSlugs.map(function (slug) {
@@ -2352,7 +2500,8 @@
     adminApi('settings', { method: 'POST', body: {
       shopClosed: !!$('adminShopClosed').checked,
       announcement: ($('adminAnnouncement').value || '').trim(),
-      hiddenItems: hidden
+      hiddenItems: hidden,
+      uploadsEnabled: !!$('adminUploadsEnabled').checked
     } }).then(function (x) {
       if (!msg) return;
       if (x.status === 200) { msg.textContent = 'Settings saved.'; loadSettings(); }
@@ -2851,7 +3000,8 @@
   $('cartDrawerClose').addEventListener('click', closeCartDrawer);
   $('cartDrawerBackdrop').addEventListener('click', closeCartDrawer);
   $('removeModalKeep').addEventListener('click', function () {
-    gaEvent(pendingRemoval && (pendingRemoval.kind === 'bookmarks' || pendingRemoval.kind === 'collections') ? 'saved_clear_kept' : 'cart_remove_kept');
+    var k = pendingRemoval && pendingRemoval.kind;
+    gaEvent(k === 'photo' ? 'photo_delete_kept' : k === 'photos-clear' || k === 'bookmarks' || k === 'collections' ? 'saved_clear_kept' : 'cart_remove_kept');
     closeRemoveModal();
   });
   $('removeModalConfirm').addEventListener('click', function () {
@@ -2861,6 +3011,8 @@
     if (p.kind === 'clear') { gaEvent('cart_remove_confirmed'); clearCart(); }
     else if (p.kind === 'bookmarks') { gaEvent('saved_clear_confirmed'); clearSaved('sets'); }
     else if (p.kind === 'collections') { gaEvent('saved_clear_confirmed'); clearSaved('stickers'); }
+    else if (p.kind === 'photo') { gaEvent('photo_delete_confirmed'); deletePhoto(p.photoId); }
+    else if (p.kind === 'photos-clear') { gaEvent('gallery_clear_confirmed'); clearPhotos(); }
     else { gaEvent('cart_remove_confirmed'); removeFromCart(p.itemId); }
   });
   $('removeModalClose').addEventListener('click', closeRemoveModal);
@@ -2945,8 +3097,19 @@
     }
     var clearBtn = e.target && e.target.closest ? e.target.closest('[data-clear-saved]') : null;
     if (clearBtn) { openRemoveModal(clearBtn.getAttribute('data-clear-saved')); return; }
+    var photoView = e.target && e.target.closest ? e.target.closest('[data-photo-view]') : null;
+    if (photoView) { openImageModal(photoView.getAttribute('data-photo-view'), photoView.getAttribute('data-photo-title')); return; }
+    var photoDel = e.target && e.target.closest ? e.target.closest('[data-photo-del]') : null;
+    if (photoDel) { openRemoveModal('photo', photoDel.getAttribute('data-photo-del')); return; }
+    var clearPhotosBtn = e.target && e.target.closest ? e.target.closest('[data-clear-photos]') : null;
+    if (clearPhotosBtn) { openRemoveModal('photos-clear'); return; }
     var actBtn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
     if (actBtn && $('commentList') && $('commentList').contains(actBtn)) handleCommentAction(actBtn);
+  });
+  document.addEventListener('change', function (e) {
+    // The gallery's file input is re-rendered with the gallery, so
+    // it is handled here by delegation, not by direct binding.
+    if (e.target && e.target.id === 'photoFile') uploadPhoto(e.target.files && e.target.files[0]);
   });
   document.addEventListener('submit', function (e) {
     if (e.target && e.target.id === 'commentForm') postComment(e);

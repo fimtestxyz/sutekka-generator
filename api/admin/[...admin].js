@@ -647,6 +647,7 @@ async function handleSettings(req, res, prisma, admin) {
       shopClosed: map.shop_closed === "true",
       announcement: map.announcement || "",
       hiddenItems: map.hidden_items ? JSON.parse(map.hidden_items) : [],
+      uploadsEnabled: map.uploads_enabled === "true",
     });
     return;
   }
@@ -679,6 +680,9 @@ async function handleSettings(req, res, prisma, admin) {
   }
   if (parsed.data.hiddenItems !== undefined) {
     updates.push(["hidden_items", JSON.stringify(parsed.data.hiddenItems)]);
+  }
+  if (parsed.data.uploadsEnabled !== undefined) {
+    updates.push(["uploads_enabled", String(parsed.data.uploadsEnabled)]);
   }
   for (const [key, value] of updates) {
     await prisma.siteSetting.upsert({

@@ -1,12 +1,13 @@
 // "Me" router (catch-all api/me/[...me].js).
 //
-// One Vercel Serverless Function for the three signed-in-user routes
+// One Vercel Serverless Function for the four signed-in-user routes
 // — the Hobby plan allows 12 functions per deployment, and one file
 // per route would have pushed this project over it (see AGENTS.md).
 // The implementations live in api/_lib/me-*.js; the URLs are
 // unchanged.
 //
 //   GET / POST / DELETE /api/me/bookmarks
+//   GET / POST / DELETE /api/me/photos
 //   GET / PUT /api/me/preferences
 //   GET / PATCH /api/me/profile
 "use strict";
@@ -14,6 +15,7 @@
 const { sendJson } = require("../_lib/http");
 const { getPathSegments } = require("../_lib/http");
 const bookmarksHandler = require("../_lib/me-bookmarks");
+const photosHandler = require("../_lib/me-photos");
 const preferencesHandler = require("../_lib/me-preferences");
 const profileHandler = require("../_lib/me-profile");
 
@@ -29,6 +31,10 @@ async function meRouter(req, res, deps = {}) {
     const route = segments[2] || "";
     if (route === "bookmarks") {
       await bookmarksHandler(req, res, deps);
+      return;
+    }
+    if (route === "photos") {
+      await photosHandler(req, res, deps);
       return;
     }
     if (route === "preferences") {

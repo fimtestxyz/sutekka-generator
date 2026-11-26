@@ -655,7 +655,7 @@ describe("settings and password", () => {
     const token = await setupAdmin(prisma);
     const get1 = mockRes();
     await adminHandler(authedReq({ url: "/api/admin/settings", token }), get1, { prisma });
-    assert.deepEqual(await get1.json(), { shopClosed: false, announcement: "", hiddenItems: [] });
+    assert.deepEqual(await get1.json(), { shopClosed: false, announcement: "", hiddenItems: [], uploadsEnabled: false });
 
     const post = mockRes();
     await adminHandler(
@@ -675,6 +675,7 @@ describe("settings and password", () => {
       shopClosed: true,
       announcement: "Prints ship in 5 days",
       hiddenItems: ["riemann-rashomon"],
+      uploadsEnabled: false,
     });
   });
 

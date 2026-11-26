@@ -41,6 +41,7 @@ model User {
   profile     UserProfile?
   preferences UserPreference[]
   bookmarks   Bookmark[]
+  photos      Photo[]
   likes       Like[]
   comments    Comment[]
 }
@@ -131,6 +132,23 @@ model Bookmark {
   @@unique([userId, stickerId])
   @@index([userId, createdAt])
   @@index([userId, stickerId])
+}
+
+model Photo {
+  // Personal gallery: the signed-in user's own photos. The image
+  // bytes live in Vercel Blob — Neon stores only this metadata row
+  // (url + pathname so a delete can remove the Blob object too).
+  id        String   @id @default(cuid())
+  userId    String
+  url       String
+  pathname  String
+  filename  String
+  sizeBytes Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Like {

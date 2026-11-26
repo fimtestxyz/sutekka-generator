@@ -27,6 +27,7 @@ async function settingsHandler(req, res, deps = {}) {
       shopClosed: map.shop_closed === "true",
       announcement: map.announcement || "",
       hiddenItems: map.hidden_items ? JSON.parse(map.hidden_items) : [],
+      uploadsEnabled: map.uploads_enabled === "true",
     });
   } catch (e) {
     console.error("settingsHandler error", e);

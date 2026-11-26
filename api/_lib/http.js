@@ -45,6 +45,31 @@ async function readJsonBody(req) {
 }
 
 /**
+ * Read a raw request body as a Buffer, rejecting when it exceeds
+ * maxBytes (the caller answers 413). Returns an empty Buffer for
+ * an empty body. Used by the photo upload, which sends the file
+ * bytes directly instead of multipart or base64.
+ *
+ * @param {import("http").IncomingMessage} req
+ * @param {number} maxBytes
+ * @returns {Promise<Buffer>}
+ */
+async function readRawBody(req, maxBytes) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of req) {
+    total += chunk.length;
+    if (total > maxBytes) {
+      const e = /** @type {any} */ (new Error("body too large"));
+      e.code = "BODY_TOO_LARGE";
+      throw e;
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+/**
  * URL path segments of a request (query string stripped, each
  * segment decoded). For /api/stickers/<id>/like this returns
  * ["api", "stickers", "<id>", "like"]. Handlers resolve dynamic
@@ -78,4 +103,4 @@ function getQuery(req) {
   return new URL(req.url || "/", "http://localhost").searchParams;
 }
 
-module.exports = { sendJson, methodNotAllowed, dbAvailable, readJsonBody, getPathSegments, getQuery };
+module.exports = { sendJson, methodNotAllowed, dbAvailable, readJsonBody, readRawBody, getPathSegments, getQuery };

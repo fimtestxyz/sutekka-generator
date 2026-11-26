@@ -419,6 +419,15 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .qty-stepper .qty-count { min-width: 28px; text-align: center; font-weight: 700; }
 .qty-stepper[hidden] { display: none; }
 
+/* Personal gallery: photo grid + upload row. */
+.upload-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.photo-card { position: relative; margin: 0; }
+.photo-view { display: block; width: 100%; padding: 0; border: none; background: none; cursor: pointer; }
+.photo-view img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border-radius: var(--radius); }
+.photo-del { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 1.1rem; line-height: 1; cursor: pointer; }
+.photo-card figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Empty saved shelves: Lili on a bookmark / peeking out of a folder.
  * Same art + copy pattern as the empty cart. */
 .empty-saved { text-align: center; padding: 28px 8px 8px; max-width: 460px; margin: 0 auto; }
