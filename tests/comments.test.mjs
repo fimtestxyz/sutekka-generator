@@ -1,7 +1,7 @@
 // Comments handler tests (mocked Prisma + session).
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import commentsHandler from "../api/stickers/[id]/comments.js";
+import commentsHandler from "../api/_lib/sticker-comments.js";
 import commentHandler from "../api/comments/[id].js";
 import { resetRateLimits } from "../api/_lib/rate-limit.js";
 import {

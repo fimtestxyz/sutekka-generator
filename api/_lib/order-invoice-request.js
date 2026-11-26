@@ -1,30 +1,28 @@
-// POST /api/orders/shipping — buyer submits a shipping address for
-// a print of their order (ADMIN.md §4.3).
+// POST /api/orders/invoice-request — buyer asks for a formal invoice
+// for their order (ADMIN.md §3, §4.2).
 //
 // No sign-in is needed to buy, so none is needed here: the
 // credential is the order itself — session id or order id PLUS the
-// buyer email on the order, which the caller must already know.
-// Submitting an address flags the order for the print queue
-// (printStatus "none" -> "queued"); it never changes any other
-// print status.
+// buyer email on the order, which the caller must already know. One
+// open request per order; a repeat request answers 409.
 "use strict";
 
-const { getPrisma } = require("../_lib/prisma");
+const { getPrisma } = require("./prisma");
 const {
   sendJson,
   methodNotAllowed,
   dbAvailable,
   readJsonBody,
-} = require("../_lib/http");
-const { checkRateLimit } = require("../_lib/rate-limit");
-const { buyerShippingSchema, parseBody } = require("../_lib/schemas");
+} = require("./http");
+const { checkRateLimit } = require("./rate-limit");
+const { buyerInvoiceRequestSchema, parseBody } = require("./schemas");
 
 /**
  * @param {import("http").IncomingMessage} req
  * @param {import("http").ServerResponse} res
  * @param {{ prisma?: any }} [deps] test injection only
  */
-async function shippingHandler(req, res, deps = {}) {
+async function invoiceRequestHandler(req, res, deps = {}) {
   try {
     if (req.method !== "POST") {
       methodNotAllowed(res, ["POST"]);
@@ -38,12 +36,12 @@ async function shippingHandler(req, res, deps = {}) {
       sendJson(res, 400, { error: "invalid_json" });
       return;
     }
-    const parsed = parseBody(buyerShippingSchema, body);
+    const parsed = parseBody(buyerInvoiceRequestSchema, body);
     if (!parsed.ok) {
       sendJson(res, 400, { error: "invalid_body", details: parsed.details });
       return;
     }
-    const { sessionId, orderId, email, name, address } = parsed.data;
+    const { sessionId, orderId, email } = parsed.data;
     if (!sessionId && !orderId) {
       sendJson(res, 400, {
         error: "invalid_body",
@@ -66,27 +64,29 @@ async function shippingHandler(req, res, deps = {}) {
       sendJson(res, 403, { error: "forbidden" });
       return;
     }
-    if (!checkRateLimit(`order-shipping:${order.id}`, 10, 60_000)) {
+    if (!checkRateLimit(`order-invoice:${order.id}`, 5, 60_000)) {
       sendJson(res, 429, { error: "too_many_attempts" });
       return;
     }
-    const updated = await prisma.order.update({
+    const existing = await prisma.invoiceRequest.findUnique({
+      where: { orderId: order.id },
+    });
+    if (existing && existing.status === "open") {
+      sendJson(res, 409, { error: "invoice_request_exists" });
+      return;
+    }
+    const request = await prisma.invoiceRequest.upsert({
+      where: { orderId: order.id },
+      create: { orderId: order.id, buyerEmail: order.buyerEmail, status: "open" },
+      update: { status: "open", resolvedAt: null },
+    });
+    await prisma.order.update({
       where: { id: order.id },
-      data: {
-        shippingName: name,
-        shippingAddress: address,
-        ...(order.printStatus === "none" ? { printStatus: "queued" } : {}),
-      },
+      data: { invoiceRequestedAt: new Date() },
     });
-    sendJson(res, 200, {
-      order: {
-        id: updated.id,
-        printStatus: updated.printStatus,
-        hasShippingAddress: true,
-      },
-    });
+    sendJson(res, 201, { request: { id: request.id, status: request.status } });
   } catch (e) {
-    console.error("ordersShippingHandler error", e);
+    console.error("ordersInvoiceRequestHandler error", e);
     if (!res.writableEnded) sendJson(res, 500, { error: "internal_error" });
   }
 }
@@ -94,5 +94,5 @@ async function shippingHandler(req, res, deps = {}) {
 // Vercel entry point. The optional third argument is test injection
 // only (Vercel never passes it).
 module.exports = async function handler(req, res, deps) {
-  await shippingHandler(req, res, deps);
+  await invoiceRequestHandler(req, res, deps);
 };

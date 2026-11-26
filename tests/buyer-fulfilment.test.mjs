@@ -2,8 +2,8 @@
 // POST /api/orders/invoice-request. Mocked Prisma — no database.
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import shippingHandler from "../api/orders/shipping.js";
-import invoiceRequestHandler from "../api/orders/invoice-request.js";
+import shippingHandler from "../api/_lib/order-shipping.js";
+import invoiceRequestHandler from "../api/_lib/order-invoice-request.js";
 import settingsHandler from "../api/settings.js";
 import { resetRateLimits } from "../api/_lib/rate-limit.js";
 import {

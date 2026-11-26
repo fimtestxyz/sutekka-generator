@@ -10,15 +10,15 @@
 // liked (the like exists now), not as an error.
 "use strict";
 
-const { getPrisma } = require("../../_lib/prisma");
-const { requireUser } = require("../../_lib/require-user");
-const { findSticker } = require("../../_lib/stickers");
+const { getPrisma } = require("./prisma");
+const { requireUser } = require("./require-user");
+const { findSticker } = require("./stickers");
 const {
   sendJson,
   methodNotAllowed,
   dbAvailable,
   getPathSegments,
-} = require("../../_lib/http");
+} = require("./http");
 
 /**
  * @param {import("http").IncomingMessage} req

@@ -1,8 +1,8 @@
 // Profile + preferences handler tests (mocked Prisma + session).
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import profileHandler from "../api/me/profile.js";
-import preferencesHandler from "../api/me/preferences.js";
+import profileHandler from "../api/_lib/me-profile.js";
+import preferencesHandler from "../api/_lib/me-preferences.js";
 import {
   setAuthEnv,
   clearAuthEnv,

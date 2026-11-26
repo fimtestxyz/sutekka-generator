@@ -11,15 +11,15 @@
 // page once the files are shown).
 "use strict";
 
-const { getPrisma } = require("../_lib/prisma");
+const { getPrisma } = require("./prisma");
 const {
   sendJson,
   methodNotAllowed,
   dbAvailable,
   readJsonBody,
   getQuery,
-} = require("../_lib/http");
-const { buyerFulfilment } = require("../_lib/admin-orders");
+} = require("./http");
+const { buyerFulfilment } = require("./admin-orders");
 
 function publicOrder(row) {
   return {

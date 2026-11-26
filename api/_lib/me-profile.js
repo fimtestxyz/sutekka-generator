@@ -15,10 +15,10 @@
 // At least one of the three must be present.
 "use strict";
 
-const { getPrisma } = require("../_lib/prisma");
-const { requireUser } = require("../_lib/require-user");
-const { sendJson, methodNotAllowed, dbAvailable, readJsonBody } = require("../_lib/http");
-const { profilePatchSchema, parseBody } = require("../_lib/schemas");
+const { getPrisma } = require("./prisma");
+const { requireUser } = require("./require-user");
+const { sendJson, methodNotAllowed, dbAvailable, readJsonBody } = require("./http");
+const { profilePatchSchema, parseBody } = require("./schemas");
 
 function publicUser(user) {
   return { id: user.id, email: user.email, name: user.name, image: user.image };

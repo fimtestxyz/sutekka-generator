@@ -12,19 +12,19 @@
 // on write (see api/_lib/comments.js).
 "use strict";
 
-const { getPrisma } = require("../../_lib/prisma");
-const { requireUser } = require("../../_lib/require-user");
-const { findSticker } = require("../../_lib/stickers");
-const { checkRateLimit } = require("../../_lib/rate-limit");
-const { cleanContent, publicComment, authorInclude } = require("../../_lib/comments");
-const { commentCreateSchema, parseBody } = require("../../_lib/schemas");
+const { getPrisma } = require("./prisma");
+const { requireUser } = require("./require-user");
+const { findSticker } = require("./stickers");
+const { checkRateLimit } = require("./rate-limit");
+const { cleanContent, publicComment, authorInclude } = require("./comments");
+const { commentCreateSchema, parseBody } = require("./schemas");
 const {
   sendJson,
   methodNotAllowed,
   dbAvailable,
   readJsonBody,
   getPathSegments,
-} = require("../../_lib/http");
+} = require("./http");
 
 /**
  * @param {import("http").IncomingMessage} req

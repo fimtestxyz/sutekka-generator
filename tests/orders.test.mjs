@@ -1,7 +1,7 @@
 // Order lookup tests (mocked Prisma). No database, no Stripe account.
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import lookupHandler from "../api/orders/lookup.js";
+import lookupHandler from "../api/_lib/order-lookup.js";
 import {
   setAuthEnv,
   clearAuthEnv,

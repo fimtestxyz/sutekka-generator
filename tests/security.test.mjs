@@ -3,11 +3,11 @@
 // and comment content is stored raw (escaped only at render).
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import profileHandler from "../api/me/profile.js";
-import preferencesHandler from "../api/me/preferences.js";
-import commentsHandler from "../api/stickers/[id]/comments.js";
-import likeHandler from "../api/stickers/[id]/like.js";
-import bookmarksHandler from "../api/me/bookmarks.js";
+import profileHandler from "../api/_lib/me-profile.js";
+import preferencesHandler from "../api/_lib/me-preferences.js";
+import commentsHandler from "../api/_lib/sticker-comments.js";
+import likeHandler from "../api/_lib/sticker-like.js";
+import bookmarksHandler from "../api/_lib/me-bookmarks.js";
 import { resetRateLimits } from "../api/_lib/rate-limit.js";
 import {
   setAuthEnv,

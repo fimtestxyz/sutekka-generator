@@ -1,7 +1,7 @@
 // Like toggle handler tests (mocked Prisma + session).
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import likeHandler from "../api/stickers/[id]/like.js";
+import likeHandler from "../api/_lib/sticker-like.js";
 import {
   setAuthEnv,
   clearAuthEnv,

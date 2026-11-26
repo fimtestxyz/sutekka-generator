@@ -11,17 +11,17 @@
 // Sign-in required for everything.
 "use strict";
 
-const { getPrisma } = require("../_lib/prisma");
-const { requireUser } = require("../_lib/require-user");
-const { findSticker } = require("../_lib/stickers");
-const { bookmarkCreateSchema, parseBody } = require("../_lib/schemas");
+const { getPrisma } = require("./prisma");
+const { requireUser } = require("./require-user");
+const { findSticker } = require("./stickers");
+const { bookmarkCreateSchema, parseBody } = require("./schemas");
 const {
   sendJson,
   methodNotAllowed,
   dbAvailable,
   readJsonBody,
   getQuery,
-} = require("../_lib/http");
+} = require("./http");
 
 const SORTS = {
   recent: { createdAt: "desc" },

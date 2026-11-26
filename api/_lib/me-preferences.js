@@ -15,10 +15,10 @@
 //   An empty array clears all preferences.
 "use strict";
 
-const { getPrisma } = require("../_lib/prisma");
-const { requireUser } = require("../_lib/require-user");
-const { sendJson, methodNotAllowed, dbAvailable, readJsonBody } = require("../_lib/http");
-const { preferencesPutSchema, parseBody } = require("../_lib/schemas");
+const { getPrisma } = require("./prisma");
+const { requireUser } = require("./require-user");
+const { sendJson, methodNotAllowed, dbAvailable, readJsonBody } = require("./http");
+const { preferencesPutSchema, parseBody } = require("./schemas");
 
 /**
  * @param {import("http").IncomingMessage} req

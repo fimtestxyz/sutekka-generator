@@ -1,7 +1,7 @@
 // Bookmarks handler tests (mocked Prisma + session).
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import bookmarksHandler from "../api/me/bookmarks.js";
+import bookmarksHandler from "../api/_lib/me-bookmarks.js";
 import {
   setAuthEnv,
   clearAuthEnv,
