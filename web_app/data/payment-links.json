@@ -1,0 +1,716 @@
+{
+  "generated_by": "scripts/create_stripe_links.py",
+  "currency": "sgd",
+  "download_url": "https://sutekka.gobblemon.com/#/download?session_id={CHECKOUT_SESSION_ID}",
+  "singles": {
+    "riemann-rashomon-01": {
+      "item_id": "riemann-rashomon-01",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 1700 万行 (#01)",
+      "amount": 400,
+      "product_id": "prod_VhTXldiRZthzof",
+      "price_id": "price_1Ug4aY2KboBtXa6rZhE4TfwX",
+      "link_id": "plink_1Ug4aZ2KboBtXa6r5X0rmnQS",
+      "url": "https://buy.stripe.com/test_dRmfZag9K9pn8fMba69ws00",
+      "stickers": [
+        "riemann-rashomon-01"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-02": {
+      "item_id": "riemann-rashomon-02",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 25 万页是个玩笑 (#02)",
+      "amount": 400,
+      "product_id": "prod_VhTXu2WJ87Jfqr",
+      "price_id": "price_1Ug4ab2KboBtXa6rBmB711g9",
+      "link_id": "plink_1Ug4ac2KboBtXa6rAplYJg7k",
+      "url": "https://buy.stripe.com/test_28EfZa4r2597fIeguq9ws01",
+      "stickers": [
+        "riemann-rashomon-02"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-03": {
+      "item_id": "riemann-rashomon-03",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 两派 (#03)",
+      "amount": 400,
+      "product_id": "prod_VhTX3SbZ9Gqz7F",
+      "price_id": "price_1Ug4ad2KboBtXa6r222vr7uf",
+      "link_id": "plink_1Ug4ae2KboBtXa6raDHvRYOf",
+      "url": "https://buy.stripe.com/test_dRmeV6e1C7hf67Ea629ws02",
+      "stickers": [
+        "riemann-rashomon-03"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-04": {
+      "item_id": "riemann-rashomon-04",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 编译通过 ≠ 证明成立 (#04)",
+      "amount": 400,
+      "product_id": "prod_VhTXn9efTkap5F",
+      "price_id": "price_1Ug4ag2KboBtXa6rIiWb4nvw",
+      "link_id": "plink_1Ug4ag2KboBtXa6r9hnDEV3w",
+      "url": "https://buy.stripe.com/test_eVqfZabTu9pn9jQ0vs9ws03",
+      "stickers": [
+        "riemann-rashomon-04"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-05": {
+      "item_id": "riemann-rashomon-05",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 恒真条件 (#05)",
+      "amount": 400,
+      "product_id": "prod_VhTXjUX9lUXwYC",
+      "price_id": "price_1Ug4ai2KboBtXa6rvyYbqQSn",
+      "link_id": "plink_1Ug4aj2KboBtXa6ravbMDo8b",
+      "url": "https://buy.stripe.com/test_3cIaEQ1eQ8lj2Vsba69ws04",
+      "stickers": [
+        "riemann-rashomon-05"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-06": {
+      "item_id": "riemann-rashomon-06",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 上市次日 (#06)",
+      "amount": 400,
+      "product_id": "prod_VhTXWz0QU01xAi",
+      "price_id": "price_1Ug4al2KboBtXa6rGnfI2KRc",
+      "link_id": "plink_1Ug4al2KboBtXa6rv8QK9JvC",
+      "url": "https://buy.stripe.com/test_9B65kw0aM453fIe1zw9ws05",
+      "stickers": [
+        "riemann-rashomon-06"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-07": {
+      "item_id": "riemann-rashomon-07",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 读不懂的证明 (#07)",
+      "amount": 400,
+      "product_id": "prod_VhTXHyHatWqXWo",
+      "price_id": "price_1Ug4an2KboBtXa6r0fPkapEq",
+      "link_id": "plink_1Ug4ao2KboBtXa6rgGv549v8",
+      "url": "https://buy.stripe.com/test_dRmaEQaPqbxvgMi91Y9ws06",
+      "stickers": [
+        "riemann-rashomon-07"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "riemann-rashomon-08": {
+      "item_id": "riemann-rashomon-08",
+      "type": "single",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — 罗生门 (#08)",
+      "amount": 400,
+      "product_id": "prod_VhTXvVgOzZ3W6d",
+      "price_id": "price_1Ug4aq2KboBtXa6rZNZR02ao",
+      "link_id": "plink_1Ug4aq2KboBtXa6rknkKrHwk",
+      "url": "https://buy.stripe.com/test_8x2fZabTudFD1Roguq9ws07",
+      "stickers": [
+        "riemann-rashomon-08"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "kakeya-wang-hong-01": {
+      "item_id": "kakeya-wang-hong-01",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 一根针 (#01)",
+      "amount": 400,
+      "product_id": "prod_VhTXOwU0JQaEyt",
+      "price_id": "price_1Ug4as2KboBtXa6rAilDxfok",
+      "link_id": "plink_1Ug4at2KboBtXa6r4BxmHGeF",
+      "url": "https://buy.stripe.com/test_28E4gs6za7hfcw2die9ws08",
+      "stickers": [
+        "kakeya-wang-hong-01"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-02": {
+      "item_id": "kakeya-wang-hong-02",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 127 页 (#02)",
+      "amount": 400,
+      "product_id": "prod_VhTX7HVGLas7Lt",
+      "price_id": "price_1Ug4au2KboBtXa6rrg1ZALsl",
+      "link_id": "plink_1Ug4av2KboBtXa6rK2hqr1J1",
+      "url": "https://buy.stripe.com/test_bJe3co1eQeJH67Eba69ws09",
+      "stickers": [
+        "kakeya-wang-hong-02"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-03": {
+      "item_id": "kakeya-wang-hong-03",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 菲尔兹奖 (#03)",
+      "amount": 400,
+      "product_id": "prod_VhTYodxhYPpbTd",
+      "price_id": "price_1Ug4ax2KboBtXa6rvCEmLHTi",
+      "link_id": "plink_1Ug4ay2KboBtXa6rMJvZa6pA",
+      "url": "https://buy.stripe.com/test_00weV6g9KeJH53A6TQ9ws0a",
+      "stickers": [
+        "kakeya-wang-hong-03"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-04": {
+      "item_id": "kakeya-wang-hong-04",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 读了一年半 (#04)",
+      "amount": 400,
+      "product_id": "prod_VhTYTvu3PCficJ",
+      "price_id": "price_1Ug4b02KboBtXa6rQOpqkovx",
+      "link_id": "plink_1Ug4b02KboBtXa6rkgUsyVzf",
+      "url": "https://buy.stripe.com/test_14A6oA2iUbxvbrYa629ws0b",
+      "stickers": [
+        "kakeya-wang-hong-04"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-05": {
+      "item_id": "kakeya-wang-hong-05",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 一夜 722 篇 (#05)",
+      "amount": 400,
+      "product_id": "prod_VhTYslff1ljIAV",
+      "price_id": "price_1Ug4b22KboBtXa6r8On1zlLD",
+      "link_id": "plink_1Ug4b32KboBtXa6rMi55z7ci",
+      "url": "https://buy.stripe.com/test_eVq3cog9K30Z1Ro3HE9ws0c",
+      "stickers": [
+        "kakeya-wang-hong-05"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-06": {
+      "item_id": "kakeya-wang-hong-06",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 没人读过 (#06)",
+      "amount": 400,
+      "product_id": "prod_VhTYfpzJxtAuQO",
+      "price_id": "price_1Ug4b52KboBtXa6rFcYN3I5e",
+      "link_id": "plink_1Ug4b52KboBtXa6rhANDi64F",
+      "url": "https://buy.stripe.com/test_fZueV60aM453eEa6TQ9ws0d",
+      "stickers": [
+        "kakeya-wang-hong-06"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-07": {
+      "item_id": "kakeya-wang-hong-07",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 两条路 (#07)",
+      "amount": 400,
+      "product_id": "prod_VhTYXcRN03j5ZY",
+      "price_id": "price_1Ug4b72KboBtXa6rzSvv34OP",
+      "link_id": "plink_1Ug4b82KboBtXa6rsmwz0mIw",
+      "url": "https://buy.stripe.com/test_14AcMY3mY7hf7bIemi9ws0e",
+      "stickers": [
+        "kakeya-wang-hong-07"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "kakeya-wang-hong-08": {
+      "item_id": "kakeya-wang-hong-08",
+      "type": "single",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — 试金石 (#08)",
+      "amount": 400,
+      "product_id": "prod_VhTY3baC5Svlf8",
+      "price_id": "price_1Ug4bA2KboBtXa6rfivHuAzK",
+      "link_id": "plink_1Ug4bA2KboBtXa6r9c46TtN0",
+      "url": "https://buy.stripe.com/test_cNidR29Lm9pncw2a629ws0f",
+      "stickers": [
+        "kakeya-wang-hong-08"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "deng-yu-hilbert-sixth-01": {
+      "item_id": "deng-yu-hilbert-sixth-01",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 1900年，第六问题 (#01)",
+      "amount": 400,
+      "product_id": "prod_VhTY0Bum6qBjzE",
+      "price_id": "price_1Ug4bC2KboBtXa6rIKatsLIB",
+      "link_id": "plink_1Ug4bD2KboBtXa6rwg7gmKAl",
+      "url": "https://buy.stripe.com/test_4gMcMY4r25979jQ1zw9ws0g",
+      "stickers": [
+        "deng-yu-hilbert-sixth-01"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-02": {
+      "item_id": "deng-yu-hilbert-sixth-02",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 牛顿的台球 (#02)",
+      "amount": 400,
+      "product_id": "prod_VhTYQbI2PJMYcS",
+      "price_id": "price_1Ug4bF2KboBtXa6rGYJYI7Do",
+      "link_id": "plink_1Ug4bF2KboBtXa6ruZ4IugzH",
+      "url": "https://buy.stripe.com/test_4gM9AM4r2gRP67E5PM9ws0h",
+      "stickers": [
+        "deng-yu-hilbert-sixth-02"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-03": {
+      "item_id": "deng-yu-hilbert-sixth-03",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 倒放也一样 (#03)",
+      "amount": 400,
+      "product_id": "prod_VhTYF3RmlZ1aVS",
+      "price_id": "price_1Ug4bH2KboBtXa6rMOvay95e",
+      "link_id": "plink_1Ug4bI2KboBtXa6rBz4FTx1e",
+      "url": "https://buy.stripe.com/test_7sY3cocXy8lj67E6TQ9ws0i",
+      "stickers": [
+        "deng-yu-hilbert-sixth-03"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-04": {
+      "item_id": "deng-yu-hilbert-sixth-04",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 水不会倒流 (#04)",
+      "amount": 400,
+      "product_id": "prod_VhTY0fqcgKhcaY",
+      "price_id": "price_1Ug4bK2KboBtXa6rmux42IwQ",
+      "link_id": "plink_1Ug4bK2KboBtXa6rQZJYPW5Q",
+      "url": "https://buy.stripe.com/test_6oUaEQ4r29pnbrY0vs9ws0j",
+      "stickers": [
+        "deng-yu-hilbert-sixth-04"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-05": {
+      "item_id": "deng-yu-hilbert-sixth-05",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 玻尔兹曼，1872 (#05)",
+      "amount": 400,
+      "product_id": "prod_VhTY0ELMuQA3sI",
+      "price_id": "price_1Ug4bM2KboBtXa6rFG3Tgkrl",
+      "link_id": "plink_1Ug4bN2KboBtXa6rqCsv2hjV",
+      "url": "https://buy.stripe.com/test_cNi3co1eQatrdA62DA9ws0k",
+      "stickers": [
+        "deng-yu-hilbert-sixth-05"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-06": {
+      "item_id": "deng-yu-hilbert-sixth-06",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 125年 (#06)",
+      "amount": 400,
+      "product_id": "prod_VhTYBbjwesbK3e",
+      "price_id": "price_1Ug4bO2KboBtXa6rremtkiin",
+      "link_id": "plink_1Ug4bP2KboBtXa6rMBbYC8gX",
+      "url": "https://buy.stripe.com/test_eVq9AM1eQeJH7bI4LI9ws0l",
+      "stickers": [
+        "deng-yu-hilbert-sixth-06"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-07": {
+      "item_id": "deng-yu-hilbert-sixth-07",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 三个人 (#07)",
+      "amount": 400,
+      "product_id": "prod_VhTYHW40KkldeD",
+      "price_id": "price_1Ug4bR2KboBtXa6rbheYsViv",
+      "link_id": "plink_1Ug4bS2KboBtXa6rZW3TYDE9",
+      "url": "https://buy.stripe.com/test_28E7sE9Lmatr7bI4LI9ws0m",
+      "stickers": [
+        "deng-yu-hilbert-sixth-07"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "deng-yu-hilbert-sixth-08": {
+      "item_id": "deng-yu-hilbert-sixth-08",
+      "type": "single",
+      "title": "邓煜与希尔伯特第六问题 — 安静地闭环 (#08)",
+      "amount": 400,
+      "product_id": "prod_VhTY2WieuJ4Plk",
+      "price_id": "price_1Ug4bT2KboBtXa6rTe6InPtR",
+      "link_id": "plink_1Ug4bU2KboBtXa6rTK9zMNHs",
+      "url": "https://buy.stripe.com/test_00w3coaPq0SR1Ro7XU9ws0n",
+      "stickers": [
+        "deng-yu-hilbert-sixth-08"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "lauren-tan-20-agents-01": {
+      "item_id": "lauren-tan-20-agents-01",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 一个月 2000 个 PR (#01)",
+      "amount": 400,
+      "product_id": "prod_VhTYKC85UpCQIc",
+      "price_id": "price_1Ug4bW2KboBtXa6rJsAFqkIP",
+      "link_id": "plink_1Ug4bW2KboBtXa6rA0JgZCBN",
+      "url": "https://buy.stripe.com/test_4gM6oAcXy9pn1Ro4LI9ws0o",
+      "stickers": [
+        "lauren-tan-20-agents-01"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-02": {
+      "item_id": "lauren-tan-20-agents-02",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 醒来 20 个已合并 (#02)",
+      "amount": 400,
+      "product_id": "prod_VhTY68kjFlx9SA",
+      "price_id": "price_1Ug4bY2KboBtXa6rZLII9bD5",
+      "link_id": "plink_1Ug4bZ2KboBtXa6rmndmlbPb",
+      "url": "https://buy.stripe.com/test_dRm9AM9LmcBz0Nkba69ws0p",
+      "stickers": [
+        "lauren-tan-20-agents-02"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-03": {
+      "item_id": "lauren-tan-20-agents-03",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 信任曲线 (#03)",
+      "amount": 400,
+      "product_id": "prod_VhTYNnvWR4yiQj",
+      "price_id": "price_1Ug4ba2KboBtXa6rJdg8UTV1",
+      "link_id": "plink_1Ug4bb2KboBtXa6rJpFFMH3y",
+      "url": "https://buy.stripe.com/test_bJe9AM6zaeJHeEa3HE9ws0q",
+      "stickers": [
+        "lauren-tan-20-agents-03"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-04": {
+      "item_id": "lauren-tan-20-agents-04",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 护栏 (#04)",
+      "amount": 400,
+      "product_id": "prod_VhTYyJJCyhSygg",
+      "price_id": "price_1Ug4bd2KboBtXa6r83fVKdpp",
+      "link_id": "plink_1Ug4be2KboBtXa6rfnBHEDwl",
+      "url": "https://buy.stripe.com/test_eVq9AM2iU8lj3Zwguq9ws0r",
+      "stickers": [
+        "lauren-tan-20-agents-04"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-05": {
+      "item_id": "lauren-tan-20-agents-05",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 禁用 useEffect (#05)",
+      "amount": 400,
+      "product_id": "prod_VhTYZICzMwscpM",
+      "price_id": "price_1Ug4bf2KboBtXa6rIvN6YFgT",
+      "link_id": "plink_1Ug4bg2KboBtXa6rQChz4n9U",
+      "url": "https://buy.stripe.com/test_6oU6oAf5G6dbfIe4LI9ws0s",
+      "stickers": [
+        "lauren-tan-20-agents-05"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-06": {
+      "item_id": "lauren-tan-20-agents-06",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — Dr. Eggbot (#06)",
+      "amount": 400,
+      "product_id": "prod_VhTY0Bww3R47pA",
+      "price_id": "price_1Ug4bi2KboBtXa6rQkk1HRHq",
+      "link_id": "plink_1Ug4bj2KboBtXa6rceYzkBKs",
+      "url": "https://buy.stripe.com/test_cNi9AM9Lmbxvcw2fqm9ws0t",
+      "stickers": [
+        "lauren-tan-20-agents-06"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-07": {
+      "item_id": "lauren-tan-20-agents-07",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 小团队 (#07)",
+      "amount": 400,
+      "product_id": "prod_VhTYVbr66aWvIF",
+      "price_id": "price_1Ug4bk2KboBtXa6rUCzYYS5O",
+      "link_id": "plink_1Ug4bl2KboBtXa6rm5xf0Hwv",
+      "url": "https://buy.stripe.com/test_5kQaEQ2iUgRPcw2emi9ws0u",
+      "stickers": [
+        "lauren-tan-20-agents-07"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "lauren-tan-20-agents-08": {
+      "item_id": "lauren-tan-20-agents-08",
+      "type": "single",
+      "title": "Lauren Tan 与 20 个 AI Agent — 控制点前移 (#08)",
+      "amount": 400,
+      "product_id": "prod_VhTYzSLVEDdNBG",
+      "price_id": "price_1Ug4bn2KboBtXa6rR82ccONI",
+      "link_id": "plink_1Ug4bn2KboBtXa6r1vNq16NJ",
+      "url": "https://buy.stripe.com/test_cNifZa8Hi8ljgMi91Y9ws0v",
+      "stickers": [
+        "lauren-tan-20-agents-08"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "ai-agent-four-faces-01": {
+      "item_id": "ai-agent-four-faces-01",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 1000 个智能体 · 8 天 · 一个操作系统 (#01)",
+      "amount": 400,
+      "product_id": "prod_VhTYYdup44q2U0",
+      "price_id": "price_1Ug4bp2KboBtXa6r5HrXv4hE",
+      "link_id": "plink_1Ug4bq2KboBtXa6rdm89zPlX",
+      "url": "https://buy.stripe.com/test_cNi4gs2iU30ZbrY6TQ9ws0w",
+      "stickers": [
+        "ai-agent-four-faces-01"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-02": {
+      "item_id": "ai-agent-four-faces-02",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 30 小时 · 费马大定理 (#02)",
+      "amount": 400,
+      "product_id": "prod_VhTYT3Q4WedJIB",
+      "price_id": "price_1Ug4bs2KboBtXa6rna69fTqm",
+      "link_id": "plink_1Ug4bs2KboBtXa6rz5eq3yxg",
+      "url": "https://buy.stripe.com/test_cNi00cg9KatrgMifqm9ws0x",
+      "stickers": [
+        "ai-agent-four-faces-02"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-03": {
+      "item_id": "ai-agent-four-faces-03",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 日活破千万 · 百强企业 60% (#03)",
+      "amount": 400,
+      "product_id": "prod_VhTZNDC1nDQCIb",
+      "price_id": "price_1Ug4bu2KboBtXa6rHwFSPhRK",
+      "link_id": "plink_1Ug4bv2KboBtXa6r4nTgTHCE",
+      "url": "https://buy.stripe.com/test_fZu6oA3mY7hf53A1zw9ws0y",
+      "stickers": [
+        "ai-agent-four-faces-03"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-04": {
+      "item_id": "ai-agent-four-faces-04",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 闯入医保统计入口 (#04)",
+      "amount": 400,
+      "product_id": "prod_VhTZoE8mjymfyu",
+      "price_id": "price_1Ug4bx2KboBtXa6rYraSgawQ",
+      "link_id": "plink_1Ug4bx2KboBtXa6rFU5mwecA",
+      "url": "https://buy.stripe.com/test_cNieV6f5G0SR0Nk2DA9ws0z",
+      "stickers": [
+        "ai-agent-four-faces-04"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-05": {
+      "item_id": "ai-agent-four-faces-05",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 512 个漏洞 · 8 个严重 (#05)",
+      "amount": 400,
+      "product_id": "prod_VhTZfPqzuQIJYY",
+      "price_id": "price_1Ug4bz2KboBtXa6r9p4S57pQ",
+      "link_id": "plink_1Ug4c02KboBtXa6rGXRJwGBs",
+      "url": "https://buy.stripe.com/test_eVqfZa5v6bxvbrYfqm9ws0A",
+      "stickers": [
+        "ai-agent-four-faces-05"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-06": {
+      "item_id": "ai-agent-four-faces-06",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 删了数百封邮件，还无视停止命令 (#06)",
+      "amount": 400,
+      "product_id": "prod_VhTZTsVYo7kzHW",
+      "price_id": "price_1Ug4c12KboBtXa6r24lvaDVq",
+      "link_id": "plink_1Ug4c22KboBtXa6rZl1gwehr",
+      "url": "https://buy.stripe.com/test_6oUeV68Hi6db2Vs0vs9ws0B",
+      "stickers": [
+        "ai-agent-four-faces-06"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-07": {
+      "item_id": "ai-agent-four-faces-07",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 12 天 · 204 章 · 87,500 字的规则书 (#07)",
+      "amount": 400,
+      "product_id": "prod_VhTZrIiT6HhIsI",
+      "price_id": "price_1Ug4c42KboBtXa6rNaH5lx8s",
+      "link_id": "plink_1Ug4c42KboBtXa6rdTjMx2S5",
+      "url": "https://buy.stripe.com/test_dRm7sEaPq30ZanU0vs9ws0C",
+      "stickers": [
+        "ai-agent-four-faces-07"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    },
+    "ai-agent-four-faces-08": {
+      "item_id": "ai-agent-four-faces-08",
+      "type": "single",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — 四张面孔 (#08)",
+      "amount": 400,
+      "product_id": "prod_VhTZzu0WpKaDUy",
+      "price_id": "price_1Ug4c62KboBtXa6rhf5YaijD",
+      "link_id": "plink_1Ug4c72KboBtXa6ry7dE1nP5",
+      "url": "https://buy.stripe.com/test_6oU8wIcXy7hf9jQ1zw9ws0D",
+      "stickers": [
+        "ai-agent-four-faces-08"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    }
+  },
+  "sets": {
+    "riemann-rashomon": {
+      "item_id": "riemann-rashomon",
+      "type": "set",
+      "title": "《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》 — full set (8 stickers)",
+      "amount": 1500,
+      "product_id": "prod_VhTZikXhlBfIxA",
+      "price_id": "price_1Ug4c92KboBtXa6rUyLLb4hf",
+      "link_id": "plink_1Ug4c92KboBtXa6rcGjUwf72",
+      "url": "https://buy.stripe.com/test_4gMbIUg9KcBz1Ro2DA9ws0E",
+      "stickers": [
+        "riemann-rashomon-01",
+        "riemann-rashomon-02",
+        "riemann-rashomon-03",
+        "riemann-rashomon-04",
+        "riemann-rashomon-05",
+        "riemann-rashomon-06",
+        "riemann-rashomon-07",
+        "riemann-rashomon-08"
+      ],
+      "set_slug": "riemann-rashomon"
+    },
+    "kakeya-wang-hong": {
+      "item_id": "kakeya-wang-hong",
+      "type": "set",
+      "title": "《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》 — full set (8 stickers)",
+      "amount": 1500,
+      "product_id": "prod_VhTZ6Y5z0RkrIe",
+      "price_id": "price_1Ug4cB2KboBtXa6rezQDNZWK",
+      "link_id": "plink_1Ug4cC2KboBtXa6rwvyDUK02",
+      "url": "https://buy.stripe.com/test_8x26oA5v6cBz7bI7XU9ws0F",
+      "stickers": [
+        "kakeya-wang-hong-01",
+        "kakeya-wang-hong-02",
+        "kakeya-wang-hong-03",
+        "kakeya-wang-hong-04",
+        "kakeya-wang-hong-05",
+        "kakeya-wang-hong-06",
+        "kakeya-wang-hong-07",
+        "kakeya-wang-hong-08"
+      ],
+      "set_slug": "kakeya-wang-hong"
+    },
+    "deng-yu-hilbert-sixth": {
+      "item_id": "deng-yu-hilbert-sixth",
+      "type": "set",
+      "title": "邓煜与希尔伯特第六问题 — full set (8 stickers)",
+      "amount": 1500,
+      "product_id": "prod_VhTZt8KGqWk5BW",
+      "price_id": "price_1Ug4cE2KboBtXa6rGOo5pry6",
+      "link_id": "plink_1Ug4cE2KboBtXa6r79lj5eFn",
+      "url": "https://buy.stripe.com/test_cNi14g5v630Z8fMdie9ws0G",
+      "stickers": [
+        "deng-yu-hilbert-sixth-01",
+        "deng-yu-hilbert-sixth-02",
+        "deng-yu-hilbert-sixth-03",
+        "deng-yu-hilbert-sixth-04",
+        "deng-yu-hilbert-sixth-05",
+        "deng-yu-hilbert-sixth-06",
+        "deng-yu-hilbert-sixth-07",
+        "deng-yu-hilbert-sixth-08"
+      ],
+      "set_slug": "deng-yu-hilbert-sixth"
+    },
+    "lauren-tan-20-agents": {
+      "item_id": "lauren-tan-20-agents",
+      "type": "set",
+      "title": "Lauren Tan 与 20 个 AI Agent — full set (8 stickers)",
+      "amount": 1500,
+      "product_id": "prod_VhTZrKV4CwbSKD",
+      "price_id": "price_1Ug4cG2KboBtXa6rfBDZTbl7",
+      "link_id": "plink_1Ug4cH2KboBtXa6rh9X2H1Ze",
+      "url": "https://buy.stripe.com/test_28EdR24r2dFDfIeguq9ws0H",
+      "stickers": [
+        "lauren-tan-20-agents-01",
+        "lauren-tan-20-agents-02",
+        "lauren-tan-20-agents-03",
+        "lauren-tan-20-agents-04",
+        "lauren-tan-20-agents-05",
+        "lauren-tan-20-agents-06",
+        "lauren-tan-20-agents-07",
+        "lauren-tan-20-agents-08"
+      ],
+      "set_slug": "lauren-tan-20-agents"
+    },
+    "ai-agent-four-faces": {
+      "item_id": "ai-agent-four-faces",
+      "type": "set",
+      "title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》 — full set (8 stickers)",
+      "amount": 1500,
+      "product_id": "prod_VhTZp1TNFSUXdt",
+      "price_id": "price_1Ug4cI2KboBtXa6rpZi9L9qM",
+      "link_id": "plink_1Ug4cJ2KboBtXa6r7WzGCaOP",
+      "url": "https://buy.stripe.com/test_14AcMYaPqeJH3Zw5PM9ws0I",
+      "stickers": [
+        "ai-agent-four-faces-01",
+        "ai-agent-four-faces-02",
+        "ai-agent-four-faces-03",
+        "ai-agent-four-faces-04",
+        "ai-agent-four-faces-05",
+        "ai-agent-four-faces-06",
+        "ai-agent-four-faces-07",
+        "ai-agent-four-faces-08"
+      ],
+      "set_slug": "ai-agent-four-faces"
+    }
+  },
+  "pack": {
+    "item_id": "complete-pack-30",
+    "type": "pack",
+    "title": "Sutekka Complete Pack — 30 stickers",
+    "amount": 2900,
+    "product_id": "prod_VhTZ6WizZIrqxM",
+    "price_id": "price_1Ug4cL2KboBtXa6rG1m87yo4",
+    "link_id": "plink_1Ug4cL2KboBtXa6rbPSb11rO",
+    "url": "https://buy.stripe.com/test_7sY3cog9K7hf3Zw1zw9ws0J",
+    "stickers": [
+      "riemann-rashomon-01",
+      "riemann-rashomon-02",
+      "riemann-rashomon-03",
+      "riemann-rashomon-04",
+      "riemann-rashomon-05",
+      "riemann-rashomon-06",
+      "riemann-rashomon-07",
+      "riemann-rashomon-08",
+      "kakeya-wang-hong-01",
+      "kakeya-wang-hong-02",
+      "kakeya-wang-hong-03",
+      "kakeya-wang-hong-04",
+      "kakeya-wang-hong-05",
+      "kakeya-wang-hong-06",
+      "kakeya-wang-hong-07",
+      "kakeya-wang-hong-08",
+      "deng-yu-hilbert-sixth-01",
+      "deng-yu-hilbert-sixth-02",
+      "deng-yu-hilbert-sixth-03",
+      "deng-yu-hilbert-sixth-04",
+      "deng-yu-hilbert-sixth-05",
+      "deng-yu-hilbert-sixth-06",
+      "deng-yu-hilbert-sixth-07",
+      "deng-yu-hilbert-sixth-08",
+      "lauren-tan-20-agents-01",
+      "lauren-tan-20-agents-02",
+      "lauren-tan-20-agents-03",
+      "lauren-tan-20-agents-04",
+      "lauren-tan-20-agents-05",
+      "lauren-tan-20-agents-06"
+    ]
+  }
+}

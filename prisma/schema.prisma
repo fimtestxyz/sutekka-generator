@@ -6,6 +6,9 @@
 //   - Social layer (UserProfile, UserPreference, Sticker, Bookmark, Like,
 //     Comment): profiles, keyword preferences, and per-set likes /
 //     comments (1-level replies) / bookmarks.
+//   - Shop (Order): one row per paid Stripe Checkout Session, created by
+//     the Stripe webhook (api/stripe/webhook.js); the download page reads
+//     it back by session id. No user account is required to buy.
 //
 // One Sticker row per sticker SET (slug = set slug, e.g.
 // "riemann-rashomon"), not per individual sticker — likes and comments
@@ -161,4 +164,22 @@ model Comment {
   @@index([stickerId, createdAt])
   @@index([parentId])
   @@index([userId])
+}
+
+model Order {
+  id                    String   @id @default(cuid())
+  stripeSessionId       String   @unique
+  stripePaymentLinkId   String?
+  stripePaymentIntentId String?
+  buyerEmail            String?
+  itemId                String
+  itemType              String
+  amountTotal           Int
+  currency              String   @default("sgd")
+  status                String   @default("paid")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([buyerEmail])
+  @@index([createdAt])
 }
