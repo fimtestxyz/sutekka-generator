@@ -33,6 +33,7 @@
     gaReady: false,
     lastSentHash: null,
     currentSlug: null,
+    replyTo: null, // thread id a comment reply goes to, or null
     engageReady: null, // null = unknown, true = API up, false = API down
     session: null, // Auth.js session user, or null when signed out
     authAvailable: null // null = unknown, true = /api/auth up, false = not configured
@@ -334,11 +335,25 @@
       });
   }
 
-  function commentHtml(c) {
-    var when = c.ts ? new Date(c.ts).toLocaleString() : '';
-    return '<article class="comment"><p class="c-head"><strong>' + esc(c.name || 'Anonymous') + '</strong>' +
+  function commentHtml(c, threadId) {
+    var thread = threadId || c.id;
+    var mine = state.session && state.session.id === c.user.id;
+    var when = c.createdAt ? new Date(c.createdAt).toLocaleString() : '';
+    var avatar = c.user.customAvatar || c.user.image;
+    var html = '<article class="comment" data-id="' + esc(c.id) + '" data-thread="' + esc(thread) + '">' +
+      '<p class="c-head">' +
+      (avatar ? '<img class="c-avatar" src="' + esc(avatar) + '" alt="">' : '') +
+      '<strong>' + esc(c.user.name || 'Anonymous') + '</strong>' +
       (when ? ' <span class="c-time">' + esc(when) + '</span>' : '') + '</p>' +
-      '<p class="c-text">' + esc(c.text || '') + '</p></article>';
+      '<p class="c-text">' + esc(c.content || '') + '</p>' +
+      '<p class="c-actions">' +
+      (state.session ? '<button type="button" data-act="reply">Reply</button>' : '') +
+      (mine ? ' <button type="button" data-act="edit">Edit</button> <button type="button" data-act="delete">Delete</button>' : '') +
+      '</p>';
+    if (c.replies && c.replies.length) {
+      html += '<div class="c-replies">' + c.replies.map(function (r) { return commentHtml(r, thread); }).join('') + '</div>';
+    }
+    return html + '</article>';
   }
 
   function loadComments(slug) {
@@ -346,12 +361,12 @@
     if (!list) return;
     list.innerHTML = '';
     if (msg) msg.textContent = 'Loading comments…';
-    fetch('/api/engage?action=comments&slug=' + encodeURIComponent(slug), { cache: 'no-store' })
+    fetch('/api/stickers/' + encodeURIComponent(slug) + '/comments', { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) {
         state.engageReady = true;
         var comments = d.comments || [];
-        list.innerHTML = comments.length ? comments.map(commentHtml).join('') :
+        list.innerHTML = comments.length ? comments.map(function (c) { return commentHtml(c); }).join('') :
           '<p class="empty">No comments yet. Be the first.</p>';
         if (msg) msg.textContent = '';
       })
@@ -366,32 +381,129 @@
       });
   }
 
+  function setReplyTo(threadId, name) {
+    state.replyTo = threadId;
+    var hint = $('replyHint');
+    if (!hint) return;
+    if (!threadId) { hint.hidden = true; hint.innerHTML = ''; return; }
+    hint.hidden = false;
+    hint.innerHTML = 'Replying to ' + esc(name || 'this thread') + ' <button type="button" id="replyCancel">Cancel</button>';
+  }
+
   function postComment(e) {
     e.preventDefault();
     var slug = state.currentSlug;
     var text = $('commentText').value.trim();
     var msg = $('commentMsg');
     if (!slug || !text) return;
-    fetch('/api/engage?action=comment&slug=' + encodeURIComponent(slug), {
-      method: 'POST', cache: 'no-store',
+    if (!state.session) { location.hash = '#/login'; return; }
+    fetch('/api/stickers/' + encodeURIComponent(slug) + '/comments', {
+      method: 'POST', credentials: 'same-origin', cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: $('commentName').value, text: text })
+      body: JSON.stringify({ content: text, parentId: state.replyTo || null })
     })
       .then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
       .then(function (res) {
+        if (res.status === 401) { location.hash = '#/login'; return; }
         if (res.status === 429) { if (msg) msg.textContent = 'Slow down — too many comments too fast.'; return; }
-        if (res.status !== 200 || !res.d.comment) { if (msg) msg.textContent = 'Could not post the comment. Try again.'; return; }
+        if ((res.status !== 200 && res.status !== 201) || !res.d.comment) {
+          if (msg) msg.textContent = 'Could not post the comment. ' + ((res.d.details && res.d.details.join('; ')) || 'Try again.');
+          return;
+        }
         var list = $('commentList');
+        var c = res.d.comment;
         if (list) {
           var empty = list.querySelector('.empty');
           if (empty) empty.remove();
-          list.insertAdjacentHTML('afterbegin', commentHtml(res.d.comment));
+          if (c.parentId) {
+            var thread = list.querySelector('article[data-id="' + c.parentId + '"]');
+            if (thread) {
+              var replies = thread.querySelector('.c-replies');
+              if (!replies) {
+                replies = document.createElement('div');
+                replies.className = 'c-replies';
+                thread.appendChild(replies);
+              }
+              replies.insertAdjacentHTML('beforeend', commentHtml(c, c.parentId));
+            } else {
+              list.insertAdjacentHTML('beforeend', commentHtml(c));
+            }
+          } else {
+            list.insertAdjacentHTML('beforeend', commentHtml(c));
+          }
         }
         $('commentText').value = '';
+        setReplyTo(null);
         if (msg) msg.textContent = 'Comment posted.';
         gaEvent('comment_post', { slug: slug });
       })
       .catch(function () { if (msg) msg.textContent = 'Could not post the comment. Try again.'; });
+  }
+
+  function handleCommentAction(btn) {
+    var article = btn.closest ? btn.closest('article.comment') : null;
+    if (!article) return;
+    var id = article.getAttribute('data-id');
+    var act = btn.getAttribute('data-act');
+    if (act === 'reply') {
+      var nameEl = article.querySelector('.c-head strong');
+      setReplyTo(article.getAttribute('data-thread'), nameEl ? nameEl.textContent : '');
+      $('commentText').focus();
+      return;
+    }
+    if (act === 'delete') {
+      if (!window.confirm('Delete this comment? Replies to it are deleted too.')) return;
+      fetch('/api/comments/' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function () { article.remove(); })
+        .catch(function () { var msg = $('commentMsg'); if (msg) msg.textContent = 'Could not delete the comment.'; });
+      return;
+    }
+    if (act === 'edit') {
+      startEditComment(article, id);
+      return;
+    }
+  }
+
+  function startEditComment(article, id) {
+    var textEl = article.querySelector('.c-text');
+    if (!textEl || article.querySelector('.c-edit')) return;
+    var current = textEl.textContent;
+    var wrap = document.createElement('div');
+    wrap.className = 'c-edit';
+    wrap.innerHTML = '<textarea rows="3" maxlength="1000"></textarea> <button type="button" data-edit="save">Save</button> <button type="button" data-edit="cancel">Cancel</button>';
+    var area = wrap.querySelector('textarea');
+    area.value = current;
+    textEl.hidden = true;
+    article.insertBefore(wrap, textEl.nextSibling);
+    area.focus();
+    wrap.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-edit]') : null;
+      if (!b) return;
+      if (b.getAttribute('data-edit') === 'cancel') { wrap.remove(); textEl.hidden = false; return; }
+      var next = area.value.trim();
+      if (!next) return;
+      fetch('/api/comments/' + encodeURIComponent(id), {
+        method: 'PATCH', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: next })
+      })
+        .then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
+        .then(function (res) {
+          if (res.status !== 200 || !res.d.comment) {
+            var msg = $('commentMsg');
+            if (msg) msg.textContent = 'Could not save the edit.';
+            return;
+          }
+          textEl.textContent = res.d.comment.content;
+          wrap.remove();
+          textEl.hidden = false;
+        })
+        .catch(function () {
+          var msg = $('commentMsg');
+          if (msg) msg.textContent = 'Could not save the edit.';
+        });
+    });
   }
 
   function postFeedback(e) {
@@ -851,6 +963,9 @@
 
   document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'likeBtn') toggleLike();
+    if (e.target && e.target.id === 'replyCancel') setReplyTo(null);
+    var actBtn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+    if (actBtn && $('commentList') && $('commentList').contains(actBtn)) handleCommentAction(actBtn);
   });
   document.addEventListener('submit', function (e) {
     if (e.target && e.target.id === 'commentForm') postComment(e);

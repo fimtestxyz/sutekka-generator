@@ -232,3 +232,21 @@ body.modal-open { overflow: hidden; }
 .field { display: block; margin-bottom: 10px; }
 .field > span { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 4px; }
 .profile-avatar { width: 64px; height: 64px; border-radius: 50%; }
+
+/* ---------- comments: threads ---------- */
+.c-replies { margin: 10px 0 0 18px; display: flex; flex-direction: column; gap: 10px; }
+.c-replies .comment { background: var(--bg); }
+.c-avatar { width: 22px; height: 22px; border-radius: 50%; vertical-align: -5px; margin-right: 6px; }
+.c-actions { margin: 6px 0 0; }
+.c-actions button, .reply-hint button {
+  padding: 3px 10px; font-size: 0.85rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--muted);
+}
+.reply-hint { color: var(--muted); font-size: 0.9rem; }
+.c-edit textarea { width: 100%; padding: 8px 10px; font-size: 0.95rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.c-edit button {
+  padding: 6px 12px; font-size: 0.9rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text);
+}

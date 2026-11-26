@@ -88,9 +88,9 @@
       <h2>Comments</h2>
       <div id="commentList" class="comment-list"></div>
       <p id="commentMsg" class="comment-msg" aria-live="polite"></p>
+      <p id="replyHint" class="reply-hint" hidden></p>
       <form id="commentForm" class="comment-form" onsubmit="return false;">
-        <input id="commentName" type="text" maxlength="40" placeholder="Name (optional)" autocomplete="nickname" aria-label="Your name">
-        <textarea id="commentText" rows="3" maxlength="500" placeholder="Say something about this sticker set…" required aria-label="Your comment"></textarea>
+        <textarea id="commentText" rows="3" maxlength="1000" placeholder="Say something about this sticker set…" required aria-label="Your comment"></textarea>
         <button type="submit">Post comment</button>
       </form>
     </div>
