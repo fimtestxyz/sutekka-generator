@@ -23,14 +23,18 @@ a { color: var(--accent); }
 img { max-width: 100%; display: block; }
 
 .top {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background: var(--surface);
   position: sticky; top: 0; z-index: 10;
+}
+.top-inner {
+  max-width: 1060px; margin: 0 auto; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .brand { font-weight: 800; font-size: 1.15rem; color: var(--text); text-decoration: none; }
 .topnav a { margin-left: 18px; color: var(--text); text-decoration: none; }
 .topnav a:hover { color: var(--accent); }
+.topnav a.active { color: var(--accent); font-weight: 700; }
 
 .view { max-width: 1060px; margin: 0 auto; padding: 20px 16px 40px; }
 .intro h1 { font-size: 1.6rem; margin: 6px 0 4px; line-height: 1.3; }
@@ -55,9 +59,17 @@ img { max-width: 100%; display: block; }
 .topics button { font-size: 0.85rem; padding: 5px 11px; }
 .count { color: var(--muted); font-size: 0.9rem; margin: 8px 0 12px; }
 
+/* Visible keyboard focus everywhere: links, buttons, inputs, cells. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .grid {
   display: grid; gap: 16px;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+@media (max-width: 719px) {
+  /* Mobile: two columns, never three — the auto-fill minmax can squeeze
+   * a third column in around 600px. */
+  .grid { grid-template-columns: repeat(2, 1fr); }
 }
 .card {
   background: var(--surface); border: 1px solid var(--border);
@@ -193,7 +205,7 @@ body.modal-open { overflow: hidden; }
 /* Tappable sticker cells: a finger badge so readers know to tap. */
 .sticker-cell { position: relative; cursor: pointer; }
 .sticker-cell:hover { border-color: var(--accent); }
-.sticker-cell:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sticker-cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tap-badge {
   position: absolute; top: 8px; right: 8px; padding: 2px 9px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
@@ -219,6 +231,19 @@ body.modal-open { overflow: hidden; }
 /* The column button gets the same click-me treatment as the stickers. */
 .tap-me { animation: tap-nudge 1.6s ease-in-out infinite; }
 
+/* Sticker lightbox navigation: previous / next arrows. */
+.modal-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; padding: 0; font-size: 1.3rem; line-height: 1;
+  cursor: pointer; border: 1px solid var(--border); border-radius: 50%;
+  background: var(--surface); color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); z-index: 2;
+}
+.modal-nav .fi { margin-right: 0; }
+.modal-prev { left: 8px; }
+.modal-next { right: 8px; }
+
 /* Sticker modal: big image, lines, and the script behind it. */
 .sticker-modal-img {
   width: 100%; max-width: 420px; display: block;
@@ -227,11 +252,33 @@ body.modal-open { overflow: hidden; }
 .sticker-modal-ja { font-size: 1.25rem; font-weight: 700; text-align: center; margin: 4px 0 0; }
 .sticker-modal-zh { color: var(--muted); text-align: center; margin: 2px 0 12px; }
 
-/* ---------- auth ---------- */
+/* ---------- user area: avatar + dropdown, separate from the nav ---------- */
 .topnav { margin-left: auto; }
-.auth-area { display: flex; align-items: center; gap: 8px; margin-left: 18px; }
-.auth-area a { color: var(--text); text-decoration: none; }
-.auth-area a:hover { color: var(--accent); }
+.user-area { display: flex; align-items: center; margin-left: 18px; padding-left: 18px; border-left: 1px solid var(--border); }
+.user-area > a { color: var(--text); text-decoration: none; }
+.user-area > a:hover { color: var(--accent); }
+.user-menu { position: relative; }
+.user-menu summary {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  list-style: none; padding: 4px 6px; border-radius: 999px;
+}
+.user-menu summary::-webkit-details-marker { display: none; }
+.user-menu summary:hover { background: var(--accent-soft); }
+.user-menu-list {
+  position: absolute; right: 0; top: calc(100% + 8px); min-width: 180px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); padding: 6px; z-index: 20;
+}
+.user-menu-list a {
+  display: block; padding: 8px 10px; border-radius: 8px;
+  color: var(--text); text-decoration: none;
+}
+.user-menu-list a:hover { background: var(--accent-soft); color: var(--text); }
+.user-menu-list hr { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+.auth-avatar-fallback {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 0.85rem;
+}
 .auth-avatar { width: 24px; height: 24px; border-radius: 50%; }
 .auth-name { font-size: 0.95rem; }
 .btn {
@@ -253,7 +300,9 @@ body.modal-open { overflow: hidden; }
 .c-actions button, .reply-hint button {
   padding: 3px 10px; font-size: 0.85rem; cursor: pointer;
   border: 1px solid var(--border); border-radius: 999px;
-  background: var(--surface); color: var(--muted);
+  /* Full text colour, not muted: at 0.85rem the grey failed the
+   * "can I read this button" test even though the ratio passes AA. */
+  background: var(--surface); color: var(--text);
 }
 .reply-hint { color: var(--muted); font-size: 0.9rem; }
 .c-edit textarea { width: 100%; padding: 8px 10px; font-size: 0.95rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
@@ -285,6 +334,31 @@ button .fi, summary .fi, h2 .fi, p .fi { margin-right: 0.35em; }
  * reads Shared for a few seconds, then reverts. Same on the set page
  * and in the sticker modal. */
 button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
+
+/* ---------- mobile: sticky bottom action bar (reader only) ---------- */
+.mobile-actions { display: none; }
+@media (max-width: 719px) {
+  .mobile-actions {
+    display: flex; gap: 10px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: var(--surface); border-top: 1px solid var(--border);
+  }
+  .mobile-actions button {
+    flex: 1; padding: 12px 16px; font-size: 1rem; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); color: var(--text);
+  }
+  /* Saved uses the same accent state as the set-level Bookmark button. */
+  #mobileSaveBtn[data-bookmarked="true"] { color: var(--accent); }
+  #mobileSaveBtn[data-bookmarked="true"] .fi { color: var(--accent); }
+  /* The fixed bar would cover the last of the reader — leave room. */
+  #reader { padding-bottom: 92px; }
+  /* Header: nav drops to its own row under brand + user area. */
+  .top-inner { flex-wrap: wrap; }
+  .topnav { order: 3; flex-basis: 100%; margin-left: 0; display: flex; overflow-x: auto; padding-top: 8px; }
+  .topnav a { margin-left: 0; margin-right: 18px; white-space: nowrap; }
+}
 
 /* Decorative Tomomi cat PNGs (free Flaticon download, see ICONS.md). */
 .empty-icon { display: block; width: 120px; height: auto; margin: 0 auto 10px; }

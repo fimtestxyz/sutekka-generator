@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf7f0">
 <title>Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸</title>
 <meta name="description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
 <meta property="og:type" content="website">
@@ -21,19 +22,21 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="styles.css?v=15">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
 <header class="top">
-  <a class="brand" href="#/">Sticker Showcase</a>
-  <nav class="topnav">
-    <a href="#/" data-nav="home">Latest</a>
-    <a href="#/bookmarks" data-nav="bookmarks">Bookmarks</a>
-    <a href="#/collections" data-nav="collections">Collections</a>
-    <a href="#/about" data-nav="about">About</a>
-  </nav>
-  <span id="authArea" class="auth-area"><a href="#/login">Sign in</a></span>
+  <div class="top-inner">
+    <a class="brand" href="#/">Sticker Showcase</a>
+    <nav class="topnav" aria-label="Main navigation">
+      <a href="#/" data-nav="home">Latest</a>
+      <a href="#/bookmarks" data-nav="bookmarks">Bookmarks</a>
+      <a href="#/collections" data-nav="collections">Collections</a>
+      <a href="#/about" data-nav="about">About</a>
+    </nav>
+    <span id="authArea" class="user-area"><a href="#/login">Sign in</a></span>
+  </div>
 </header>
 
 <main id="home" class="view">
@@ -113,15 +116,18 @@
     <h2>More from this series</h2>
     <div id="seriesStrip" class="strip"></div>
   </section>
+  <div class="mobile-actions" id="mobileActions">
+    <button id="mobileSaveBtn" aria-pressed="false" data-bookmarked="false"><i class="fi fi-br-bookmark"></i> Save</button>
+    <button id="mobileShareBtn"><i class="fi fi-br-share"></i> Share</button>
+  </div>
 </main>
 
 <main id="about" class="view" hidden>
   <h1>About</h1>
-  <p>Every sticker set here is made by three agents, not one giant prompt. The Editorial Thinker researches and fact-checks the column. The Sticker Scriptwriter finds the angle and writes one point per sticker, with a Japanese reaction line. The Master Illustrator draws it and scores it. If the insight is weak, the work goes back to the Thinker — never to prettier artwork.</p>
-  <p>Minimum publication score is 7/10. The score is shown on each set page — it is an honesty marker, not a boast.</p>
-  <p>Claims that are reported but unconfirmed are labelled as such, in the stickers and on the page. A picture never states an unconfirmed claim as fact.</p>
-  <p>The pipeline, the spec and every brief, script and QA note live in the repo: <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a>.</p>
-  <p>New sticker sets appear here automatically once they are pushed — the listing is generated from the repo, not hand-edited.</p>
+  <p>gobblemon.com turns current-affairs columns into sticker sets — a different way to learn what's happening in the world, and a fun one. One sticker, one point: each set takes a big story and breaks it into eight small pictures you can actually remember.</p>
+  <p>Every fact on a sticker is checked before it's drawn. If something is reported but not confirmed, the sticker says so — a picture never states an unconfirmed claim as fact.</p>
+  <h2>How to enjoy it</h2>
+  <p>Browse a set, tap any sticker to read the point behind it, and collect the ones you like. Share a sticker with a friend when it explains something better than a paragraph could. Each set is walked through by a small cast of animal friends — a rabbit with a pencil, a frog with a magnifying glass, an owl with a scarf, and more.</p>
   <h2>Feedback</h2>
   <p>Something broken, a sticker that missed, an idea for a series? Tell me here.</p>
   <form id="feedbackForm" class="comment-form" onsubmit="return false;">
@@ -153,10 +159,10 @@
 </main>
 
 <footer class="foot">
-  <p>Sticker Showcase · built from <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a> · new sticker sets appear automatically after each push. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
+  <p>Sticker Showcase · gobblemon.com — current affairs, in stickers. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=19" defer></script>
+<script src="app.js?v=20" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>
@@ -171,6 +177,8 @@
   <div class="modal-backdrop" id="stickerModalBackdrop"></div>
   <div class="modal-box">
     <button id="stickerModalClose" class="modal-close" aria-label="Close">×</button>
+    <button id="stickerModalPrev" class="modal-nav modal-prev" aria-label="Previous sticker"><i class="fi fi-br-angle-left"></i></button>
+    <button id="stickerModalNext" class="modal-nav modal-next" aria-label="Next sticker"><i class="fi fi-br-angle-right"></i></button>
     <h2 id="stickerModalTitle"></h2>
     <img id="stickerModalImg" alt="" class="sticker-modal-img">
     <p class="sticker-modal-ja" id="stickerModalJa"></p>

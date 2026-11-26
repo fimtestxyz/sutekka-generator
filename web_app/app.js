@@ -117,21 +117,22 @@
     if (!el) return;
     var u = state.session;
     if (!u) { el.innerHTML = '<a href="#/login">Sign in</a>'; return; }
-    el.innerHTML = '';
-    if (u.image) {
-      var img = document.createElement('img');
-      img.src = u.image; img.alt = ''; img.className = 'auth-avatar';
-      el.appendChild(img);
-    }
-    var name = document.createElement('a');
-    name.href = '#/profile';
-    name.className = 'auth-name';
-    name.textContent = u.name || u.email || 'Signed in';
-    el.appendChild(name);
-    var out = document.createElement('a');
-    out.href = '/api/auth/signout';
-    out.textContent = 'Sign out';
-    el.appendChild(out);
+    // The user area is its own block, separate from the main nav: an
+    // avatar button that opens a dropdown (Profile / Bookmarks /
+    // Collections / Sign out) instead of three same-weight links.
+    var avatar = u.image
+      ? '<img src="' + esc(u.image) + '" alt="" class="auth-avatar">'
+      : '<span class="auth-avatar auth-avatar-fallback" aria-hidden="true">' + esc((u.name || u.email || '?').charAt(0).toUpperCase()) + '</span>';
+    el.innerHTML =
+      '<details class="user-menu">' +
+      '<summary>' + avatar + '<span class="auth-name">' + esc(u.name || u.email || 'Signed in') + '</span><i class="fi fi-br-angle-down"></i></summary>' +
+      '<div class="user-menu-list">' +
+      '<a href="#/profile">Profile</a>' +
+      '<a href="#/bookmarks">Bookmarks</a>' +
+      '<a href="#/collections">Collections</a>' +
+      '<hr>' +
+      '<a href="/api/auth/signout">Sign out</a>' +
+      '</div></details>';
   }
 
   function renderLogin() {
@@ -416,9 +417,7 @@
         state.engageReady = false;
         list.innerHTML = '';
         if (msg) {
-          msg.innerHTML = 'Comments are still being set up. You can also discuss this sticker set on GitHub: ' +
-            '<a href="https://github.com/fimtestxyz/sutekka-generator/issues/new?title=' +
-            encodeURIComponent('Comment: ' + slug) + '">open an issue</a>.';
+          msg.textContent = 'Comments are still being set up. Check back soon.';
         }
       });
   }
@@ -552,10 +551,18 @@
 
   function renderBookmarkBtn(bookmarked) {
     var btn = $('bookmarkBtn');
-    if (!btn) return;
-    btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Saved' : 'Bookmark');
-    btn.setAttribute('aria-pressed', String(bookmarked));
-    btn.setAttribute('data-bookmarked', String(bookmarked));
+    if (btn) {
+      btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Saved' : 'Bookmark');
+      btn.setAttribute('aria-pressed', String(bookmarked));
+      btn.setAttribute('data-bookmarked', String(bookmarked));
+    }
+    // The mobile bottom bar's Save button mirrors the same state.
+    var m = $('mobileSaveBtn');
+    if (m) {
+      m.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Saved' : 'Save');
+      m.setAttribute('aria-pressed', String(bookmarked));
+      m.setAttribute('data-bookmarked', String(bookmarked));
+    }
   }
 
   function loadBookmarkState(slug) {
@@ -766,7 +773,7 @@
         } else if (res.status === 429) {
           if (msg) msg.textContent = 'Slow down — too many messages too fast.';
         } else if (msg) {
-          msg.innerHTML = 'Feedback is still being set up. You can also <a href="https://github.com/fimtestxyz/sutekka-generator/issues/new">open an issue on GitHub</a>.';
+          msg.textContent = 'Feedback is still being set up. Check back soon.';
         }
       })
       .catch(function () { if (msg) msg.textContent = 'Could not send feedback. Try again.'; });
@@ -859,9 +866,16 @@
 
   /* ---------- home grid ---------- */
 
+  /* Descriptive alt text for a sticker: the title plus the scene, which
+   * describes what the picture shows. A screen reader gets the picture,
+   * not just its label. */
+  function stickerAlt(s) {
+    return s.scene ? s.title + '. ' + s.scene : s.title;
+  }
+
   function cardHtml(c) {
     return '<a class="card" href="#/set/' + c.slug + '">' +
-      '<img src="' + c.thumb + '" alt="' + esc(c.title) + '" loading="lazy" decoding="async" style="aspect-ratio:' + c.ratio + '">' +
+      '<img src="' + c.thumb + '" alt="' + esc(c.title + ' — 贴纸合集') + '" loading="lazy" decoding="async" style="aspect-ratio:' + c.ratio + '">' +
       '<div class="card-body"><h2>' + esc(c.title) + '</h2>' +
       '<p class="card-meta">' + esc(seriesTitle(c.batch)) + ' · ' + c.date + '</p></div></a>';
   }
@@ -915,7 +929,7 @@
 
   function stickerCellHtml(s) {
     return '<figure class="sticker-cell tappable" tabindex="0" role="button" data-n="' + esc(s.n) + '" aria-label="' + esc(s.title) + ' — 点开看这张贴纸的脚本">' +
-      '<img src="' + s.file + '" alt="' + esc(s.title) + '" loading="lazy" decoding="async">' +
+      '<img src="' + s.file + '" alt="' + esc(stickerAlt(s)) + '" loading="lazy" decoding="async">' +
       '<span class="tap-badge"><i class="fi fi-br-cursor-finger"></i> 点我</span>' +
       '<figcaption><span class="sticker-ja">' + esc(s.ja) + '</span>' +
       '<span class="sticker-zh">' + esc(s.zh) + '</span></figcaption></figure>';
@@ -935,7 +949,7 @@
     $('crumbBatch').textContent = ' / ' + seriesTitle(c.batch);
     var img = $('setImg');
     img.src = c.image;
-    img.alt = c.title;
+    img.alt = c.title + ' — 贴纸合集，共 ' + (c.stickers || []).length + ' 张';
     $('stage').classList.remove('zoomed');
     var zoomBtn = $('zoomBtn');
     zoomBtn.innerHTML = '<i class="fi fi-br-zoom-in"></i> Zoom in';
@@ -947,6 +961,7 @@
     if (c.character_sheet) {
       cs.hidden = false;
       $('charSheetImg').src = c.character_sheet;
+      $('charSheetImg').alt = c.cast ? '角色介绍：' + c.cast : 'Character sheet';
       $('charSheetCast').textContent = c.cast || '';
     } else {
       cs.hidden = true;
@@ -986,6 +1001,13 @@
     profileEl.hidden = name !== 'profile';
     bookmarksEl.hidden = name !== 'bookmarks';
     collectionsEl.hidden = name !== 'collections';
+    // Active nav state: the reader lives under Latest.
+    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about' }[name] || null;
+    document.querySelectorAll('.topnav a').forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('data-nav') === nav);
+    });
+    // Close the user menu on navigation.
+    document.querySelectorAll('details.user-menu[open]').forEach(function (d) { d.open = false; });
   }
 
   function route() { routeInner(); trackPageView(); }
@@ -1146,7 +1168,7 @@
     $('stickerModalTitle').textContent = s.title;
     var img = $('stickerModalImg');
     img.src = s.file;
-    img.alt = s.title;
+    img.alt = stickerAlt(s);
     $('stickerModalJa').textContent = s.ja || '';
     $('stickerModalZh').textContent = s.zh || '';
     $('stickerModalPoint').textContent = s.point || '';
@@ -1156,6 +1178,20 @@
     loadStickerLike(s.id);
     loadStickerBookmark(s.id);
     gaEvent('sticker_modal', { slug: state.currentSlug || '', n: String(n) });
+  }
+
+  /* Sticker lightbox: previous / next sticker, wrapping around the set.
+   * The modal is the lightbox — arrows on the sides, ArrowLeft /
+   * ArrowRight on the keyboard, Escape to close. */
+  function stickerNav(dir) {
+    var rec = state.currentSlug ? findSet(state.currentSlug) : null;
+    var s = state.currentSticker;
+    if (!rec || !s) return;
+    var list = rec.stickers || [];
+    var i = -1;
+    list.forEach(function (x, idx) { if (String(x.n) === String(s.n)) i = idx; });
+    if (i < 0 || list.length < 2) return;
+    openStickerModal(list[(i + dir + list.length) % list.length].n);
   }
 
   function closeStickerModal() {
@@ -1305,7 +1341,7 @@
    * successful share the button turns green and reads Shared for a few
    * seconds, then reverts to its original label. */
   function markShared(btn, originalHtml) {
-    if (!btn) return;
+    if (!btn || btn.classList.contains('shared')) return; // already showing Shared
     btn.classList.add('shared');
     btn.innerHTML = '<i class="fi fi-br-share"></i> Shared';
     setTimeout(function () {
@@ -1347,7 +1383,9 @@
     done(url);
   }
 
-  $('shareBtn').addEventListener('click', function () {
+  /* Share this set — used by the reader-tools button and by the mobile
+   * bottom bar (same action, same green Shared state). */
+  function shareSet(btn) {
     // Clean share URL, not the hash URL: crawlers never see the
     // fragment, so /share/<slug>/ is the page with the OG tags.
     var url = state.currentSlug
@@ -1361,18 +1399,23 @@
     var title = (rec && rec.share_title) || $('setTitle').textContent;
     var text = (rec && rec.share_teaser) || '';
     var msg = $('shareMsg');
+    var original = btn ? btn.innerHTML : '';
     gaEvent('share', { slug: state.currentSlug || '' });
-    function done(text) { msg.textContent = text; setTimeout(function () { msg.textContent = ''; }, 2500); }
+    function done(t) { if (msg) { msg.textContent = t; setTimeout(function () { msg.textContent = ''; }, 2500); } }
     if (navigator.share) {
       var payload = { title: title, url: url };
       if (text) payload.text = text;
-      navigator.share(payload).then(function () { markShared($('shareBtn'), '<i class="fi fi-br-share"></i> Share this set'); done('Shared.'); }, function () { /* dismissed */ });
+      navigator.share(payload).then(function () { if (btn) markShared(btn, original); done('Shared.'); }, function () { /* dismissed */ });
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () { markShared($('shareBtn'), '<i class="fi fi-br-share"></i> Share this set'); done('Link copied.'); }, function () { done(url); });
+      navigator.clipboard.writeText(url).then(function () { if (btn) markShared(btn, original); done('Link copied.'); }, function () { done(url); });
     } else {
       done(url);
     }
-  });
+  }
+
+  $('shareBtn').addEventListener('click', function () { shareSet(this); });
+  $('mobileShareBtn').addEventListener('click', function () { shareSet(this); });
+  $('mobileSaveBtn').addEventListener('click', toggleBookmark);
 
   // Character sheet preference: collapsed by default, remembered in
   // localStorage so the reader's choice sticks across visits.
@@ -1388,6 +1431,8 @@
   $('columnModalBackdrop').addEventListener('click', closeColumnModal);
   $('stickerModalClose').addEventListener('click', closeStickerModal);
   $('stickerModalBackdrop').addEventListener('click', closeStickerModal);
+  $('stickerModalPrev').addEventListener('click', function () { stickerNav(-1); });
+  $('stickerModalNext').addEventListener('click', function () { stickerNav(1); });
   $('stickerGrid').addEventListener('click', function (e) {
     var cell = e.target.closest ? e.target.closest('.sticker-cell') : null;
     if (cell) openStickerModal(cell.getAttribute('data-n'));
@@ -1401,9 +1446,18 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !$('columnModal').hidden) closeColumnModal();
     if (e.key === 'Escape' && !$('stickerModal').hidden) closeStickerModal();
+    if (!$('stickerModal').hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      var tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return; // typing, not navigating
+      e.preventDefault();
+      stickerNav(e.key === 'ArrowLeft' ? -1 : 1);
+    }
   });
 
   document.addEventListener('click', function (e) {
+    // Close the user menu when the tap lands outside it.
+    var menu = e.target && e.target.closest ? e.target.closest('.user-menu') : null;
+    if (!menu) document.querySelectorAll('details.user-menu[open]').forEach(function (d) { d.open = false; });
     // closest('button'): the buttons contain <i> icons, and a tap on the
     // icon itself has the icon as e.target, not the button.
     var btn = e.target && e.target.closest ? e.target.closest('button') : null;
