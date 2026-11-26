@@ -98,7 +98,14 @@ video required) never disclosed before payment.
   the feedback form on the About page. Prices include GST (also
   MONETISE.md §7: say so on the checkout page).
 - Shell app.js?v=26 / styles.css?v=20, SW v27. Tests 153/153,
-  typecheck clean. Live verify: (pending — browser check running)
+  typecheck clean. Live verify 2026-11-27 ~05:24: ALL PASS — one
+  set in cart shows "S$14 away from the complete pack" with a
+  half-full bar and Add-the-pack button; tapping it gives set +
+  pack, subtotal S$44, "Complete pack in your cart ✓"; refund line
+  (quoted verbatim above) visible on the cart page and the download
+  page. Note from the same check: the download page spent ~35s on
+  the "Confirming your payment…" spinner before the files appeared
+  — pre-existing polling behaviour, not new in v1.1.
 
 ## Build status (v1 — built 2026-11-27, deploy dpl_AA8dk9oHinUqi2dgiYAGgn1UyHKA READY)
 
