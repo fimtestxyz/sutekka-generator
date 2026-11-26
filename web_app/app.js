@@ -47,6 +47,8 @@
 
   var LS_LIKED_KEY = 'sticker-showcase-liked-v1';
   var LS_LIKE_COUNTS_KEY = 'sticker-showcase-like-counts-v1';
+  var LS_BOOKMARKED_KEY = 'sticker-showcase-bookmarked-v1';
+  var LS_BOOKMARKS_KEY = 'sticker-showcase-bookmarks-v1';
 
   function gaEvent(name, params) {
     if (!state.gaReady || typeof window.gtag !== 'function') return;
@@ -91,6 +93,7 @@
       .then(function (d) {
         state.session = d && d.user ? d.user : null;
         renderAuthArea();
+        if (state.session) prefetchBookmarks();
         var hash = location.hash || '#/';
         if (hash === '#/login') renderLogin();
         if (hash === '#/profile') renderProfile();
@@ -296,6 +299,7 @@
   function renderLike(count, liked, localOnly) {
     var btn = $('likeBtn'), countEl = $('likeCount'), note = $('likeNote');
     if (!btn) return;
+    state.likeCount = count;
     btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? 'Liked' : 'Like');
     btn.setAttribute('aria-pressed', String(liked));
     countEl.textContent = count > 0 ? count + (count === 1 ? ' like' : ' likes') : 'No likes yet';
@@ -303,11 +307,14 @@
   }
 
   function loadLikes(slug) {
-    renderLike(0, Boolean(lsGet(LS_LIKED_KEY)[slug]), false);
+    renderLike(lsGet(LS_LIKE_COUNTS_KEY)[slug] || 0, Boolean(lsGet(LS_LIKED_KEY)[slug]), false);
     fetch('/api/stickers/' + encodeURIComponent(slug) + '/like', { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) {
         state.engageReady = true;
+        var counts = lsGet(LS_LIKE_COUNTS_KEY);
+        counts[slug] = d.likes || 0;
+        lsSet(LS_LIKE_COUNTS_KEY, counts);
         renderLike(d.likes || 0, d.liked || Boolean(lsGet(LS_LIKED_KEY)[slug]), false);
       })
       .catch(function () {
@@ -316,27 +323,21 @@
       });
   }
 
-  function toggleLikeLocal(slug, liked) {
-    // Server not configured: keep the like on this device.
-    var likedMap = lsGet(LS_LIKED_KEY);
-    var counts = lsGet(LS_LIKE_COUNTS_KEY);
-    counts[slug] = Math.max(0, (counts[slug] || 0) + (liked ? 1 : -1));
-    lsSet(LS_LIKE_COUNTS_KEY, counts);
-    if (liked) likedMap[slug] = true; else delete likedMap[slug];
-    lsSet(LS_LIKED_KEY, likedMap);
-    renderLike(counts[slug], liked, true);
-  }
-
   function toggleLike() {
     var slug = state.currentSlug;
     if (!slug) return;
     if (!state.session) { location.hash = '#/login'; return; }
     var likedMap = lsGet(LS_LIKED_KEY);
     var liked = !likedMap[slug];
-    if (state.engageReady === false) {
-      toggleLikeLocal(slug, liked);
-      return;
-    }
+    // Optimistic: show the new state right away, so the tap feels instant;
+    // the server call below only confirms it.
+    var counts = lsGet(LS_LIKE_COUNTS_KEY);
+    counts[slug] = Math.max(0, (state.likeCount || 0) + (liked ? 1 : -1));
+    lsSet(LS_LIKE_COUNTS_KEY, counts);
+    if (liked) likedMap[slug] = true; else delete likedMap[slug];
+    lsSet(LS_LIKED_KEY, likedMap);
+    renderLike(counts[slug], liked, state.engageReady === false);
+    if (state.engageReady === false) return;
     fetch('/api/stickers/' + encodeURIComponent(slug) + '/like', { method: 'POST', credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) {
         if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
@@ -346,13 +347,26 @@
       .then(function (d) {
         if (d.liked) likedMap[slug] = true; else delete likedMap[slug];
         lsSet(LS_LIKED_KEY, likedMap);
+        counts[slug] = d.likes || 0;
+        lsSet(LS_LIKE_COUNTS_KEY, counts);
         renderLike(d.likes || 0, d.liked, false);
         gaEvent('like', { slug: slug, liked: d.liked });
       })
       .catch(function (e) {
-        if (e.message === 'signed out') return;
+        if (e.message === 'signed out') {
+          // Undo the optimistic update: the tap did not count.
+          var m = lsGet(LS_LIKED_KEY);
+          if (liked) delete m[slug]; else m[slug] = true;
+          lsSet(LS_LIKED_KEY, m);
+          var c = lsGet(LS_LIKE_COUNTS_KEY);
+          c[slug] = Math.max(0, (state.likeCount || 0) + (liked ? -1 : 1));
+          lsSet(LS_LIKE_COUNTS_KEY, c);
+          renderLike(c[slug], !liked, false);
+          return;
+        }
+        // Server unreachable: the optimistic state stays as the on-device
+        // state, same as the old local-only fallback.
         state.engageReady = false;
-        toggleLikeLocal(slug, liked);
       });
   }
 
@@ -538,7 +552,7 @@
   }
 
   function loadBookmarkState(slug) {
-    renderBookmarkBtn(false);
+    renderBookmarkBtn(Boolean(lsGet(LS_BOOKMARKED_KEY)[slug]));
     if (!state.session) return;
     fetch('/api/me/bookmarks?stickerId=' + encodeURIComponent(slug), { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -561,6 +575,12 @@
       options.headers = { 'Content-Type': 'application/json' };
       options.body = JSON.stringify({ stickerId: slug });
     }
+    // Optimistic: show the new state right away; the server confirms below.
+    var map = lsGet(LS_BOOKMARKED_KEY);
+    if (!bookmarked) map[slug] = true; else delete map[slug];
+    lsSet(LS_BOOKMARKED_KEY, map);
+    renderBookmarkBtn(!bookmarked);
+    lsSet(LS_BOOKMARKS_KEY, {}); // the saved list changed — drop its cache
     fetch(url, options)
       .then(function (r) {
         if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
@@ -572,10 +592,47 @@
         gaEvent('bookmark', { slug: slug, bookmarked: !bookmarked });
       })
       .catch(function (e) {
+        // Undo the optimistic update, then report the failure.
+        var m = lsGet(LS_BOOKMARKED_KEY);
+        if (bookmarked) m[slug] = true; else delete m[slug];
+        lsSet(LS_BOOKMARKED_KEY, m);
+        renderBookmarkBtn(bookmarked);
         if (e.message === 'signed out') return;
         var msg = $('shareMsg');
         if (msg) { msg.textContent = 'Could not save the bookmark.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
       });
+  }
+
+  // Warm the bookmarks endpoint + cache in the background, so opening
+  // Bookmarks later renders instantly instead of waiting on a cold function.
+  function prefetchBookmarks() {
+    var cached = lsGet(LS_BOOKMARKS_KEY);
+    if (cached && cached.sort === 'recent' && Date.now() - (cached.savedAt || 0) < 5 * 60 * 1000) return;
+    fetch('/api/me/bookmarks?sort=recent', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        lsSet(LS_BOOKMARKS_KEY, { sort: 'recent', savedAt: Date.now(), bookmarks: d.bookmarks || [] });
+      })
+      .catch(function () { /* best effort only */ });
+  }
+
+  function renderBookmarksList(items) {
+    var body = $('bookmarksBody');
+    if (!body) return;
+    var labels = { recent: 'Recent', oldest: 'Oldest', title: 'Title A–Z' };
+    var sortHtml = '<div class="sort-row" role="group" aria-label="Sort bookmarks">' +
+      Object.keys(labels).map(function (s) {
+        return '<button type="button" data-sort="' + s + '"' +
+          (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
+      }).join('') + '</div>';
+    var cards = (items || []).map(function (b) {
+      var set = findSet(b.sticker.slug);
+      return set ? cardHtml(set) : '';
+    }).join('');
+    body.innerHTML = sortHtml +
+      (cards
+        ? '<div class="grid">' + cards + '</div>'
+        : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
   }
 
   function renderBookmarks() {
@@ -589,27 +646,26 @@
       body.innerHTML = '<p>Bookmarks are not set up yet — the site works fine without an account.</p>';
       return;
     }
-    body.innerHTML = '<p>Loading…</p>';
+    // Cache-first: show the last list instantly, refresh in the background.
+    var cached = lsGet(LS_BOOKMARKS_KEY);
+    var shownFromCache = false;
+    if (cached && cached.sort === state.bookmarksSort && cached.bookmarks) {
+      renderBookmarksList(cached.bookmarks);
+      shownFromCache = true;
+    } else {
+      body.innerHTML = '<p>Loading…</p>';
+    }
     fetch('/api/me/bookmarks?sort=' + encodeURIComponent(state.bookmarksSort), { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) {
-        var labels = { recent: 'Recent', oldest: 'Oldest', title: 'Title A–Z' };
-        var sortHtml = '<div class="sort-row" role="group" aria-label="Sort bookmarks">' +
-          Object.keys(labels).map(function (s) {
-            return '<button type="button" data-sort="' + s + '"' +
-              (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
-          }).join('') + '</div>';
-        var cards = (d.bookmarks || []).map(function (b) {
-          var set = findSet(b.sticker.slug);
-          return set ? cardHtml(set) : '';
-        }).join('');
-        body.innerHTML = sortHtml +
-          (cards
-            ? '<div class="grid">' + cards + '</div>'
-            : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
+        var items = d.bookmarks || [];
+        lsSet(LS_BOOKMARKS_KEY, { sort: state.bookmarksSort, savedAt: Date.now(), bookmarks: items });
+        renderBookmarksList(items);
       })
       .catch(function () {
-        body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
+        if (!shownFromCache) {
+          body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
+        }
       });
   }
 
@@ -765,7 +821,7 @@
     state.sets.forEach(function (c) {
       c.tags.forEach(function (t) { counts[t] = (counts[t] || 0) + 1; });
     });
-    var tags = Object.keys(counts).filter(function (t) { return counts[t] >= 2; }).sort();
+    var tags = Object.keys(counts).filter(function (t) { return counts[t] >= 1; }).sort();
     var html = tags.map(function (t) {
       return '<button data-topic="' + esc(t) + '"' +
         (state.topic === t ? ' class="active"' : '') + '>#' + esc(t) + ' (' + counts[t] + ')</button>';
@@ -894,7 +950,10 @@
   $('chips').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-batch]');
     if (!b) return;
-    location.hash = b.dataset.batch === 'all' ? '#/' : '#/batch/' + b.dataset.batch;
+    var id = b.dataset.batch;
+    // Clicking the active category toggles the filter off; without this the
+    // hash is set to the same value and no hashchange fires at all.
+    location.hash = (id === 'all' || String(state.batch) === String(id)) ? '#/' : '#/batch/' + id;
   });
 
   $('topics').addEventListener('click', function (e) {

@@ -199,6 +199,7 @@ body.modal-open { overflow: hidden; }
   font-size: 0.8rem; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   animation: tap-nudge 1.6s ease-in-out infinite;
 }
+.tap-badge .fi { color: #eab308; }
 @keyframes tap-nudge {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }

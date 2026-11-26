@@ -90,3 +90,5 @@
 - Lauren Tan's multi-agent trust engineering（tenten-skills-knowledge-base）
 - 工作室已有研究：fimtestxyz/lauren-tan-agent-study（GROK-WORK.md、
   AGENT-METHOD.md、SOURCES.md）
+
+Tags: Lauren Tan, Grok Bot, 信任曲线

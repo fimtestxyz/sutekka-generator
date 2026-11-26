@@ -7,7 +7,7 @@
 - Set page: https://sutekka.gobblemon.com/share/riemann-rashomon/
 - Reader: https://sutekka.gobblemon.com/#/set/riemann-rashomon
 - QA score: 8.3/10
-- Tags: 黎曼猜想, AI, 数学, 罗生门, 挂谷猜想, 菲尔兹奖, 希尔伯特第六问题, Lauren Tan, AI Agent, Grok Bot, Fable 5.2, OpenClaw
+- Tags: 数学, 黎曼猜想, 罗生门, AI证明, Lean
 - Characters: 黎黎（白兔子，圆眼镜，大黄铅笔）、糊糊（青蛙，放大镜）、 团团（灰猫头鹰，红围巾）
 
 Angle: 一张没人读过的证明，让所有人各说各话——这就是罗生门。
@@ -101,6 +101,8 @@ Angle: 一张没人读过的证明，让所有人各说各话——这就是罗�
 
 一张没人读过的证明，让所有人各说各话——这就是罗生门。
 
+Tags: 黎曼猜想, 罗生门, AI证明, Lean
+
 ## 核实备注（主编留给 QA）
 
 - 专栏第 7 点说 Lean/Mathlib“仅确认顶层定理陈述编译无误”——这个说法
@@ -126,7 +128,7 @@ Angle: 一张没人读过的证明，让所有人各说各话——这就是罗�
 - Set page: https://sutekka.gobblemon.com/share/kakeya-wang-hong/
 - Reader: https://sutekka.gobblemon.com/#/set/kakeya-wang-hong
 - QA score: 8.6/10
-- Tags: 黎曼猜想, AI, 数学, 罗生门, 挂谷猜想, 菲尔兹奖, 希尔伯特第六问题, Lauren Tan, AI Agent, Grok Bot, Fable 5.2, OpenClaw, 王虹, AI验证
+- Tags: 数学, 挂谷猜想, 王虹, 菲尔兹奖, AI验证
 - Characters: 黎黎（白兔子，圆眼镜，大黄铅笔）、糊糊（青蛙，放大镜）、 团团（灰猫头鹰，红围巾）
 
 Angle: 一根针花了一年半才让人读懂；722 篇手稿一夜之间没人读完——慢的那条路才是试金石。
@@ -283,7 +285,7 @@ Tags: 挂谷猜想, 王虹, 菲尔兹奖, AI验证, 数学
 - Set page: https://sutekka.gobblemon.com/share/deng-yu-hilbert-sixth/
 - Reader: https://sutekka.gobblemon.com/#/set/deng-yu-hilbert-sixth
 - QA score: 8.6/10
-- Tags: 黎曼猜想, AI, 数学, 罗生门, 挂谷猜想, 菲尔兹奖, 希尔伯特第六问题, Lauren Tan, AI Agent, Grok Bot, Fable 5.2, OpenClaw
+- Tags: 数学, 希尔伯特第六问题, 邓煜, 玻尔兹曼方程, 菲尔兹奖
 - Characters: 黎黎（白兔子，圆眼镜，大黄铅笔）、糊糊（青蛙，放大镜）、 团团（灰猫头鹰，红围巾）
 
 ### Column (verbatim)
@@ -403,6 +405,8 @@ Tags: 挂谷猜想, 王虹, 菲尔兹奖, AI验证, 数学
 - 网易/新浪：历史首次！中国籍数学家同获菲尔兹奖；从大学同窗到
   菲尔兹“双星”
 
+Tags: 希尔伯特第六问题, 邓煜, 玻尔兹曼方程, 菲尔兹奖
+
 ### Stickers
 
 01. 1900年，第六问题 — 第6問題！ / 第六问题！ (https://sutekka.gobblemon.com/stickers/deng-yu-hilbert-sixth/stickers/01.png) — point: 1900 年，希尔伯特列出 23 个问题；第 6 个问：物理学能不 能像数学一样被公理化——从牛顿定律出发，严格推出流体方程。
@@ -419,7 +423,7 @@ Tags: 挂谷猜想, 王虹, 菲尔兹奖, AI验证, 数学
 - Set page: https://sutekka.gobblemon.com/share/lauren-tan-20-agents/
 - Reader: https://sutekka.gobblemon.com/#/set/lauren-tan-20-agents
 - QA score: 8.6/10
-- Tags: 黎曼猜想, AI, 数学, 罗生门, 挂谷猜想, 菲尔兹奖, 希尔伯特第六问题, Lauren Tan, AI Agent, Grok Bot, Fable 5.2, OpenClaw
+- Tags: AI Agent, Lauren Tan, Grok Bot, 信任曲线
 - Characters: 泡泡（小海獭，怀里抱着海星，大黄铅笔）、章章（紫色小章鱼， 放大镜）、企企（小企鹅，蓝色围巾）
 
 ### Column (verbatim)
@@ -552,6 +556,8 @@ Lauren Tan的案例之所以值得一个专栏，是因为它触及了AI编程�
 - 工作室已有研究：fimtestxyz/lauren-tan-agent-study（GROK-WORK.md、
   AGENT-METHOD.md、SOURCES.md）
 
+Tags: Lauren Tan, Grok Bot, 信任曲线
+
 ### Stickers
 
 01. 一个月 2000 个 PR — 2000件！ / 一个月2000个PR！ (https://sutekka.gobblemon.com/stickers/lauren-tan-20-agents/stickers/01.png) — point: 上个月，她一个人向生产环境合并了 2000 个 PR——演讲的 标题就是这个数字。
@@ -568,7 +574,7 @@ Lauren Tan的案例之所以值得一个专栏，是因为它触及了AI编程�
 - Set page: https://sutekka.gobblemon.com/share/ai-agent-four-faces/
 - Reader: https://sutekka.gobblemon.com/#/set/ai-agent-four-faces
 - QA score: 8.9/10
-- Tags: 黎曼猜想, AI, 数学, 罗生门, 挂谷猜想, 菲尔兹奖, 希尔伯特第六问题, Lauren Tan, AI Agent, Grok Bot, Fable 5.2, OpenClaw
+- Tags: AI Agent, Fable 5.2, OpenClaw, WorkBuddy
 - Characters: 黎黎（白兔子，圆黑框眼镜，大黄铅笔）、糊糊（青色小青蛙，放大镜）、团团（灰色小猫头鹰，红色围巾）
 
 ### Column (verbatim)
@@ -793,6 +799,8 @@ Dario Amodei（Anthropic CEO）发表长文呼吁放缓前沿能力推进的速�
 | 11 | 失败率 70%~95%、60% 归因数据/上下文/治理 | ⚠️ 部分核实（区间实；60% 不得印） |
 
 **核查小结：**11 条主张中 7 条已核实、4 条部分核实、0 条完全无来源——但 4 条部分核实里各藏着一个贴纸不能印的细节（Altman 引言归属、黄仁勋「动态权限」、王小川案例的「帮忙赚钱」、60% 归因）。专栏整体事实骨架是实的，最危险的不是编造，而是**引言张冠李戴和数字口径被悄悄换掉**。编剧写脚本时请严格按第五、六节的正负清单取材。
+
+Tags: Fable 5.2, OpenClaw, WorkBuddy
 
 ### Stickers
 
