@@ -422,10 +422,17 @@ Tests 142/142 (was 97), typecheck clean.
   `api/stickers/[...sticker].js` (like + comments). Function count
   is now 11 of 12 — any new endpoint must reuse a router, not add a
   file. See AGENTS.md.
-- **Not yet verified live:** the file pinning on a real webhook event
-  (a second test purchase is running to prove it); the admin login
-  itself (the owner creates the account at `#/kangle` first — the
-  setup form is live, `setupNeeded: true` confirmed by curl).
+- **Not yet verified live:** nothing outstanding on the code side. The
+  file pinning on a real webhook event is now proven as far as it can
+  be from outside the admin: the second test purchase (Riemann set,
+  S$15, order `cmwxr5kcm000008ia381fl0c9`, 2026-11-27 00:13 SGT)
+  landed with `payMethodType: "card"` on the Order row and the
+  download page showing all 8 files — the new webhook code ran live.
+  The pinned `filesJson` itself is visible only inside the admin
+  order view (it is not a public field). The owner created the admin
+  account after the deploy (`setupNeeded` flipped to false ~00:17
+  SGT), so the first-run setup window is closed; the order's pinned
+  files can be checked in `#/kangle` → Orders → that order.
 - **Still open (from §10):** decisions 2 (invoice/refund in-admin
   needs `STRIPE_SECRET_KEY`), 3 (Stripe shipping collection later),
   4 (print size promise + sample before selling prints), 5
