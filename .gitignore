@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Env (never commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# Prisma generated client lives in node_modules; migrations are committed.
+# Local test artefacts
+*.log
