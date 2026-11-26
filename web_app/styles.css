@@ -267,3 +267,7 @@ body.modal-open { overflow: hidden; }
 .fi { font-size: 1.05em; line-height: 1; vertical-align: -0.12em; }
 button .fi, summary .fi, h2 .fi, p .fi { margin-right: 0.35em; }
 #bookmarkBtn[data-bookmarked="true"] .fi { color: var(--accent); }
+
+/* Decorative Tomomi cat PNGs (free Flaticon download, see ICONS.md). */
+.empty-icon { display: block; width: 120px; height: auto; margin: 0 auto 10px; }
+.profile-deco { display: block; width: 110px; height: auto; margin: 2px auto 4px; }

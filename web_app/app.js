@@ -208,6 +208,7 @@
     }).join('\n');
     body.innerHTML =
       '<form id="profileForm" class="comment-form" onsubmit="return false;">' +
+      '<img class="profile-deco" src="icons/smile.png" alt="" width="512" height="512">' +
       '<h2>Profile</h2>' +
       (avatar ? '<p><img class="profile-avatar" src="' + esc(avatar) + '" alt=""></p>' : '') +
       '<label class="field"><span>Name</span><input id="profileName" type="text" maxlength="100" value="' + esc(u.name || '') + '" autocomplete="nickname"></label>' +
@@ -387,7 +388,7 @@
         state.engageReady = true;
         var comments = d.comments || [];
         list.innerHTML = comments.length ? comments.map(function (c) { return commentHtml(c); }).join('') :
-          '<p class="empty">No comments yet. Be the first.</p>';
+          '<p class="empty"><img class="empty-icon" src="icons/chat.png" alt="" width="512" height="512">No comments yet. Be the first.</p>';
         if (msg) msg.textContent = '';
       })
       .catch(function () {
@@ -605,7 +606,7 @@
         body.innerHTML = sortHtml +
           (cards
             ? '<div class="grid">' + cards + '</div>'
-            : '<p class="empty">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
+            : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
       })
       .catch(function () {
         body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
@@ -626,7 +627,7 @@
       .then(function (res) {
         if (res.status === 200 && res.d.ok) {
           $('feedbackText').value = '';
-          if (msg) msg.textContent = 'Thanks — feedback received.';
+          if (msg) msg.innerHTML = '<img class="empty-icon" src="icons/party.png" alt="" width="512" height="512">Thanks — feedback received.';
           gaEvent('feedback', {});
         } else if (res.status === 429) {
           if (msg) msg.textContent = 'Slow down — too many messages too fast.';
@@ -803,7 +804,7 @@
     img.alt = c.title;
     $('stage').classList.remove('zoomed');
     var zoomBtn = $('zoomBtn');
-    zoomBtn.textContent = 'Zoom in';
+    zoomBtn.innerHTML = '<i class="fi fi-br-zoom-in"></i> Zoom in';
     zoomBtn.setAttribute('aria-pressed', 'false');
     $('stickerGrid').innerHTML = (c.stickers || []).map(stickerCellHtml).join('');
     // Character sheet: collapsed by default; the reader's open/close
@@ -910,13 +911,13 @@
   $('zoomBtn').addEventListener('click', function () {
     var stage = $('stage');
     var zoomed = stage.classList.toggle('zoomed');
-    this.textContent = zoomed ? 'Zoom out' : 'Zoom in';
+    this.innerHTML = zoomed ? '<i class="fi fi-br-zoom-out"></i> Zoom out' : '<i class="fi fi-br-zoom-in"></i> Zoom in';
     this.setAttribute('aria-pressed', String(zoomed));
   });
   $('stage').addEventListener('click', function (e) {
     if (e.target.tagName === 'IMG' && this.classList.contains('zoomed')) {
       this.classList.remove('zoomed');
-      $('zoomBtn').textContent = 'Zoom in';
+      $('zoomBtn').innerHTML = '<i class="fi fi-br-zoom-in"></i> Zoom in';
       $('zoomBtn').setAttribute('aria-pressed', 'false');
     }
   });
