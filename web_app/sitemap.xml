@@ -1,36 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://sutekka-generator.vercel.app/</loc>
+    <loc>https://sutekka.gobblemon.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://sutekka-generator.vercel.app/share/riemann-rashomon/</loc>
+    <loc>https://sutekka.gobblemon.com/share/riemann-rashomon/</loc>
     <lastmod>2026-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sutekka-generator.vercel.app/share/kakeya-wang-hong/</loc>
+    <loc>https://sutekka.gobblemon.com/share/kakeya-wang-hong/</loc>
     <lastmod>2026-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sutekka-generator.vercel.app/share/deng-yu-hilbert-sixth/</loc>
+    <loc>https://sutekka.gobblemon.com/share/deng-yu-hilbert-sixth/</loc>
     <lastmod>2026-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sutekka-generator.vercel.app/share/lauren-tan-20-agents/</loc>
+    <loc>https://sutekka.gobblemon.com/share/lauren-tan-20-agents/</loc>
     <lastmod>2026-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://sutekka-generator.vercel.app/share/ai-agent-four-faces/</loc>
+    <loc>https://sutekka.gobblemon.com/share/ai-agent-four-faces/</loc>
     <lastmod>2026-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
