@@ -100,8 +100,12 @@ to almost zero width.
   clean single-row lines. Screenshots in /tmp (cart-mobile.png,
   cart-desktop.png — ephemeral, not committed).
 - Shell app.js?v=29 / styles.css?v=23, SW v30 (no index change,
-  DATA_V stays 12). Tests 155/155, typecheck clean. Live verify:
-  (pending — browser check running)
+  DATA_V stays 12). Tests 155/155, typecheck clean. Live verify
+  2026-11-27 ~05:48: ALL PASS — titles on one line at desktop
+  width, no SKU, no "each", price = line total, Remove a text
+  link, thumbnails visible; subtotal S$48; + on the set line →
+  S$30 / S$63. (Phone-width layout verified locally at 390 px
+  before the deploy.)
 
 ## v1.3 — cart lines show thumbnail + SKU + name (2026-11-27)
 
