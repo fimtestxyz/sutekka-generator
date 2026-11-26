@@ -84,6 +84,36 @@ accept confirmation. Guide draft: iguide_61VpSRlFlBiNwPHxl412KboBtXa6r.
   in `web_app/data/inventory.json`, the Neon database with Prisma, and the
   Vercel serverless functions under `api/`.
 
+## Build status — DONE and verified end to end in the sandbox (2026-11-26)
+
+- Commit `a0252b1` (main), deploy `dpl_Geg2DgmEgMyJHsYHEpQmt8sJRoD7` READY.
+- 46 Payment Links created in the sandbox by
+  `scripts/create_stripe_links.py` (idempotent; re-runnable). Link map in
+  `web_app/data/payment-links.json`; webhook fallback map in
+  `api/_lib/payment-link-map.js`.
+- Prisma Order model + migration `20261126233000_add_orders` (applied by
+  the Vercel build's `prisma migrate deploy`).
+- `POST /api/stripe/webhook`: HMAC signature verification with
+  node:crypto (no Stripe SDK); `checkout.session.completed` upserts one
+  Order row. Webhook endpoint `we_1Ug4j72KboBtXa6rnaJy4t2U`, secret set
+  as `STRIPE_WEBHOOK_SECRET` on Vercel (production + preview) by
+  `~/workspace/tools/set_stripe_webhook_secret.py` (secret never printed).
+- `GET/POST /api/orders/lookup`: by session id, order id or email;
+  marks delivered once the download page shows the files.
+- Buy buttons (sticker modal, set page, homepage pack card) + `#/download`
+  view with payment confirmation polling and file download links.
+- Tests 97/97 (was 70), typecheck clean.
+- **End-to-end test purchase verified 2026-11-26 23:41 SGT**: test card
+  4242 paid S$4.00 for ai-agent-four-faces-03 (session
+  cs_test_a0KtrR1FQTgl3eS3joHqEizq3FxmmqMujDnGRjebdknq8rRo7shQr8i8Ox);
+  Stripe confirms payment_status paid + metadata shop_item propagated;
+  Order `cmwxpzx47000008l48txj8k1l` recorded and marked delivered; the
+  download page showed the order summary + the PNG link. **PayNow was
+  listed on the checkout page** alongside cards and Link.
+- Remaining before real money: live account onboarding (business details,
+  bank account, ID check) + PayNow enabled in the Dashboard; then flip
+  the links to live mode and re-verify with a real S$4 purchase.
+
 ## Open decisions
 
 1. Managed Payments now or later (recommendation: later, see above).
