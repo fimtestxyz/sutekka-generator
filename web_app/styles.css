@@ -7,6 +7,7 @@
   --border: #e5ded0;
   --accent: #b3402a;
   --accent-soft: #f6e8e4;
+  --ok: #2e7d4f;
   --radius: 10px;
 }
 * { box-sizing: border-box; }
@@ -93,7 +94,7 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--border); border-radius: 999px;
   background: var(--surface); color: var(--text);
 }
-.like-row button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.like-row button[aria-pressed="true"], #stickerLikeBtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .like-count { font-size: 0.92rem; }
 .like-note { color: var(--muted); font-size: 0.85rem; }
 .comments h2, #about h2 { font-size: 1.1rem; margin: 0 0 10px; }
@@ -137,7 +138,7 @@ img { max-width: 100%; display: block; }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #171512; --surface: #211e1a; --text: #f0ebe2;
-    --muted: #a89f92; --border: #38322a; --accent: #e0785f; --accent-soft: #3a2723;
+    --muted: #a89f92; --border: #38322a; --accent: #e0785f; --accent-soft: #3a2723; --ok: #7cc79b;
   }
   .card img { background: #2a2620; }
 }
@@ -201,8 +202,14 @@ body.modal-open { overflow: hidden; }
 }
 .tap-badge .fi { color: #eab308; }
 
-/* Sticker modal actions: like / collect / share one sticker. */
+/* Sticker modal actions: like / collect / share one sticker. Same pill
+ * buttons as the set-level .like-row, so the state colours match. */
 .sticker-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.sticker-actions button {
+  padding: 8px 16px; font-size: 0.95rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text);
+}
 .sticker-actions .meta { color: var(--muted); font-size: 0.9rem; }
 @keyframes tap-nudge {
   0%, 100% { transform: translateY(0); }
@@ -271,7 +278,13 @@ body.modal-open { overflow: hidden; }
    the "Uicons by Flaticon" footer attribution (already in the footer). */
 .fi { font-size: 1.05em; line-height: 1; vertical-align: -0.12em; }
 button .fi, summary .fi, h2 .fi, p .fi { margin-right: 0.35em; }
-#bookmarkBtn[data-bookmarked="true"] .fi { color: var(--accent); }
+#bookmarkBtn[data-bookmarked="true"], #stickerBookmarkBtn[data-bookmarked="true"] { color: var(--accent); }
+#bookmarkBtn[data-bookmarked="true"] .fi, #stickerBookmarkBtn[data-bookmarked="true"] .fi { color: var(--accent); }
+
+/* Shared state: after a successful share the button turns green and
+ * reads Shared for a few seconds, then reverts. Same on the set page
+ * and in the sticker modal. */
+button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 
 /* Decorative Tomomi cat PNGs (free Flaticon download, see ICONS.md). */
 .empty-icon { display: block; width: 120px; height: auto; margin: 0 auto 10px; }

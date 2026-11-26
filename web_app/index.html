@@ -21,7 +21,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=13">
+<link rel="stylesheet" href="styles.css?v=14">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
@@ -30,6 +30,7 @@
   <nav class="topnav">
     <a href="#/" data-nav="home">Latest</a>
     <a href="#/bookmarks" data-nav="bookmarks">Bookmarks</a>
+    <a href="#/collections" data-nav="collections">Collections</a>
     <a href="#/about" data-nav="about">About</a>
   </nav>
   <span id="authArea" class="auth-area"><a href="#/login">Sign in</a></span>
@@ -146,11 +147,16 @@
   <div id="bookmarksBody"><p>Loading…</p></div>
 </main>
 
+<main id="collections" class="view" hidden>
+  <h1>Collections</h1>
+  <div id="collectionsBody"><p>Loading…</p></div>
+</main>
+
 <footer class="foot">
   <p>Sticker Showcase · built from <a href="https://github.com/fimtestxyz/sutekka-generator">fimtestxyz/sutekka-generator</a> · new sticker sets appear automatically after each push. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=18" defer></script>
+<script src="app.js?v=19" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>

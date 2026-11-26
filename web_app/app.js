@@ -47,7 +47,7 @@
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -104,6 +104,7 @@
         if (hash === '#/login') renderLogin();
         if (hash === '#/profile') renderProfile();
         if (hash === '#/bookmarks') renderBookmarks();
+        if (hash === '#/collections') renderCollections();
       })
       .catch(function () {
         state.authAvailable = false;
@@ -638,6 +639,12 @@
     return set2 ? cardHtml(set2) : '';
   }
 
+  function isStickerBookmark(b) {
+    // Individual sticker ids are "<set-slug>-NN"; set slugs never end
+    // in -NN, so the suffix tells the two apart.
+    return /-\d{2}$/.test(b.sticker.slug);
+  }
+
   function renderBookmarksList(items) {
     var body = $('bookmarksBody');
     if (!body) return;
@@ -647,11 +654,28 @@
         return '<button type="button" data-sort="' + s + '"' +
           (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
       }).join('') + '</div>';
-    var cards = (items || []).map(bookmarkCardHtml).join('');
+    // Bookmarks = whole sets only; collected stickers live in Collections.
+    var cards = (items || []).filter(function (b) { return !isStickerBookmark(b); }).map(bookmarkCardHtml).join('');
     body.innerHTML = sortHtml +
       (cards
         ? '<div class="grid">' + cards + '</div>'
         : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
+  }
+
+  function renderCollectionsList(items) {
+    var body = $('collectionsBody');
+    if (!body) return;
+    var labels = { recent: 'Recent', oldest: 'Oldest', title: 'Title A–Z' };
+    var sortHtml = '<div class="sort-row" role="group" aria-label="Sort collection">' +
+      Object.keys(labels).map(function (s) {
+        return '<button type="button" data-sort="' + s + '"' +
+          (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
+      }).join('') + '</div>';
+    var cards = (items || []).filter(isStickerBookmark).map(bookmarkCardHtml).join('');
+    body.innerHTML = sortHtml +
+      (cards
+        ? '<div class="grid">' + cards + '</div>'
+        : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No stickers collected yet. Open a sticker and tap <i class="fi fi-br-bookmark"></i> Collect to save it here.</p>');
   }
 
   function renderBookmarks() {
@@ -684,6 +708,41 @@
       .catch(function () {
         if (!shownFromCache) {
           body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
+        }
+      });
+  }
+
+  function renderCollections() {
+    var body = $('collectionsBody');
+    if (!body) return;
+    if (!state.session) {
+      body.innerHTML = '<p>Sign in first to see your collection.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      return;
+    }
+    if (state.authAvailable === false) {
+      body.innerHTML = '<p>Collections are not set up yet — the site works fine without an account.</p>';
+      return;
+    }
+    // Same cache as Bookmarks (one list, two views); refresh in the
+    // background.
+    var cached = lsGet(LS_BOOKMARKS_KEY);
+    var shownFromCache = false;
+    if (cached && cached.sort === state.bookmarksSort && cached.bookmarks) {
+      renderCollectionsList(cached.bookmarks);
+      shownFromCache = true;
+    } else {
+      body.innerHTML = '<p>Loading…</p>';
+    }
+    fetch('/api/me/bookmarks?sort=' + encodeURIComponent(state.bookmarksSort), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        var items = d.bookmarks || [];
+        lsSet(LS_BOOKMARKS_KEY, { sort: state.bookmarksSort, savedAt: Date.now(), bookmarks: items });
+        renderCollectionsList(items);
+      })
+      .catch(function () {
+        if (!shownFromCache) {
+          body.innerHTML = '<p>Could not load your collection. Check your connection and reload.</p>';
         }
       });
   }
@@ -926,6 +985,7 @@
     loginEl.hidden = name !== 'login';
     profileEl.hidden = name !== 'profile';
     bookmarksEl.hidden = name !== 'bookmarks';
+    collectionsEl.hidden = name !== 'collections';
   }
 
   function route() { routeInner(); trackPageView(); }
@@ -944,6 +1004,7 @@
     if (parts[0] === 'login') { renderLogin(); showView('login'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'profile') { renderProfile(); showView('profile'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'bookmarks') { renderBookmarks(); showView('bookmarks'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'collections') { renderCollections(); showView('collections'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'batch' && parts[1]) {
       state.batch = parts[1]; state.topic = null; state.shown = PAGE_SIZE;
       renderChips(); renderTopics(); renderGrid(); showView('home'); return;
@@ -1240,6 +1301,19 @@
       });
   }
 
+  /* Shared state (same for the set page and the sticker modal): after a
+   * successful share the button turns green and reads Shared for a few
+   * seconds, then reverts to its original label. */
+  function markShared(btn, originalHtml) {
+    if (!btn) return;
+    btn.classList.add('shared');
+    btn.innerHTML = '<i class="fi fi-br-share"></i> Shared';
+    setTimeout(function () {
+      btn.classList.remove('shared');
+      btn.innerHTML = originalHtml;
+    }, 2500);
+  }
+
   function shareSticker() {
     var s = state.currentSticker;
     if (!s) return;
@@ -1258,16 +1332,16 @@
         var file = new File([blob], s.id + '.png', { type: blob.type || 'image/png' });
         if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error('files unsupported');
         return navigator.share({ files: [file], title: title, text: text });
-      }).then(function () { done('Shared.'); }).catch(function (e) {
+      }).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> Share'); done('Shared.'); }).catch(function (e) {
         if (e && e.name === 'AbortError') return; // user dismissed the sheet
         var payload = { title: title, url: url };
         if (text) payload.text = text;
-        navigator.share(payload).then(function () { done('Shared.'); }, function () { /* dismissed */ });
+        navigator.share(payload).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> Share'); done('Shared.'); }, function () { /* dismissed */ });
       });
       return;
     }
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () { done('Link copied.'); }, function () { done(url); });
+      navigator.clipboard.writeText(url).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> Share'); done('Link copied.'); }, function () { done(url); });
       return;
     }
     done(url);
@@ -1292,9 +1366,9 @@
     if (navigator.share) {
       var payload = { title: title, url: url };
       if (text) payload.text = text;
-      navigator.share(payload).then(function () { done('Shared.'); }, function () { /* dismissed */ });
+      navigator.share(payload).then(function () { markShared($('shareBtn'), '<i class="fi fi-br-share"></i> Share this set'); done('Shared.'); }, function () { /* dismissed */ });
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () { done('Link copied.'); }, function () { done(url); });
+      navigator.clipboard.writeText(url).then(function () { markShared($('shareBtn'), '<i class="fi fi-br-share"></i> Share this set'); done('Link copied.'); }, function () { done(url); });
     } else {
       done(url);
     }
@@ -1343,6 +1417,11 @@
     if (sortBtn && $('bookmarksBody') && $('bookmarksBody').contains(sortBtn)) {
       state.bookmarksSort = sortBtn.getAttribute('data-sort');
       renderBookmarks();
+      return;
+    }
+    if (sortBtn && $('collectionsBody') && $('collectionsBody').contains(sortBtn)) {
+      state.bookmarksSort = sortBtn.getAttribute('data-sort');
+      renderCollections();
       return;
     }
     var actBtn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
