@@ -108,7 +108,15 @@ async function webhookHandler(req, res, deps = {}) {
       files = resolved
         ? resolveOrderFiles(resolved.itemId, resolved.itemType, linksData)
         : null;
+      if (resolved && !files) {
+        console.error(
+          "order files pinning failed: could not resolve files for",
+          resolved.itemId,
+          "— order recorded without a file pin",
+        );
+      }
     } catch (e) {
+      console.error("order files pinning failed", e);
       files = null;
     }
     const payMethodType =
