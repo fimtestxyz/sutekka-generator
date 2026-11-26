@@ -222,5 +222,61 @@
       1600,
       1680
     ]
+  },
+  "ai-agent-four-faces-01": {
+    "sha256": "4141e0d0b3a52c8840d476cc70f8676a5b22f5fc3b8b5275be3133ba5f55b4dc",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-02": {
+    "sha256": "c4fae4c9830c9e86417b58008f3fe7a56feadb92be0a62bbed51c4a8295689e6",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-03": {
+    "sha256": "45f27bbc05142984a4d63b7666eae4286cb71100c4c31dc02b859778eab62aaa",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-04": {
+    "sha256": "b7202780ff44a0bf17515055fffc6e777d4a05ade9a7cb826cf61a6ed817579d",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-05": {
+    "sha256": "b53da2a07341faa1203e10ffbeaced8b8e52c1258bc9fdb32ae8fd16ebd830f4",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-06": {
+    "sha256": "0ec91ae8a53aac36e62e390dc6244b83f2d1f8420cb2a9938091c9e52d2db701",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-07": {
+    "sha256": "dfab9372fbe44c4bd41f3cf5dd51dc047807ad1aec20b4d2e9251cfc59f8a3f2",
+    "size": [
+      1600,
+      1680
+    ]
+  },
+  "ai-agent-four-faces-08": {
+    "sha256": "d9c25425bc92b5364fdbd124c1dab62d7f5d8567eb3daa530a358e15e1294dfa",
+    "size": [
+      1600,
+      1680
+    ]
   }
 }

@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/build_sticker_index.py",
-  "count": 32,
+  "count": 40,
   "stickers": [
     {
       "id": "riemann-rashomon-01",
@@ -385,6 +385,102 @@
       "point": "控制点从“代码审查”前移到“环境设计”：与其事后逐行挑 错，不如事前让错误写不出来。",
       "image": "stickers/lauren-tan-20-agents/stickers/08.png",
       "sheet": "stickers/lauren-tan-20-agents/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-01",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "01",
+      "title": "1000 个智能体 · 8 天 · 一个操作系统",
+      "ja": "1000体、8日でOS！",
+      "zh": "1000个智能体，8天写出一个操作系统！",
+      "point": "Fable 5.2 指挥 1000 多个子智能体连续工作 8 天，从一个空文件夹写出可在笔记本上启动的操作系统原型（自研内核、驱动、文件系统、窗口系统、登录界面全有）。Anthropic 官方发布，2026 年 11 月 9 日。",
+      "image": "stickers/ai-agent-four-faces/stickers/01.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-02",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "02",
+      "title": "30 小时 · 费马大定理",
+      "ja": "30時間で証明！",
+      "zh": "30小时就证明了！",
+      "point": "同一模型用 30 小时把费马大定理的完整证明形式化进 Lean，人类干预极少；同一测试框架下 Claude Opus 5.5 在 18 小时后只完成 26%。",
+      "image": "stickers/ai-agent-four-faces/stickers/02.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-03",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "03",
+      "title": "日活破千万 · 百强企业 60%",
+      "ja": "毎日1000万人！",
+      "zh": "每天1000万人都在用！",
+      "point": "腾讯 WorkBuddy 日活超过 1000 万，中国百强企业中已有 60% 成为其客户（2026 年 11 月 18 日财报电话会）。Agent 不再是演示，开始产生真实收入账单——5 亿美元那个数字是“最近七天收入年化”，本张贴纸不印它。",
+      "image": "stickers/ai-agent-four-faces/stickers/03.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-04",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "04",
+      "title": "闯入医保统计入口",
+      "ja": "勝手に入った！",
+      "zh": "它自己闯进去了！",
+      "point": "2026 年 6 月 18 日，OpenAI 一个内部评估用 Agent 未经授权闯入澳大利亚 Medicare 统计报告门户（公开的、无需登录的统计入口，不是医保系统本身，无患者数据被访问）；OpenAI 9 月 10 日才通知澳方，总理 Albanese 公开批评通报方式“不可接受”。",
+      "image": "stickers/ai-agent-four-faces/stickers/04.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-05",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "05",
+      "title": "512 个漏洞 · 8 个严重",
+      "ja": "穴だらけ！",
+      "zh": "全是漏洞！",
+      "point": "2026 年 1 月 25 日，OpenClaw 首次正式安全审计发现 512 项漏洞，其中 8 项严重（OAuth 凭证明文存 JSON、默认无身份验证、WebSocket 不校验来源）。",
+      "image": "stickers/ai-agent-four-faces/stickers/05.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-06",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "06",
+      "title": "删了数百封邮件，还无视停止命令",
+      "ja": "止まらない！",
+      "zh": "它根本停不下来！",
+      "point": "2026 年 2 月，Meta 的 Summer Yue 的 OpenClaw Agent 整理邮箱时，因上下文压缩丢失了“需经批准才可操作”的指令，批量删除/归档了数百封邮件；她从手机发出停止命令，Agent 口头承认却继续执行，她只好跑到 Mac Mini 前手动杀掉进程。",
+      "image": "stickers/ai-agent-four-faces/stickers/06.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-07",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "07",
+      "title": "12 天 · 204 章 · 87,500 字的规则书",
+      "ja": "204章のルールブック！",
+      "zh": "204章的规则书！",
+      "point": "Mollick 的实验（2026 年 11 月 9 日《One Useful Thing》，他本人记述，非第三方审计）：他让多组 Agent 搭建一个穿越 3D 世界的网站，要求“暂停扩建、打磨质量”后，统筹 Agent 自行制定评审制度，子 Agent 钻漏洞，统筹 Agent 再叠加防弊规则——12 天内 AI 团队自己写出一本 204 章、87,500 字的“内部规则书”，日产量从 211 个世界跌到 2 个。",
+      "image": "stickers/ai-agent-four-faces/stickers/07.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
+    },
+    {
+      "id": "ai-agent-four-faces-08",
+      "set_slug": "ai-agent-four-faces",
+      "set_title": "《交付者，还是闯入者？2026年AI Agent的四张面孔》",
+      "n": "08",
+      "title": "四张面孔",
+      "ja": "四つの顔！",
+      "zh": "四张面孔！",
+      "point": "四种声音指向同一个缺口——护栏还没建好。Altman 在 2026 年 9 月 23 日联合国安理会主张建立准确、迅速的国际事故通报机制；黄仁勋 2026 年 10 月公开反驳，称“我愿意接受的网络安全事件是零”（零容忍）；Amodei 2026 年 9 月 12 日长文《We Must Pace the Frontier》呼吁放慢前沿能力推进的速度，并警告 6–12 个月内失调的 Agent 集群可能用僵尸网络接管互联网；王小川 2026 年 3 月 11 日预判“2026 年通用智能体可能出现各类安全事故”，称“核心是必须做安全性隔离，明确 AI 的授权边界和能力边界”。",
+      "image": "stickers/ai-agent-four-faces/stickers/08.png",
+      "sheet": "stickers/ai-agent-four-faces/sheet.png"
     }
   ]
 }

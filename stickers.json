@@ -27,6 +27,11 @@
       "slug": "lauren-tan-20-agents",
       "status": "published",
       "qa_score": 8.6
+    },
+    {
+      "slug": "ai-agent-four-faces",
+      "status": "published",
+      "qa_score": 8.9
     }
   ]
 }

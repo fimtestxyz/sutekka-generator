@@ -1,1 +1,32 @@
-{"batches": [{"date": "2026-11-25", "id": 1, "premise": "一张贴纸讲一个点：时事专栏变成的贴纸套装。", "slugs": ["riemann-rashomon", "kakeya-wang-hong", "deng-yu-hilbert-sixth", "lauren-tan-20-agents"], "tags": ["黎曼猜想", "AI", "数学", "罗生门", "挂谷猜想", "菲尔兹奖", "希尔伯特第六问题", "Lauren Tan", "AI Agent", "Grok Bot"], "title": "Current Affairs Stickers", "title_zh": "时事贴纸"}]}
+{
+  "batches": [
+    {
+      "date": "2026-11-25",
+      "id": 1,
+      "premise": "一张贴纸讲一个点：时事专栏变成的贴纸套装。",
+      "slugs": [
+        "riemann-rashomon",
+        "kakeya-wang-hong",
+        "deng-yu-hilbert-sixth",
+        "lauren-tan-20-agents",
+        "ai-agent-four-faces"
+      ],
+      "tags": [
+        "黎曼猜想",
+        "AI",
+        "数学",
+        "罗生门",
+        "挂谷猜想",
+        "菲尔兹奖",
+        "希尔伯特第六问题",
+        "Lauren Tan",
+        "AI Agent",
+        "Grok Bot",
+        "Fable 5.2",
+        "OpenClaw"
+      ],
+      "title": "Current Affairs Stickers",
+      "title_zh": "时事贴纸"
+    }
+  ]
+}
