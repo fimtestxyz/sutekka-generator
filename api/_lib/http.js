@@ -44,4 +44,28 @@ async function readJsonBody(req) {
   return JSON.parse(text);
 }
 
-module.exports = { sendJson, methodNotAllowed, dbAvailable, readJsonBody };
+/**
+ * URL path segments of a request (query string stripped, each
+ * segment decoded). For /api/stickers/<id>/like this returns
+ * ["api", "stickers", "<id>", "like"]. Handlers resolve dynamic
+ * route params from here rather than depending on Vercel's
+ * req.query injection, so the same code works in tests.
+ *
+ * @param {import("http").IncomingMessage} req
+ * @returns {string[]}
+ */
+function getPathSegments(req) {
+  const path = (req.url || "/").split("?")[0];
+  return path
+    .split("/")
+    .filter(Boolean)
+    .map((s) => {
+      try {
+        return decodeURIComponent(s);
+      } catch (e) {
+        return s;
+      }
+    });
+}
+
+module.exports = { sendJson, methodNotAllowed, dbAvailable, readJsonBody, getPathSegments };

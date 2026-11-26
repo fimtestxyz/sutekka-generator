@@ -282,7 +282,7 @@
 
   function loadLikes(slug) {
     renderLike(0, Boolean(lsGet(LS_LIKED_KEY)[slug]), false);
-    fetch('/api/engage?action=likes&slug=' + encodeURIComponent(slug), { cache: 'no-store' })
+    fetch('/api/stickers/' + encodeURIComponent(slug) + '/like', { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) {
         state.engageReady = true;
@@ -294,32 +294,43 @@
       });
   }
 
+  function toggleLikeLocal(slug, liked) {
+    // Server not configured: keep the like on this device.
+    var likedMap = lsGet(LS_LIKED_KEY);
+    var counts = lsGet(LS_LIKE_COUNTS_KEY);
+    counts[slug] = Math.max(0, (counts[slug] || 0) + (liked ? 1 : -1));
+    lsSet(LS_LIKE_COUNTS_KEY, counts);
+    if (liked) likedMap[slug] = true; else delete likedMap[slug];
+    lsSet(LS_LIKED_KEY, likedMap);
+    renderLike(counts[slug], liked, true);
+  }
+
   function toggleLike() {
     var slug = state.currentSlug;
     if (!slug) return;
+    if (!state.session) { location.hash = '#/login'; return; }
     var likedMap = lsGet(LS_LIKED_KEY);
     var liked = !likedMap[slug];
     if (state.engageReady === false) {
-      // Server not configured: keep the like on this device.
-      var counts = lsGet(LS_LIKE_COUNTS_KEY);
-      counts[slug] = Math.max(0, (counts[slug] || 0) + (liked ? 1 : -1));
-      lsSet(LS_LIKE_COUNTS_KEY, counts);
-      if (liked) likedMap[slug] = true; else delete likedMap[slug];
-      lsSet(LS_LIKED_KEY, likedMap);
-      renderLike(counts[slug], liked, true);
+      toggleLikeLocal(slug, liked);
       return;
     }
-    fetch('/api/engage?action=' + (liked ? 'like' : 'unlike') + '&slug=' + encodeURIComponent(slug), { method: 'POST', cache: 'no-store' })
-      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    fetch('/api/stickers/' + encodeURIComponent(slug) + '/like', { method: 'POST', credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) {
+        if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
       .then(function (d) {
         if (d.liked) likedMap[slug] = true; else delete likedMap[slug];
         lsSet(LS_LIKED_KEY, likedMap);
         renderLike(d.likes || 0, d.liked, false);
         gaEvent('like', { slug: slug, liked: d.liked });
       })
-      .catch(function () {
+      .catch(function (e) {
+        if (e.message === 'signed out') return;
         state.engageReady = false;
-        toggleLike(); // fall back to the on-device path once
+        toggleLikeLocal(slug, liked);
       });
   }
 
