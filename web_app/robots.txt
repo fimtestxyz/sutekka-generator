@@ -58,4 +58,4 @@ Allow: /
 User-agent: Bytespider
 Disallow: /
 
-Sitemap: https://sutekka-generator.vercel.app/sitemap.xml
+Sitemap: https://sutekka.gobblemon.com/sitemap.xml

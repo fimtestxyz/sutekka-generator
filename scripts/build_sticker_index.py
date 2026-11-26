@@ -72,11 +72,10 @@ except ImportError:  # pragma: no cover
     Image = None
 
 # Canonical host for absolute URLs in Open Graph tags.
-# PLACEHOLDER: https://sutekka-generator.vercel.app — update this
-# to the real deployment URL once the Vercel project is live and
-# its domain is confirmed. The share button in app.js uses
+# Production domain: https://sutekka.gobblemon.com (custom domain,
+# live 2026-11-26). The share button in app.js uses
 # location.origin, so it follows the host automatically.
-SITE_URL = "https://sutekka-generator.vercel.app"
+SITE_URL = "https://sutekka.gobblemon.com"
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STICKERS_DIR = os.path.join(ROOT, "stickers")
