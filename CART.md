@@ -72,6 +72,53 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.7 — Lili asks before anything is removed (2026-11-27)
+
+User request: "Allow user to remove the cart. But ask to
+confirm. Hopefully dont delete. Use phsyco and make a rabbit
+to ask to confirm... With emotion one. Be creative with the
+experience"
+
+- **Remove and Clear cart no longer delete on one tap: Lili
+  the rabbit asks first.** The modal reuses the site's modal
+  pattern (backdrop, ×, Escape, scroll lock, z-50 above the
+  drawer): Lili's own sticker photo on top
+  (`thumbs/riemann-rashomon-01.jpg` — white rabbit, round
+  glasses, yellow pencil), the item named in her quote, a big
+  dark "Keep it in my bag" button and a small muted underlined
+  "Yes, remove it" link. Clear cart gets the whole-bag
+  variant: "Whoa — the whole bag? I packed every single one
+  of these for you…" / "Keep my bag" / "Yes, clear it all".
+- **Psychology, on purpose:** anthropomorphism (Lili asks in
+  the first person — disappointing a character you like is
+  harder than tapping a button); loss aversion + endowment
+  ("already tucked it into your bag" — removing feels like a
+  loss); default bias (Keep is the big warm button, remove is
+  small muted text); one extra step of friction, so a stray
+  tap can never delete. The stepper reaching 0 is deliberately
+  NOT gated — that is N deliberate taps with the count visibly
+  falling, not an accidental delete.
+- Wiring: the delegated cartBody handler now opens the modal
+  with the entry title (via `findCartItem` + `cartEntry`);
+  the confirm button acts on the pending removal, then
+  `removeFromCart` / `clearCart` run as before. Escape closes
+  only the topmost layer (chain: column / sticker / image /
+  remove / drawer); closing the modal while the drawer is open
+  keeps the page locked. Keep is focused on open. GA events:
+  `cart_remove_prompt` / `cart_remove_kept` /
+  `cart_remove_confirmed`.
+- Shell app.js?v=32 / styles.css?v=26, SW v33 (no index
+  change, DATA_V stays 12). Tests 155/155, typecheck clean.
+  Local headless check at 390 px before deploying: Remove →
+  modal (Lili loaded, item named, Keep focused), Keep → item
+  stays (S$52), confirm → gone (S$44), Clear → "whole bag"
+  copy, Escape cancels, confirm empties the cart. Live verify
+  2026-11-27 ~06:29: ALL PASS — exact copy confirmed in both
+  variants (checker zoomed the artwork), Keep leaves S$34
+  untouched, confirm drops S$34 → S$30, Escape cancels the
+  clear, confirm empties the cart and the badge disappears.
+  No defects.
+
 ## v1.6 — cart drawer + nav icons (2026-11-27)
 
 User request (with a DCHToons cart screenshot): "Make the cart
