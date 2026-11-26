@@ -39,7 +39,7 @@
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -89,7 +89,9 @@
       .then(function (d) {
         state.session = d && d.user ? d.user : null;
         renderAuthArea();
-        if ((location.hash || '#/') === '#/login') renderLogin();
+        var hash = location.hash || '#/';
+        if (hash === '#/login') renderLogin();
+        if (hash === '#/profile') renderProfile();
       })
       .catch(function () {
         state.authAvailable = false;
@@ -108,7 +110,8 @@
       img.src = u.image; img.alt = ''; img.className = 'auth-avatar';
       el.appendChild(img);
     }
-    var name = document.createElement('span');
+    var name = document.createElement('a');
+    name.href = '#/profile';
     name.className = 'auth-name';
     name.textContent = u.name || u.email || 'Signed in';
     el.appendChild(name);
@@ -145,6 +148,120 @@
     body.innerHTML = '<p>Sign in to like, comment and bookmark sticker sets. Browsing works without an account.</p>' +
       '<p><a class="btn" href="/api/auth/signin/google?callbackUrl=%2F">Continue with Google</a></p>' +
       '<p class="meta">Google is only used to identify you here — no posts, no contacts. Sign-in asks for your Google profile and email, nothing else.</p>';
+  }
+
+  /* ---------- profile + preferences ---------- */
+
+  function profileFetch(path, options) {
+    return fetch(path, Object.assign({ credentials: 'same-origin' }, options || {}));
+  }
+
+  function renderProfile() {
+    var body = $('profileBody');
+    if (!body) return;
+    if (!state.session) {
+      body.innerHTML = '<p>Sign in first to edit your profile.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      return;
+    }
+    if (state.authAvailable === false) {
+      body.innerHTML = '<p>Profile editing is not set up yet — the site works fine without an account.</p>';
+      return;
+    }
+    body.innerHTML = '<p>Loading…</p>';
+    Promise.all([
+      profileFetch('/api/me/profile').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
+      profileFetch('/api/me/preferences').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    ]).then(function (res) {
+      renderProfileForms(res[0], res[1]);
+    }).catch(function () {
+      body.innerHTML = '<p>Could not load your profile. Check your connection and reload.</p>';
+    });
+  }
+
+  function renderProfileForms(me, prefs) {
+    var body = $('profileBody');
+    var u = me.user, p = me.profile || {};
+    var avatar = p.customAvatar || u.image || '';
+    var kwLines = (prefs.keywords || []).map(function (k) {
+      return k.weight === 1 ? k.keyword : k.keyword + '=' + k.weight;
+    }).join('\n');
+    body.innerHTML =
+      '<form id="profileForm" class="comment-form" onsubmit="return false;">' +
+      '<h2>Profile</h2>' +
+      (avatar ? '<p><img class="profile-avatar" src="' + esc(avatar) + '" alt=""></p>' : '') +
+      '<label class="field"><span>Name</span><input id="profileName" type="text" maxlength="100" value="' + esc(u.name || '') + '" autocomplete="nickname"></label>' +
+      '<label class="field"><span>Bio (max 280 characters)</span><textarea id="profileBio" rows="3" maxlength="280">' + esc(p.bio || '') + '</textarea></label>' +
+      '<label class="field"><span>Custom avatar URL (https:// — leave empty to use your Google photo)</span><input id="profileAvatar" type="text" inputmode="url" maxlength="2048" value="' + esc(p.customAvatar || '') + '" autocomplete="off"></label>' +
+      '<button type="submit">Save profile</button>' +
+      '<span id="profileMsg" class="comment-msg" aria-live="polite"></span>' +
+      '</form>' +
+      '<form id="prefsForm" class="comment-form" onsubmit="return false;">' +
+      '<h2>Keyword preferences</h2>' +
+      '<p class="meta">One keyword per line, optionally with =weight (0–2, default 1), e.g. <code>AI=1.5</code>. Stored on your account for future personalisation — the listing does not use them yet.</p>' +
+      '<label class="field"><span>Keywords</span><textarea id="prefsKeywords" rows="5">' + esc(kwLines) + '</textarea></label>' +
+      '<button type="submit">Save preferences</button>' +
+      '<span id="prefsMsg" class="comment-msg" aria-live="polite"></span>' +
+      '</form>';
+  }
+
+  function saveProfile(e) {
+    e.preventDefault();
+    var msg = $('profileMsg');
+    var body = {
+      bio: $('profileBio').value,
+      customAvatar: $('profileAvatar').value.trim()
+    };
+    var name = $('profileName').value.trim();
+    if (name) body.name = name;
+    msg.textContent = 'Saving…';
+    profileFetch('/api/me/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          msg.textContent = 'Could not save: ' + ((res.d.details && res.d.details.join('; ')) || res.d.error || 'error');
+          return;
+        }
+        if (res.d.user) { state.session = res.d.user; renderAuthArea(); }
+        msg.textContent = 'Saved.';
+      })
+      .catch(function () { msg.textContent = 'Could not save. Check your connection.'; });
+  }
+
+  function parseKeywords(text) {
+    var seen = {}, errors = [];
+    text.split('\n').forEach(function (line) {
+      var t = line.trim();
+      if (!t) return;
+      var parts = t.split('=');
+      var keyword = parts[0].trim();
+      var weight = 1;
+      if (parts.length > 1) {
+        weight = parseFloat(parts.slice(1).join('='));
+        if (isNaN(weight) || weight < 0 || weight > 2) { errors.push('Bad weight: ' + t); return; }
+      }
+      if (!keyword || keyword.length > 40) { errors.push('Bad keyword: ' + t); return; }
+      seen[keyword] = weight;
+    });
+    var keywords = Object.keys(seen).map(function (k) { return { keyword: k, weight: seen[k] }; });
+    return { keywords: keywords, errors: errors };
+  }
+
+  function savePreferences(e) {
+    e.preventDefault();
+    var msg = $('prefsMsg');
+    var parsed = parseKeywords($('prefsKeywords').value);
+    if (parsed.errors.length) { msg.textContent = parsed.errors[0]; return; }
+    msg.textContent = 'Saving…';
+    profileFetch('/api/me/preferences', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: parsed.keywords }) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          msg.textContent = 'Could not save: ' + ((res.d.details && res.d.details.join('; ')) || res.d.error || 'error');
+          return;
+        }
+        msg.textContent = 'Saved.';
+      })
+      .catch(function () { msg.textContent = 'Could not save. Check your connection.'; });
   }
 
   function lsGet(key) {
@@ -501,6 +618,7 @@
     readerEl.hidden = name !== 'reader';
     aboutEl.hidden = name !== 'about';
     loginEl.hidden = name !== 'login';
+    profileEl.hidden = name !== 'profile';
   }
 
   function route() { routeInner(); trackPageView(); }
@@ -511,6 +629,7 @@
     if (parts[0] === 'set' && parts[1]) { openSet(parts[1]); return; }
     if (parts[0] === 'about') { showView('about'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'login') { renderLogin(); showView('login'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'profile') { renderProfile(); showView('profile'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'batch' && parts[1]) {
       state.batch = parts[1]; state.topic = null; state.shown = PAGE_SIZE;
       renderChips(); renderTopics(); renderGrid(); showView('home'); return;
@@ -725,6 +844,8 @@
   document.addEventListener('submit', function (e) {
     if (e.target && e.target.id === 'commentForm') postComment(e);
     if (e.target && e.target.id === 'feedbackForm') postFeedback(e);
+    if (e.target && e.target.id === 'profileForm') saveProfile(e);
+    if (e.target && e.target.id === 'prefsForm') savePreferences(e);
   });
 
   document.addEventListener('keydown', function (e) {

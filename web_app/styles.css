@@ -227,3 +227,8 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--border); border-radius: 999px;
   background: var(--text); color: var(--bg); text-decoration: none;
 }
+
+/* ---------- profile ---------- */
+.field { display: block; margin-bottom: 10px; }
+.field > span { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 4px; }
+.profile-avatar { width: 64px; height: 64px; border-radius: 50%; }
