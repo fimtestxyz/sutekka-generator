@@ -71,3 +71,27 @@ checks out through a server-side Checkout Session:
 - Server-side drafts / cross-device carts for signed-in users.
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
+
+## Build status (v1 — built 2026-11-27, deploy dpl_AA8dk9oHinUqi2dgiYAGgn1UyHKA READY)
+
+Everything above is built. Tests 153/153 (was 142), typecheck clean.
+
+- **First deploy failed, then fixed:** migration
+  `20261127010000_cart_orders` failed with P3018 — Prisma created
+  the old unique as an INDEX, so `DROP CONSTRAINT` errored. Fixed
+  to `DROP INDEX IF EXISTS`, and the build ran a one-time
+  `migrate resolve --rolled-back` (removed again in the next commit,
+  so the build is clean now). The failed migration applied nothing
+  (transaction rolled back), production never saw a half-state.
+- **Live, verified by curl:** shell app.js?v=24 / styles.css?v=18;
+  `POST /api/orders/checkout` answers 503 `checkout_not_configured`
+  (the route is live, the key is genuinely absent); the two old test
+  orders still look up; the migration left existing rows intact.
+- **Live, verified in the browser:** (pending — cart UI check running)
+- **Still open — the one step only the owner can do:** create a
+  Stripe **restricted key** (Checkout Sessions: write) in the Stripe
+  Dashboard and add it as `STRIPE_SECRET_KEY` on Vercel (production
+  + preview). Until then the cart, drafts and management all work and
+  checkout says plainly that it is not connected yet. Once the key is
+  set, verify with one test-mode cart purchase (two items, one
+  payment) and check the webhook records one Order row per item.
