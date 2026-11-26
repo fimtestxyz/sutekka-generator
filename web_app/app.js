@@ -1005,6 +1005,7 @@
     loadComments(slug);
     loadBookmarkState(slug);
     renderBuyButtons();
+    renderCartButtons();
   }
 
   /* ---------- routing ---------- */
@@ -2239,6 +2240,7 @@
     loadStickerLike(s.id);
     loadStickerBookmark(s.id);
     renderStickerBuyBtn();
+    renderCartButtons();
     gaEvent('sticker_modal', { slug: state.currentSlug || '', n: String(n) });
   }
 

@@ -389,6 +389,9 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
   border-radius: 10px; background: var(--accent); color: #fff;
   font-size: 12px; line-height: 1.5; text-align: center; vertical-align: 1px;
 }
+/* An author display rule beats the [hidden] default, so the badge
+ * needs its own hidden rule or it shows "0" on an empty cart. */
+.cart-count[hidden] { display: none; }
 .cart-list { list-style: none; padding: 0; margin: 12px 0; }
 .cart-list li {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
