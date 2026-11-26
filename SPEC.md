@@ -196,7 +196,9 @@ scripts/
 1. 总编辑给专栏，流水线跑完 §4，`qa.md` ≥ 7/10。
 2. 打编号：跑 `scripts/tag_stickers.py`（每张贴纸底部印 `<slug>-NN`）
    与 `scripts/compose_sheet.py`（重拼 `sheet.png`），再跑
-   `scripts/build_sticker_index.py` 更新 `inventory.json`。
+   `scripts/build_sticker_index.py` 更新 `inventory.json`。同一趟构建
+   还会重生成 SEO/GEO 文件（`robots.txt`、`sitemap.xml`、`llms.txt`、
+   `llms-full.txt`、各套的分享页与首页 OG 图），见 `SEO_GEO.md`。
 3. 总编辑看 `sheet.png` + `qa.md`，决定发布 / 修改 / 放弃。
 3. 发布 = 加入 `stickers.json`（状态 published）+ 推送；网站画廊
    自动读取索引展示。

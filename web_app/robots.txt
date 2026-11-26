@@ -1,0 +1,61 @@
+# Sticker Showcase — crawler & agent-bot policy.
+# Every public page is static content; nothing that powers
+# search or answers is blocked. Full policy: SEO_GEO.md.
+
+User-agent: *
+Allow: /
+
+# Named agent bots are explicitly welcome:
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /
+
+# Bytespider: bulk-training crawler, excluded on purpose.
+User-agent: Bytespider
+Disallow: /
+
+Sitemap: https://sutekka-generator.vercel.app/sitemap.xml

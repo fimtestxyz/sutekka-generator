@@ -1,0 +1,17 @@
+# Sticker Showcase
+
+> Sticker Showcase turns current-affairs columns into sticker sets. One sticker, one point. Every set starts from a researched column: the Editorial Thinker verifies the facts against named sources, the Sticker Scriptwriter finds the angle and writes one point per sticker with a Japanese reaction line, and the Master Illustrator draws it. A set is published only with a QA score of 7/10 or higher; the score is shown on the set page. Claims that are reported but unconfirmed are labelled as such — a picture never states an unconfirmed claim as fact.
+
+## Sets
+
+- [《1700万行代码与一个玩笑：AI“证明”黎曼猜想的罗生门》](https://sutekka-generator.vercel.app/share/riemann-rashomon/): 25万页是个玩笑，98%对问号。最后一张：还没解出来呢。
+- [《一根针穿过三维：王虹的菲尔兹奖证明，与它引爆的AI验证危机》](https://sutekka-generator.vercel.app/share/kakeya-wang-hong/): 127 页读了一年半，722 篇一夜没人读完。最后一张：试金石在这儿。
+- [邓煜与希尔伯特第六问题](https://sutekka-generator.vercel.app/share/deng-yu-hilbert-sixth/): 微观定律没有方向，宏观世界却有。最后一张：安静地闭环了。
+- [Lauren Tan 与 20 个 AI Agent](https://sutekka-generator.vercel.app/share/lauren-tan-20-agents/)
+- [《交付者，还是闯入者？2026年AI Agent的四张面孔》](https://sutekka-generator.vercel.app/share/ai-agent-four-faces/)
+
+## More
+
+- [Full content of every set](https://sutekka-generator.vercel.app/llms-full.txt)
+- [Sitemap](https://sutekka-generator.vercel.app/sitemap.xml)
+- [Homepage](https://sutekka-generator.vercel.app/)

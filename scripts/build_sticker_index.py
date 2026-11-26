@@ -8,8 +8,19 @@ Scans stickers/*/ and generates:
   - web_app/stickers/<slug>/stickers/NN.png (staged copies of the
     individual stickers, for the reader's per-sticker grid)
   - web_app/og/<slug>.jpg     (1200x630 JPEG, link-preview card)
+  - web_app/og/site.jpg       (link-preview card for the homepage,
+    regenerated from the newest set's sheet)
   - web_app/share/<slug>/index.html (static page with Open Graph
     tags for that set; redirects humans to the SPA reader)
+  - web_app/robots.txt       (crawler + agent-bot policy, see
+    SEO_GEO.md; regenerated on every build)
+  - web_app/sitemap.xml      (homepage + one /share/<slug>/ per
+    set — the only crawlable set URLs, since the reader is
+    hash-routed and fragments are never indexed)
+  - web_app/llms.txt         (machine-readable index for LLM
+    crawlers: site summary + every set with its URL)
+  - web_app/llms-full.txt    (full content for LLM crawlers: every
+    set's column, research brief and sticker list)
 
 Why share pages exist: the reader is a hash-routed SPA, and a
 shared link used to be /#/set/<slug>. The fragment is never
@@ -282,6 +293,207 @@ def make_og_image(src, dst):
     return True, height
 
 
+def share_page_json_ld(record):
+    """Structured data for a set's share page: the set as a
+    CreativeWork (with one ImageObject per sticker) plus the
+    breadcrumb Home › set. JSON, so no invented facts — every
+    value comes from the record the build already verified."""
+    slug = record["slug"]
+    desc = (record.get("share_teaser") or record["angle"]
+            or "Sticker set from Sticker Showcase.").strip()
+    lang = "zh-CN" if record["lang"] == "zh" else "en"
+    parts = []
+    for s in record["stickers"]:
+        caption = " / ".join(x for x in (s["ja"], s["zh"]) if x)
+        parts.append({
+            "@type": "ImageObject",
+            "name": s["title"],
+            "contentUrl": f"{SITE_URL}/{s['file']}",
+            "caption": caption,
+        })
+    data = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CreativeWork",
+                "name": record["title"],
+                "description": desc,
+                "url": f"{SITE_URL}/share/{slug}/",
+                "image": f"{SITE_URL}/og/{slug}.jpg",
+                "inLanguage": lang,
+                "datePublished": record["date"],
+                "author": {
+                    "@type": "Organization",
+                    "name": "Sticker Showcase",
+                    "url": SITE_URL,
+                },
+                "hasPart": parts,
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1,
+                     "name": "Sticker Showcase", "item": SITE_URL + "/"},
+                    {"@type": "ListItem", "position": 2,
+                     "name": record["title"],
+                     "item": f"{SITE_URL}/share/{slug}/"},
+                ],
+            },
+        ],
+    }
+    text = json.dumps(data, ensure_ascii=False, indent=2)
+    # A literal "</script>" inside a value would close the tag early.
+    return text.replace("</", "<\\/")
+
+
+# ---------------------------------------------------------------- SEO / GEO
+# robots.txt, sitemap.xml, llms.txt and llms-full.txt are regenerated
+# on every build from the same records as index.json, so a new set
+# is discoverable by search and agent crawlers without any extra step.
+# Full policy: SEO_GEO.md.
+
+AGENT_BOTS = [
+    # OpenAI
+    "GPTBot", "ChatGPT-User", "OAI-SearchBot",
+    # Anthropic
+    "ClaudeBot", "anthropic-ai", "Claude-Web",
+    # Google AI features
+    "Google-Extended",
+    # Perplexity
+    "PerplexityBot", "Perplexity-User",
+    # Apple
+    "Applebot-Extended",
+    # Meta
+    "Meta-ExternalAgent", "Meta-ExternalFetcher",
+    # Common Crawl (feeds many search indexes)
+    "CCBot",
+    # Cohere, You.com, DuckDuckGo
+    "cohere-ai", "YouBot", "DuckAssistBot",
+]
+
+# Deliberate exclusion (see SEO_GEO.md): bulk-training crawler with
+# a record of ignoring crawl limits.
+BLOCKED_BOTS = ["Bytespider"]
+
+
+def robots_text():
+    lines = [
+        "# Sticker Showcase — crawler & agent-bot policy.",
+        "# Every public page is static content; nothing that powers",
+        "# search or answers is blocked. Full policy: SEO_GEO.md.",
+        "",
+        "User-agent: *",
+        "Allow: /",
+        "",
+        "# Named agent bots are explicitly welcome:",
+    ]
+    for bot in AGENT_BOTS:
+        lines += [f"User-agent: {bot}", "Allow: /", ""]
+    for bot in BLOCKED_BOTS:
+        lines += [f"# {bot}: bulk-training crawler, excluded on purpose.",
+                  f"User-agent: {bot}", "Disallow: /", ""]
+    lines.append(f"Sitemap: {SITE_URL}/sitemap.xml")
+    return "\n".join(lines) + "\n"
+
+
+def sitemap_text(records):
+    """Homepage + one /share/<slug>/ per set. The reader's hash
+    routes (#/set/<slug>) are never sent to a server and are never
+    indexed, so they do not belong here."""
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+             "  <url>",
+             f"    <loc>{SITE_URL}/</loc>",
+             "    <changefreq>daily</changefreq>",
+             "    <priority>1.0</priority>",
+             "  </url>"]
+    for r in records:
+        lines += ["  <url>",
+                  f"    <loc>{SITE_URL}/share/{r['slug']}/</loc>",
+                  f"    <lastmod>{r['date']}</lastmod>",
+                  "    <changefreq>monthly</changefreq>",
+                  "    <priority>0.8</priority>",
+                  "  </url>"]
+    lines.append("</urlset>")
+    return "\n".join(lines) + "\n"
+
+
+SITE_INTRO = (
+    "Sticker Showcase turns current-affairs columns into sticker sets. "
+    "One sticker, one point. Every set starts from a researched column: "
+    "the Editorial Thinker verifies the facts against named sources, the "
+    "Sticker Scriptwriter finds the angle and writes one point per sticker "
+    "with a Japanese reaction line, and the Master Illustrator draws it. "
+    "A set is published only with a QA score of 7/10 or higher; the score "
+    "is shown on the set page. Claims that are reported but unconfirmed are "
+    "labelled as such — a picture never states an unconfirmed claim as fact."
+)
+
+
+def llms_text(records):
+    """llms.txt: the index for LLM crawlers — site summary plus every
+    set with its crawlable URL and one-line angle."""
+    lines = ["# Sticker Showcase", "",
+             f"> {SITE_INTRO}", "",
+             "## Sets", ""]
+    for r in records:
+        teaser = (r.get("share_teaser") or r["angle"] or "").strip()
+        lines.append(f"- [{r['title']}]({SITE_URL}/share/{r['slug']}/)"
+                     + (f": {teaser}" if teaser else ""))
+    lines += ["", "## More", "",
+              f"- [Full content of every set]({SITE_URL}/llms-full.txt)",
+              f"- [Sitemap]({SITE_URL}/sitemap.xml)",
+              f"- [Homepage]({SITE_URL}/)"]
+    return "\n".join(lines) + "\n"
+
+
+def llms_full_text(records):
+    """llms-full.txt: the full content — every set's column (verbatim),
+    research brief and sticker list, so an agent can answer from the
+    site's own checked facts instead of guessing."""
+    lines = ["# Sticker Showcase — full content", "",
+             f"> {SITE_INTRO}", ""]
+    for r in records:
+        lines += [f"## {r['title']}", "",
+                  f"- Set page: {SITE_URL}/share/{r['slug']}/",
+                  f"- Reader: {SITE_URL}/#/set/{r['slug']}",
+                  f"- QA score: {r['qa']}/10",
+                  f"- Tags: {', '.join(r['tags'])}"]
+        if r.get("cast"):
+            lines.append(f"- Characters: {r['cast']}")
+        angle = (r["angle"] or "").strip()
+        if angle:
+            lines += ["", f"Angle: {angle}"]
+        column = (r.get("column_source") or "").strip()
+        if column:
+            lines += ["", "### Column (verbatim)", "", column]
+        brief = (r.get("column_md") or "").strip()
+        if brief:
+            lines += ["", "### Research brief", "", brief]
+        if r["stickers"]:
+            lines += ["", "### Stickers", ""]
+            for s in r["stickers"]:
+                line = (f"{s['n']}. {s['title']} — {s['ja']} / {s['zh']} "
+                        f"({SITE_URL}/{s['file']})")
+                if s.get("point"):
+                    line += f" — point: {s['point']}"
+                lines.append(line)
+        lines.append("")
+    return "\n".join(lines)
+
+
+def write_if_changed(path, text):
+    """Write text to path unless the content is identical.
+    Returns True when the file was (re)written."""
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
+            if f.read() == text:
+                return False
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return True
+
+
 def share_page_html(record):
     slug = record["slug"]
     title = record["title"]
@@ -298,6 +510,22 @@ def share_page_html(record):
     og_image = f"{SITE_URL}/og/{slug}.jpg"
     og_height = record.get("og_height", OG_HEIGHT)
     reader_url = f"/#/set/{slug}"
+    lang = "zh-CN" if record["lang"] == "zh" else "en"
+    published = f"{record['date']}T00:00:00+08:00"
+    json_ld = share_page_json_ld(record)
+    # Body content for crawlers (humans are redirected by the script
+    # below before reading it): the angle plus the full sticker list,
+    # so the page is a real document, not just a tag carrier.
+    angle = (record["angle"] or "").strip()
+    sticker_items = "".join(
+        f"<li><strong>{html.escape(s['title'])}</strong>"
+        + (f" — {html.escape(s['ja'])} / {html.escape(s['zh'])}"
+           if s["ja"] or s["zh"] else "")
+        + "</li>"
+        for s in record["stickers"]
+    )
+    cast_line = (f"<p>Characters: {html.escape(record['cast'])}</p>"
+                 if record.get("cast") else "")
     # JS-only redirect on purpose: no meta refresh, so crawlers stay
     # on this page and read the tags above instead of following away.
     return f"""<!DOCTYPE html>
@@ -315,12 +543,17 @@ def share_page_html(record):
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="{og_height}">
 <meta property="og:url" content="{share_url}">
+<meta property="og:locale" content="{lang}">
+<meta property="article:published_time" content="{published}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc_hook}">
 <meta name="twitter:description" content="{esc_desc}">
 <meta name="twitter:image" content="{og_image}">
 <link rel="canonical" href="{share_url}">
-<style>body{{font-family:system-ui,sans-serif;background:#faf7f0;color:#1d1a16;margin:0;padding:48px 20px;text-align:center}}h1{{font-size:22px}}p{{color:#555;max-width:560px;margin:12px auto}}a{{color:#b3402a}}</style>
+<script type="application/ld+json">
+{json_ld}
+</script>
+<style>body{{font-family:system-ui,sans-serif;background:#faf7f0;color:#1d1a16;margin:0;padding:48px 20px;text-align:center}}h1{{font-size:22px}}p{{color:#555;max-width:560px;margin:12px auto}}a{{color:#b3402a}}ol{{text-align:left;max-width:560px;margin:12px auto}}li{{margin:6px 0}}</style>
 <script>location.replace('{reader_url}');</script>
 </head>
 <body>
@@ -329,6 +562,9 @@ def share_page_html(record):
 <p>{esc_desc}</p>
 <p>Opening the sticker set…</p>
 <p><a href="{reader_url}">View {esc_title} on Sticker Showcase →</a></p>
+{f"<h2>About this set</h2><p>{html.escape(angle)}</p>" if angle else ""}
+{f"<ol>{sticker_items}</ol>" if sticker_items else ""}
+{cast_line}
 </main>
 </body>
 </html>
@@ -495,6 +731,20 @@ def main():
             if f.read() != inventory_text:
                 fail("inventory.json is stale — run scripts/build_sticker_index.py")
         print(f"inventory.json is fresh ({inventory['count']} stickers)")
+        # SEO / GEO files are generated from the same records.
+        for name, text in [
+            ("robots.txt", robots_text()),
+            ("sitemap.xml", sitemap_text(records)),
+            ("llms.txt", llms_text(records)),
+            ("llms-full.txt", llms_full_text(records)),
+        ]:
+            path = os.path.join(WEBAPP_DIR, name)
+            if not os.path.isfile(path):
+                fail(f"{name} missing — run the build script")
+            with open(path, encoding="utf-8") as f:
+                if f.read() != text:
+                    fail(f"{name} is stale — run scripts/build_sticker_index.py")
+            print(f"{name} is fresh")
         return
 
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -508,6 +758,26 @@ def main():
     with open(os.path.join(DATA_DIR, "inventory.json"), "w",
               encoding="utf-8") as f:
         f.write(inventory_text)
+
+    # SEO / GEO: robots, sitemap and the LLM index files, all from the
+    # same records — a new set is discoverable without any extra step.
+    seo_made = 0
+    for name, text in [
+        ("robots.txt", robots_text()),
+        ("sitemap.xml", sitemap_text(records)),
+        ("llms.txt", llms_text(records)),
+        ("llms-full.txt", llms_full_text(records)),
+    ]:
+        if write_if_changed(os.path.join(WEBAPP_DIR, name), text):
+            seo_made += 1
+
+    # Homepage link-preview card, regenerated from the newest set.
+    site_og_made = False
+    if records:
+        newest_src = os.path.join(STICKERS_DIR, records[0]["slug"], "sheet.png")
+        wrote_site_og, _h = make_og_image(
+            newest_src, os.path.join(OG_DIR, "site.jpg"))
+        site_og_made = wrote_site_og
 
     thumbs_made = 0
     staged = 0
@@ -548,7 +818,9 @@ def main():
           f"{thumbs_made} thumbs (re)generated, {staged} images staged, "
           f"{og_made} OG images (re)generated, "
           f"{share_made} share pages (re)generated, "
-          f"{sum(1 for r in records if r['slug'] in hooks)} share hooks applied")
+          f"{sum(1 for r in records if r['slug'] in hooks)} share hooks applied, "
+          f"{seo_made} SEO files (re)written, "
+          f"site OG {'regenerated' if site_og_made else 'unchanged'}")
 
 
 if __name__ == "__main__":
