@@ -54,7 +54,7 @@
       this line (no trailing slash, `https`, production domain):
 
       ```
-      https://sutekka-generator.vercel.app/api/auth/callback/google
+      https://sutekka.gobblemon.com/api/auth/callback/google
       ```
 
 - [ ] Optional, only if you also want to test sign-in on your own machine:
@@ -93,7 +93,7 @@
       | `DATABASE_URL` | Pooled string from Step 4 |
       | `DIRECT_URL` | Direct string from Step 4 |
       | `AUTH_SECRET` | Generate now: run `openssl rand -base64 32` in a terminal and paste the output |
-      | `AUTH_URL` | `https://sutekka-generator.vercel.app` |
+      | `AUTH_URL` | `https://sutekka.gobblemon.com` |
       | `AUTH_GOOGLE_ID` | Client ID from Step 3 |
       | `AUTH_GOOGLE_SECRET` | Client secret from Step 3 |
 
@@ -106,7 +106,7 @@
       into `main`, deploy, run the database migration and seed on the first
       deploy, and verify the live site.
 - [ ] Verification checklist (Muse runs it, you confirm the sign-in):
-  - [ ] `https://sutekka-generator.vercel.app/api/auth/session` no longer
+  - [ ] `https://sutekka.gobblemon.com/api/auth/session` no longer
         returns `503 auth_not_configured`.
   - [ ] Click sign-in on the live site → Google account chooser appears →
         after choosing, your name shows in the header.
@@ -117,10 +117,10 @@
 ## Values cheat-sheet (copy-paste)
 
 ```
-Production domain:  https://sutekka-generator.vercel.app
-Redirect URI:       https://sutekka-generator.vercel.app/api/auth/callback/google
+Production domain:  https://sutekka.gobblemon.com
+Redirect URI:       https://sutekka.gobblemon.com/api/auth/callback/google
 Local redirect URI: http://localhost:3000/api/auth/callback/google
-AUTH_URL:           https://sutekka-generator.vercel.app
+AUTH_URL:           https://sutekka.gobblemon.com
 AUTH_SECRET:        openssl rand -base64 32
 ```
 
