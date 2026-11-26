@@ -390,7 +390,46 @@ Versioning follows the existing convention: `app.js`/`styles.css`
   Stripe shipping-address collection on the Payment Links (recreate
   links); sales analytics charts.
 
-## 10. Open decisions (need the owner before building)
+## 11. Build status (v1 — built 2026-11-26/27, commit e554838, deploy dpl_5pN6yXHWqhJPm8N8Uvmrs6mnHevq READY)
+
+Everything in §§2–8 is built except the items marked otherwise below.
+Tests 142/142 (was 97), typecheck clean.
+
+- **Auth:** first-run setup + scrypt hash in `AdminUser` + DB session
+  tokens + 5-fail lockout + audit log, as specced in §2 (the env-var
+  design in the first draft was replaced — see §2).
+- **Webhook pinning:** live — each new order stores `payMethodType`
+  and `filesJson` (file paths + 1600×1680). Redeliveries update only
+  Stripe-owned fields, never status/print/files/admin fields.
+  Deviation from §3: card brand + last 4 are NOT stored in v1 — they
+  need a Stripe API read with the secret key, and v1 deliberately has
+  no `STRIPE_SECRET_KEY` on Vercel. Only the method type (card /
+  PayNow) is stored. Last 4 is a v2 item (with the secret key).
+- **Admin API:** `api/admin/[...admin].js` — all routes in §6 except
+  the invoice-issuing API call: v1 records an invoice issued in the
+  Dashboard (per decision 2); no in-admin issuing.
+- **Buyer:** shipping + invoice-request endpoints live; download page
+  shows tracking, invoice state, and both forms.
+- **Settings:** shop open/closed + announcement + hidden items live;
+  the storefront reads them on load.
+- **Function-count constraint (build lesson):** the first v1 deploy
+  FAILED with `exceeded_serverless_functions_per_deployment` — the
+  Hobby plan allows 12 Serverless Functions per deployment and the
+  project was already at 12 before the admin added 4. Fixed by
+  consolidating into catch-all routers (implementations in `api/_lib/`):
+  `api/orders/[...order].js` (lookup + shipping + invoice-request),
+  `api/me/[...me].js` (bookmarks + preferences + profile),
+  `api/stickers/[...sticker].js` (like + comments). Function count
+  is now 11 of 12 — any new endpoint must reuse a router, not add a
+  file. See AGENTS.md.
+- **Not yet verified live:** the file pinning on a real webhook event
+  (a second test purchase is running to prove it); the admin login
+  itself (the owner creates the account at `#/kangle` first — the
+  setup form is live, `setupNeeded: true` confirmed by curl).
+- **Still open (from §10):** decisions 2 (invoice/refund in-admin
+  needs `STRIPE_SECRET_KEY`), 3 (Stripe shipping collection later),
+  4 (print size promise + sample before selling prints), 5
+  (column-rights check per set, enforced by hide/show).
 
 1. **Admin username + password.** The owner picks them and types them
    into the first-run setup form at `#/kangle` immediately after the
