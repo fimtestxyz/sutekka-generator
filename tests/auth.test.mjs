@@ -4,7 +4,7 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
-import { isAuthConfigured, authHandler } from "../api/_lib/auth.js";
+import { isAuthConfigured, authHandler, getAuthConfig } from "../api/_lib/auth.js";
 import { getSessionFromRequest } from "../api/_lib/session.js";
 
 const ENV_KEYS = ["DATABASE_URL", "AUTH_SECRET", "AUTH_GOOGLE_ID", "AUTH_GOOGLE_SECRET"];
@@ -123,6 +123,23 @@ describe("authHandler", () => {
     assert.equal(res.headers["content-type"], "application/json");
     assert.deepEqual(res.headers["set-cookie"], ["a=1; Path=/; HttpOnly", "b=2; Path=/; HttpOnly"]);
     assert.deepEqual(JSON.parse(await res.body()), { ok: true });
+  });
+});
+
+describe("auth basePath (regression: live 400 Bad request. 2026-11-26)", () => {
+  it("getAuthConfig sets basePath /api/auth", async () => {
+    setAuthEnv();
+    const config = /** @type {{ basePath?: string }} */ (await getAuthConfig());
+    assert.equal(config.basePath, "/api/auth");
+  });
+
+  it("real Auth core answers /api/auth/session with 200, not 400", async () => {
+    setAuthEnv();
+    const res = mockRes();
+    await authHandler(mockReq(), res);
+    assert.equal(res.statusCode, 200);
+    // No session cookie: Auth.js returns JSON null (not {}).
+    assert.equal(JSON.parse(await res.body()), null);
   });
 });
 

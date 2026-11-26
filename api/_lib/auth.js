@@ -52,6 +52,12 @@ async function getAuthConfig() {
   const { Google, PrismaAdapter } = await loadAuthCore();
   configCache = {
     trustHost: true,
+    // @auth/core defaults basePath to "/auth" (the Next.js route sets
+    // it to "/api/auth" automatically). This is a plain Vercel
+    // function at /api/auth/*, so without this the action cannot be
+    // parsed from the path (UnknownAction) and every auth route
+    // answers 400 "Bad request." — seen live 2026-11-26.
+    basePath: "/api/auth",
     secret: process.env.AUTH_SECRET,
     adapter: PrismaAdapter(getPrisma()),
     providers: [
