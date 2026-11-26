@@ -72,6 +72,41 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.8 — fun empty cart: Lili in an empty bag (2026-11-27)
+
+User request (quoting the old line): "Your cart is empty.
+Add a sticker, a set, or the complete pack — the buttons sit
+next to every Buy button. Make it more fun. And show empty
+cart icon with creativity"
+
+- **The empty cart is now a little scene:** a hand-drawn
+  inline SVG of Lili peeking out of an empty paper bag — tall
+  ears with pink inners, round glasses, blush, smile, her
+  yellow pencil tucked in, two sparkles — gently bobbing
+  (respects `prefers-reduced-motion`). Under it: "Nothing in
+  here yet! / Lili peeked inside — just echoes. Add a sticker,
+  a set, or the complete pack, and she'll tuck it in for you."
+  The "buttons sit next to every Buy button" hint stays as a
+  muted line, and a dark "Browse stickers" button closes the
+  drawer back to the shop. (The SVG is drawn, not a photo —
+  no new art asset, no extra download; the saved-drafts list
+  still renders below it when drafts exist.)
+- **Side fix found by the local headless check:** nav icons
+  now have a fixed 18 px box, so the bag button keeps its tap
+  target even if the icon font fails to load — without it, an
+  empty cart (hidden badge, no glyph) collapsed the button to
+  6×0 px and it could not be tapped at all.
+- Shell app.js?v=33 / styles.css?v=27, SW v34 (no index
+  change, DATA_V stays 12). Tests 155/155, typecheck clean.
+  Local headless check at 390 px before deploying: empty
+  state renders (SVG 180×147, copy, button, badge hidden),
+  Browse closes the drawer. Live verify 2026-11-27 ~06:38:
+  ALL PASS — art confirmed in a zoomed view (ears, glasses,
+  blush, pencil, dashed stitch line, sparkles), exact copy,
+  Browse closes the drawer to the shop page. The bobbing was
+  not verified from still screenshots (expected — motion
+  needs a live look).
+
 ## v1.7 — Lili asks before anything is removed (2026-11-27)
 
 User request: "Allow user to remove the cart. But ask to
