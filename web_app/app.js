@@ -149,8 +149,26 @@
       return;
     }
     body.innerHTML = '<p>Sign in to like, comment and bookmark sticker sets. Browsing works without an account.</p>' +
-      '<p><a class="btn" href="/api/auth/signin/google?callbackUrl=%2F">Continue with Google</a></p>' +
+      '<form id="googleSigninForm" method="POST" action="/api/auth/signin/google">' +
+      '<input type="hidden" name="csrfToken" value="">' +
+      '<input type="hidden" name="callbackUrl" value="/">' +
+      '<button class="btn" type="submit" disabled>Continue with Google</button></form>' +
       '<p class="meta">Google is only used to identify you here — no posts, no contacts. Sign-in asks for your Google profile and email, nothing else.</p>';
+    // Auth.js v5 signs in by POST with a CSRF token (a plain GET link to
+    // /api/auth/signin/google is not a sign-in). Fetch the token first;
+    // the fetch also sets the CSRF cookie the POST is checked against.
+    fetch('/api/auth/csrf', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var f = $('googleSigninForm');
+        if (!f) return;
+        f.querySelector('input[name="csrfToken"]').value = d.csrfToken || '';
+        f.querySelector('button[type="submit"]').disabled = false;
+      })
+      .catch(function () {
+        var f = $('googleSigninForm');
+        if (f) f.querySelector('button[type="submit"]').disabled = false;
+      });
   }
 
   /* ---------- profile + preferences ---------- */

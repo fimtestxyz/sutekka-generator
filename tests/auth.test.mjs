@@ -141,6 +141,40 @@ describe("auth basePath (regression: live 400 Bad request. 2026-11-26)", () => {
     // No session cookie: Auth.js returns JSON null (not {}).
     assert.equal(JSON.parse(await res.body()), null);
   });
+
+  it("real Auth core redirects a POST /api/auth/signin/google to Google", async () => {
+    setAuthEnv();
+    // Step 1: fetch the CSRF token (sets the CSRF cookie too).
+    const csrfRes = mockRes();
+    await authHandler(mockReq({ url: "/api/auth/csrf", headers: { host: "example.test" } }), csrfRes);
+    assert.equal(csrfRes.statusCode, 200);
+    const { csrfToken } = JSON.parse(await csrfRes.body());
+    assert.equal(typeof csrfToken, "string");
+    const setCookie = csrfRes.headers["set-cookie"];
+    const csrfCookie = (Array.isArray(setCookie) ? setCookie[0] : setCookie).split(";")[0];
+    // Step 2: POST the sign-in form the way the login page does
+    // (a plain GET link to /api/auth/signin/google is NOT a sign-in
+    // in Auth.js v5 — it renders the sign-in page instead).
+    const res = mockRes();
+    await authHandler(
+      mockReq({
+        method: "POST",
+        url: "/api/auth/signin/google?callbackUrl=%2F",
+        headers: {
+          host: "example.test",
+          "content-type": "application/x-www-form-urlencoded",
+          cookie: csrfCookie,
+        },
+        body: `csrfToken=${encodeURIComponent(csrfToken)}&callbackUrl=%2F`,
+      }),
+      res,
+    );
+    assert.equal(res.statusCode, 302);
+    assert.match(
+      res.headers.location,
+      /^https:\/\/accounts\.google\.com\/o\/oauth2\/v2\/auth\?/,
+    );
+  });
 });
 
 describe("getSessionFromRequest", () => {
