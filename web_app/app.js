@@ -38,6 +38,7 @@
     gaReady: false,
     lastSentHash: null,
     currentSlug: null,
+    currentSticker: null, // sticker object shown in the modal, if any
     replyTo: null, // thread id a comment reply goes to, or null
     bookmarksSort: 'recent', // recent | oldest | title
     engageReady: null, // null = unknown, true = API up, false = API down
@@ -621,6 +622,22 @@
       .catch(function () { /* best effort only */ });
   }
 
+  function bookmarkCardHtml(b) {
+    var slug = b.sticker.slug;
+    // An individual sticker id is "<set-slug>-NN"; set slugs never end
+    // in -NN, so the suffix tells the two apart.
+    var m = slug.match(/^(.*)-(\d{2})$/);
+    if (m) {
+      var set = findSet(m[1]);
+      return '<a class="card" href="#/set/' + m[1] + '/sticker/' + m[2] + '">' +
+        '<img src="' + esc(b.sticker.imageUrl) + '" alt="' + esc(b.sticker.title) + '" loading="lazy" decoding="async" style="aspect-ratio:1600/1680">' +
+        '<div class="card-body"><h2>' + esc(b.sticker.title) + '</h2>' +
+        '<p class="card-meta">' + esc(set ? set.title : m[1]) + '</p></div></a>';
+    }
+    var set2 = findSet(slug);
+    return set2 ? cardHtml(set2) : '';
+  }
+
   function renderBookmarksList(items) {
     var body = $('bookmarksBody');
     if (!body) return;
@@ -630,10 +647,7 @@
         return '<button type="button" data-sort="' + s + '"' +
           (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
       }).join('') + '</div>';
-    var cards = (items || []).map(function (b) {
-      var set = findSet(b.sticker.slug);
-      return set ? cardHtml(set) : '';
-    }).join('');
+    var cards = (items || []).map(bookmarkCardHtml).join('');
     body.innerHTML = sortHtml +
       (cards
         ? '<div class="grid">' + cards + '</div>'
@@ -919,7 +933,13 @@
   function routeInner() {
     var hash = location.hash || '#/';
     var parts = hash.replace(/^#\//, '').split('/');
-    if (parts[0] === 'set' && parts[1]) { openSet(parts[1]); return; }
+    if (parts[0] === 'set' && parts[1]) {
+      openSet(parts[1]);
+      // Deep link to one sticker: #/set/<slug>/sticker/<n> opens the set
+      // with that sticker's modal already open (shared links use it).
+      if (parts[2] === 'sticker' && parts[3]) openStickerModal(parts[3]);
+      return;
+    }
     if (parts[0] === 'about') { showView('about'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'login') { renderLogin(); showView('login'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'profile') { renderProfile(); showView('profile'); window.scrollTo(0, 0); return; }
@@ -1061,6 +1081,7 @@
     var s = null;
     (rec.stickers || []).forEach(function (x) { if (String(x.n) === String(n)) s = x; });
     if (!s) return;
+    state.currentSticker = s;
     $('stickerModalTitle').textContent = s.title;
     var img = $('stickerModalImg');
     img.src = s.file;
@@ -1071,12 +1092,185 @@
     $('stickerModalScene').textContent = s.scene || '';
     $('stickerModal').hidden = false;
     document.body.classList.add('modal-open');
+    loadStickerLike(s.id);
+    loadStickerBookmark(s.id);
     gaEvent('sticker_modal', { slug: state.currentSlug || '', n: String(n) });
   }
 
   function closeStickerModal() {
     $('stickerModal').hidden = true;
     document.body.classList.remove('modal-open');
+    state.currentSticker = null;
+    // A deep link (#/set/<slug>/sticker/<n>) brought the reader here:
+    // leaving it in the address bar would reopen the modal on reload,
+    // so step back to the plain set URL without triggering a route.
+    var m = (location.hash || '').match(/^#\/set\/([^/]+)\/sticker\/\d+$/);
+    if (m) history.replaceState(null, '', '#/set/' + m[1]);
+  }
+
+  /* ---------- per-sticker like / collect / share ---------- */
+  /* The modal's actions reuse the set-level endpoints with the
+   * sticker id (<set-slug>-NN): the seed stores one Sticker row per
+   * individual sticker, so findSticker resolves it. Optimistic
+   * updates + localStorage maps are shared with the set-level
+   * toggles (set slugs and sticker ids never collide). */
+
+  function renderStickerLike(count, liked) {
+    var btn = $('stickerLikeBtn'), countEl = $('stickerLikeCount');
+    if (!btn) return;
+    btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? 'Liked' : 'Like');
+    btn.setAttribute('aria-pressed', String(liked));
+    if (countEl) countEl.textContent = count > 0 ? count + (count === 1 ? ' like' : ' likes') : 'No likes yet';
+  }
+
+  function loadStickerLike(id) {
+    var likedMap = lsGet(LS_LIKED_KEY);
+    renderStickerLike(lsGet(LS_LIKE_COUNTS_KEY)[id] || 0, Boolean(likedMap[id]));
+    fetch('/api/stickers/' + encodeURIComponent(id) + '/like', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        var counts = lsGet(LS_LIKE_COUNTS_KEY);
+        counts[id] = d.likes || 0;
+        lsSet(LS_LIKE_COUNTS_KEY, counts);
+        renderStickerLike(d.likes || 0, d.liked || Boolean(likedMap[id]));
+      })
+      .catch(function () {
+        renderStickerLike(lsGet(LS_LIKE_COUNTS_KEY)[id] || 0, Boolean(likedMap[id]));
+      });
+  }
+
+  function toggleStickerLike() {
+    var s = state.currentSticker;
+    if (!s) return;
+    if (!state.session) { location.hash = '#/login'; return; }
+    var id = s.id;
+    var likedMap = lsGet(LS_LIKED_KEY);
+    var liked = !likedMap[id];
+    var counts = lsGet(LS_LIKE_COUNTS_KEY);
+    counts[id] = Math.max(0, (counts[id] || 0) + (liked ? 1 : -1));
+    lsSet(LS_LIKE_COUNTS_KEY, counts);
+    if (liked) likedMap[id] = true; else delete likedMap[id];
+    lsSet(LS_LIKED_KEY, likedMap);
+    renderStickerLike(counts[id], liked);
+    fetch('/api/stickers/' + encodeURIComponent(id) + '/like', { method: 'POST', credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) {
+        if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        if (d.liked) likedMap[id] = true; else delete likedMap[id];
+        lsSet(LS_LIKED_KEY, likedMap);
+        counts[id] = d.likes || 0;
+        lsSet(LS_LIKE_COUNTS_KEY, counts);
+        renderStickerLike(d.likes || 0, d.liked);
+        gaEvent('sticker_like', { sticker: id, liked: d.liked });
+      })
+      .catch(function (e) {
+        if (e.message === 'signed out') {
+          var m = lsGet(LS_LIKED_KEY);
+          if (liked) delete m[id]; else m[id] = true;
+          lsSet(LS_LIKED_KEY, m);
+          var c = lsGet(LS_LIKE_COUNTS_KEY);
+          c[id] = Math.max(0, (c[id] || 0) + (liked ? -1 : 1));
+          lsSet(LS_LIKE_COUNTS_KEY, c);
+          renderStickerLike(c[id], !liked);
+          return;
+        }
+        // Server unreachable: the optimistic state stays on-device.
+      });
+  }
+
+  function renderStickerBookmark(bookmarked) {
+    var btn = $('stickerBookmarkBtn');
+    if (!btn) return;
+    btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Collected' : 'Collect');
+    btn.setAttribute('aria-pressed', String(bookmarked));
+    btn.setAttribute('data-bookmarked', String(bookmarked));
+  }
+
+  function loadStickerBookmark(id) {
+    renderStickerBookmark(Boolean(lsGet(LS_BOOKMARKED_KEY)[id]));
+    if (!state.session) return;
+    fetch('/api/me/bookmarks?stickerId=' + encodeURIComponent(id), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { renderStickerBookmark(Boolean(d.bookmarked)); })
+      .catch(function () { /* keep the cached state */ });
+  }
+
+  function toggleStickerBookmark() {
+    var s = state.currentSticker;
+    if (!s) return;
+    if (!state.session) { location.hash = '#/login'; return; }
+    var id = s.id;
+    var btn = $('stickerBookmarkBtn');
+    var bookmarked = btn && btn.getAttribute('data-bookmarked') === 'true';
+    var method = bookmarked ? 'DELETE' : 'POST';
+    var url = bookmarked
+      ? '/api/me/bookmarks?stickerId=' + encodeURIComponent(id)
+      : '/api/me/bookmarks';
+    var options = { method: method, credentials: 'same-origin', cache: 'no-store' };
+    if (!bookmarked) {
+      options.headers = { 'Content-Type': 'application/json' };
+      options.body = JSON.stringify({ stickerId: id });
+    }
+    var map = lsGet(LS_BOOKMARKED_KEY);
+    if (!bookmarked) map[id] = true; else delete map[id];
+    lsSet(LS_BOOKMARKED_KEY, map);
+    renderStickerBookmark(!bookmarked);
+    lsSet(LS_BOOKMARKS_KEY, {}); // the saved list changed — drop its cache
+    fetch(url, options)
+      .then(function (r) {
+        if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function () {
+        renderStickerBookmark(!bookmarked);
+        gaEvent('sticker_bookmark', { sticker: id, bookmarked: !bookmarked });
+      })
+      .catch(function (e) {
+        var m = lsGet(LS_BOOKMARKED_KEY);
+        if (bookmarked) m[id] = true; else delete m[id];
+        lsSet(LS_BOOKMARKED_KEY, m);
+        renderStickerBookmark(bookmarked);
+        if (e.message === 'signed out') return;
+        var msg = $('stickerShareMsg');
+        if (msg) { msg.textContent = 'Could not save it. Try again.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
+      });
+  }
+
+  function shareSticker() {
+    var s = state.currentSticker;
+    if (!s) return;
+    var rec = state.currentSlug ? findSet(state.currentSlug) : null;
+    // Deep link: the recipient opens this exact sticker in the modal.
+    var url = location.origin + '/#/set/' + state.currentSlug + '/sticker/' + s.n;
+    var title = s.title + (rec ? ' — ' + rec.title : '');
+    var text = (s.zh || s.ja || '') + ' — Sutekka';
+    var msg = $('stickerShareMsg');
+    function done(t) { if (msg) { msg.textContent = t; setTimeout(function () { msg.textContent = ''; }, 2500); } }
+    gaEvent('sticker_share', { sticker: s.id });
+    if (navigator.share) {
+      // Prefer sharing the image itself (WhatsApp and friends accept
+      // it); fall back to sharing the link when files are unsupported.
+      fetch(s.file).then(function (r) { return r.blob(); }).then(function (blob) {
+        var file = new File([blob], s.id + '.png', { type: blob.type || 'image/png' });
+        if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error('files unsupported');
+        return navigator.share({ files: [file], title: title, text: text });
+      }).then(function () { done('Shared.'); }).catch(function (e) {
+        if (e && e.name === 'AbortError') return; // user dismissed the sheet
+        var payload = { title: title, url: url };
+        if (text) payload.text = text;
+        navigator.share(payload).then(function () { done('Shared.'); }, function () { /* dismissed */ });
+      });
+      return;
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () { done('Link copied.'); }, function () { done(url); });
+      return;
+    }
+    done(url);
   }
 
   $('shareBtn').addEventListener('click', function () {
@@ -1136,8 +1330,14 @@
   });
 
   document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'likeBtn') toggleLike();
-    if (e.target && e.target.id === 'bookmarkBtn') toggleBookmark();
+    // closest('button'): the buttons contain <i> icons, and a tap on the
+    // icon itself has the icon as e.target, not the button.
+    var btn = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (btn && btn.id === 'likeBtn') toggleLike();
+    if (btn && btn.id === 'bookmarkBtn') toggleBookmark();
+    if (btn && btn.id === 'stickerLikeBtn') toggleStickerLike();
+    if (btn && btn.id === 'stickerBookmarkBtn') toggleStickerBookmark();
+    if (btn && btn.id === 'stickerShareBtn') shareSticker();
     if (e.target && e.target.id === 'replyCancel') setReplyTo(null);
     var sortBtn = e.target && e.target.closest ? e.target.closest('[data-sort]') : null;
     if (sortBtn && $('bookmarksBody') && $('bookmarksBody').contains(sortBtn)) {

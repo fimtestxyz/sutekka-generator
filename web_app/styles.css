@@ -200,6 +200,10 @@ body.modal-open { overflow: hidden; }
   animation: tap-nudge 1.6s ease-in-out infinite;
 }
 .tap-badge .fi { color: #eab308; }
+
+/* Sticker modal actions: like / collect / share one sticker. */
+.sticker-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.sticker-actions .meta { color: var(--muted); font-size: 0.9rem; }
 @keyframes tap-nudge {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }

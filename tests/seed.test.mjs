@@ -26,15 +26,20 @@ function mockPrisma() {
 }
 
 describe("seed", () => {
-  it("upserts one Sticker row per set in index.json", async () => {
+  it("upserts one Sticker row per set plus one per individual sticker", async () => {
     const prisma = mockPrisma();
     const rows = await seed(/** @type {any} */ (prisma), indexData);
-    assert.equal(rows.length, 5);
+    const stickerCount = indexData.sets.reduce((n, s) => n + (s.stickers || []).length, 0);
+    assert.equal(rows.length, indexData.sets.length + stickerCount);
+    assert.equal(stickerCount, 40);
+    // Rows are grouped per set (set row first, then its sticker rows),
+    // so the set rows are the ones whose slug does not end in -NN.
     assert.deepEqual(
-      rows.map((r) => r.slug),
+      rows.filter((r) => !/-\d{2}$/.test(r.slug)).map((r) => r.slug),
       indexData.sets.map((s) => s.slug),
     );
-    assert.equal(prisma.calls.length, 5);
+    assert.equal(rows.filter((r) => /-\d{2}$/.test(r.slug)).length, stickerCount);
+    assert.equal(prisma.calls.length, indexData.sets.length + stickerCount);
   });
 
   it("maps slug / title / imageUrl / keywords from the set record", async () => {
@@ -52,6 +57,25 @@ describe("seed", () => {
       title: set.title,
       imageUrl: "/" + set.image,
       keywords: set.tags,
+    });
+  });
+
+  it("maps slug / title / imageUrl / keywords for sticker rows", async () => {
+    const prisma = mockPrisma();
+    await seed(/** @type {any} */ (prisma), indexData);
+    const firstSet = indexData.sets[0];
+    const firstSticker = firstSet.stickers[0];
+    // Calls are grouped per set: set row first, then its sticker rows.
+    const call = prisma.calls[1];
+    assert.equal(call.where.slug, firstSticker.id);
+    assert.equal(call.create.slug, firstSticker.id);
+    assert.equal(call.create.title, firstSticker.title);
+    assert.equal(call.create.imageUrl, "/" + firstSticker.file);
+    assert.deepEqual(call.create.keywords, firstSet.tags);
+    assert.deepEqual(call.update, {
+      title: firstSticker.title,
+      imageUrl: "/" + firstSticker.file,
+      keywords: firstSet.tags,
     });
   });
 

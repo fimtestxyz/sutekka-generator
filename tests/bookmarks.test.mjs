@@ -188,6 +188,29 @@ describe("POST /api/me/bookmarks", () => {
     assert.equal((await res.json()).bookmark.id, "bm1");
   });
 
+  it("bookmarks an individual sticker id (<set>-NN)", async () => {
+    const sticker = {
+      id: "ck999",
+      slug: "set-a-03",
+      title: "Sticker 3",
+      imageUrl: "/stickers/set-a/stickers/03.png",
+    };
+    const prisma = mockPrismaBookmarks({ sticker });
+    const res = mockRes();
+    await bookmarksHandler(
+      mockReq({
+        method: "POST",
+        url: "/api/me/bookmarks",
+        body: JSON.stringify({ stickerId: "set-a-03" }),
+      }),
+      res,
+      { prisma, sessionDeps: sessionDepsFor("u1") },
+    );
+    assert.equal(res.statusCode, 201);
+    // The endpoint resolved the sticker id to the sticker row's cuid.
+    assert.deepEqual(prisma.calls.create, [{ userId: "u1", stickerId: "ck999" }]);
+  });
+
   it("answers 401 signed out, 400 without stickerId, 404 unknown sticker", async () => {
     const signedOut = mockRes();
     await bookmarksHandler(

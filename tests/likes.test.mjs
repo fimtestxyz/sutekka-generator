@@ -178,6 +178,27 @@ describe("POST /api/stickers/[id]/like", () => {
     });
   });
 
+  it("likes an individual sticker id (<set>-NN) the same way as a set", async () => {
+    const prisma = mockPrismaLikes({
+      sticker: { id: "ck999", slug: "set-a-03" },
+      liked: false,
+      baseCount: 0,
+    });
+    const res = mockRes();
+    await likeHandler(
+      mockReq({ method: "POST", url: "/api/stickers/set-a-03/like" }),
+      res,
+      { prisma, sessionDeps: sessionDepsFor("u1") },
+    );
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(prisma.calls.create, [{ userId: "u1", stickerId: "ck999" }]);
+    assert.deepEqual(await res.json(), {
+      liked: true,
+      likes: 1,
+      sticker: { id: "ck999", slug: "set-a-03" },
+    });
+  });
+
   it("answers 405 for other methods", async () => {
     const res = mockRes();
     await likeHandler(
