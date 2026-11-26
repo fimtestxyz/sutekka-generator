@@ -403,6 +403,11 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .qty-stepper button:disabled { opacity: 0.35; cursor: default; }
 .qty-stepper .qty-count { min-width: 28px; text-align: center; font-weight: 700; }
 .qty-stepper[hidden] { display: none; }
+
+/* Cart line thumbnail: 56 px, small JPEG (see build script). */
+.cart-info { flex: 1; min-width: 0; }
+.cart-thumb-link { flex: none; }
+.cart-thumb { display: block; width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); background: #fff; }
 .cart-list { list-style: none; padding: 0; margin: 12px 0; }
 .cart-list li {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;

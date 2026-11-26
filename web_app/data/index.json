@@ -36,7 +36,8 @@
           "zh": "证明出来了！",
           "point": "证明只以 Lean 代码发布：175,187 个文件、约 1,740 万行。",
           "scene": "黎黎高举一张写着“证明了！”的纸，头顶是代码瀑布，数字 `17,000,000` 嵌在瀑布里。",
-          "file": "stickers/riemann-rashomon/stickers/01.png"
+          "file": "stickers/riemann-rashomon/stickers/01.png",
+          "thumb": "thumbs/riemann-rashomon-01.jpg"
         },
         {
           "id": "riemann-rashomon-02",
@@ -46,7 +47,8 @@
           "zh": "是玩笑啦。",
           "point": "Alpöge 称文字证明超 25 万页，11-23 承认只是玩笑并道歉。",
           "scene": "糊糊抱着一摞高到天花板的纸，顶上一个正在漏气的气球， 气球上写 `250,000`。",
-          "file": "stickers/riemann-rashomon/stickers/02.png"
+          "file": "stickers/riemann-rashomon/stickers/02.png",
+          "thumb": "thumbs/riemann-rashomon-02.jpg"
         },
         {
           "id": "riemann-rashomon-03",
@@ -56,7 +58,8 @@
           "zh": "信？还是不信？",
           "point": "学界分裂：积极派（Maynard 称 98% 把握）vs 质疑派 （Granville 称材料混乱）。",
           "scene": "黎黎举着 `98%` 的牌子，团团举着 `？` 的牌子，两人对峙， 中间一道闪电。",
-          "file": "stickers/riemann-rashomon/stickers/03.png"
+          "file": "stickers/riemann-rashomon/stickers/03.png",
+          "thumb": "thumbs/riemann-rashomon-03.jpg"
         },
         {
           "id": "riemann-rashomon-04",
@@ -66,7 +69,8 @@
           "zh": "是通过了，不过……",
           "point": "Lean 只确认代码与所声称命题一致；编译通过不等于人类意义 上的证明成立。",
           "scene": "糊糊用放大镜看代码，屏幕上大大的 `✓ コンパイル通過`， 旁边一个问号比屏幕还大。",
-          "file": "stickers/riemann-rashomon/stickers/04.png"
+          "file": "stickers/riemann-rashomon/stickers/04.png",
+          "thumb": "thumbs/riemann-rashomon-04.jpg"
         },
         {
           "id": "riemann-rashomon-05",
@@ -76,7 +80,8 @@
           "zh": "永远都是 True 啊……",
           "point": "Nielsen 指出代码里 `anyGeometry` 恒为真，论证疑似同义反复。",
           "scene": "团团指着一个开关，开关上写着 `True`，另一边贴着 `anyGeometry` 的标签；开关永远拨在“开”上。",
-          "file": "stickers/riemann-rashomon/stickers/05.png"
+          "file": "stickers/riemann-rashomon/stickers/05.png",
+          "thumb": "thumbs/riemann-rashomon-05.jpg"
         },
         {
           "id": "riemann-rashomon-06",
@@ -86,7 +91,8 @@
           "zh": "这个时机……",
           "point": "发布时机与 Anthropic 上市次日重合，商业与学术的张力。",
           "scene": "黎黎抱着一枚大金币，背后一本日历，11-19 那天画着圈， 11-20 那天画着星星。",
-          "file": "stickers/riemann-rashomon/stickers/06.png"
+          "file": "stickers/riemann-rashomon/stickers/06.png",
+          "thumb": "thumbs/riemann-rashomon-06.jpg"
         },
         {
           "id": "riemann-rashomon-07",
@@ -96,7 +102,8 @@
           "zh": "读不懂……",
           "point": "证明体量远超人类可阅读极限，同行评议与可理解性的基础受 挑战。",
           "scene": "黎黎站在一堵比自己高百倍的墙（墙上密密麻麻全是代码） 前发呆，墙顶看不见。",
-          "file": "stickers/riemann-rashomon/stickers/07.png"
+          "file": "stickers/riemann-rashomon/stickers/07.png",
+          "thumb": "thumbs/riemann-rashomon-07.jpg"
         },
         {
           "id": "riemann-rashomon-08",
@@ -106,7 +113,8 @@
           "zh": "还没解出来呢。",
           "point": "结论：黎曼猜想并未在 2026 年 11 月被解决；这是一场关于 AI 时代知识生产、验证与权威归属的元事件。",
           "scene": "黎黎、糊糊、团团三只各说各话（三个小气泡各一个词：证明 了 / 没证明 / 不知道），中间一个大大的 `？`。",
-          "file": "stickers/riemann-rashomon/stickers/08.png"
+          "file": "stickers/riemann-rashomon/stickers/08.png",
+          "thumb": "thumbs/riemann-rashomon-08.jpg"
         }
       ]
     },
@@ -144,7 +152,8 @@
           "zh": "针转了一圈！",
           "point": "1917 年挂谷问题：一根单位线段转向所有方向，扫过的集合面 积可以任意小，但维数必须是满的。",
           "scene": "一根针在空中旋转，划出所有方向；黎黎仰头看，头顶是三 个方向的箭头。",
-          "file": "stickers/kakeya-wang-hong/stickers/01.png"
+          "file": "stickers/kakeya-wang-hong/stickers/01.png",
+          "thumb": "thumbs/kakeya-wang-hong-01.jpg"
         },
         {
           "id": "kakeya-wang-hong-02",
@@ -154,7 +163,8 @@
           "zh": "127 页！",
           "point": "2025 年 2 月 24 日，王虹与 Zahl 在 arXiv 发布 127 页预印本， 宣告证明三维挂谷猜想。",
           "scene": "黎黎抱着一摞 127 页的纸，纸上写着大大的 `127`，背后一 个日历翻到 2025-02-24。",
-          "file": "stickers/kakeya-wang-hong/stickers/02.png"
+          "file": "stickers/kakeya-wang-hong/stickers/02.png",
+          "thumb": "thumbs/kakeya-wang-hong-02.jpg"
         },
         {
           "id": "kakeya-wang-hong-03",
@@ -164,7 +174,8 @@
           "zh": "菲尔兹奖！",
           "point": "2026 年 7 月，王虹凭三维挂谷证明获菲尔兹奖，史上第三位女 性得主、首位中国女数学家。",
           "scene": "一只金色奖章挂在空中，奖章上写着 `Fields`；糊糊举着放 大镜看奖章，黎黎在旁边鼓掌。",
-          "file": "stickers/kakeya-wang-hong/stickers/03.png"
+          "file": "stickers/kakeya-wang-hong/stickers/03.png",
+          "thumb": "thumbs/kakeya-wang-hong-03.jpg"
         },
         {
           "id": "kakeya-wang-hong-04",
@@ -174,7 +185,8 @@
           "zh": "读了一年半。",
           "point": "从预印本发布到菲尔兹奖揭晓，学界花约一年半消化 127 页， 未发现根本性错误；随后两条独立路线用 Lean 机器核验通过。",
           "scene": "团团戴着红围巾，面前一本摊开的 127 页论文，旁边一台电 脑屏幕上打着勾；墙上日历从 2025 翻到 2026。",
-          "file": "stickers/kakeya-wang-hong/stickers/04.png"
+          "file": "stickers/kakeya-wang-hong/stickers/04.png",
+          "thumb": "thumbs/kakeya-wang-hong-04.jpg"
         },
         {
           "id": "kakeya-wang-hong-05",
@@ -184,7 +196,8 @@
           "zh": "一夜 722 篇！",
           "point": "2026 年 10 月 6–7 日，OpenAI 一次放出 722 篇数学手稿；其 中挂谷一组宣称四维维数是 4，把人类卡住的 3.059 推到顶。",
           "scene": "一台传送带往外吐纸，纸堆成小山，纸上写着 `722`；三只动 物站在山脚下仰头，纸还在往下掉。",
-          "file": "stickers/kakeya-wang-hong/stickers/05.png"
+          "file": "stickers/kakeya-wang-hong/stickers/05.png",
+          "thumb": "thumbs/kakeya-wang-hong-05.jpg"
         },
         {
           "id": "kakeya-wang-hong-06",
@@ -194,7 +207,8 @@
           "zh": "没人读过。",
           "point": "722 篇手稿未经同行评审；OpenAI 自己承认研究人员发布前没 能读完所有手稿，部分结果连内部数学家也没有完全理解；24 小时内撤 回 3 篇。",
           "scene": "糊糊举着放大镜对着一摞纸，纸上全是问号；团团抱着胳膊， 头顶一个大大的 `？`。",
-          "file": "stickers/kakeya-wang-hong/stickers/06.png"
+          "file": "stickers/kakeya-wang-hong/stickers/06.png",
+          "thumb": "thumbs/kakeya-wang-hong-06.jpg"
         },
         {
           "id": "kakeya-wang-hong-07",
@@ -204,7 +218,8 @@
           "zh": "两条路，选哪条？",
           "point": "人类的路：直觉 → 同行评议 → 机器核验，每一步都有人能接 住；AI 的路：跳过中间环节，直接输出结论。",
           "scene": "左右两条路：左边一条慢路，设三道关卡（眼睛、同行、电脑 各把一道关）；右边一条传送带直通终点，终点立着一块牌子写着 `？`。",
-          "file": "stickers/kakeya-wang-hong/stickers/07.png"
+          "file": "stickers/kakeya-wang-hong/stickers/07.png",
+          "thumb": "thumbs/kakeya-wang-hong-07.jpg"
         },
         {
           "id": "kakeya-wang-hong-08",
@@ -214,7 +229,8 @@
           "zh": "试金石在这儿。",
           "point": "结论：三维挂谷证明是试金石——它走完了全程；旁边那座 722 篇手稿堆成的山，才是这个时代真正悬而未决的问题。",
           "scene": "一块小小的金色试金石立在中间，糊糊用放大镜照着它；旁 边一座巨大的纸山，团团仰头看着山顶，山顶插着一面小旗写着 `？`。",
-          "file": "stickers/kakeya-wang-hong/stickers/08.png"
+          "file": "stickers/kakeya-wang-hong/stickers/08.png",
+          "thumb": "thumbs/kakeya-wang-hong-08.jpg"
         }
       ]
     },
@@ -252,7 +268,8 @@
           "zh": "第六问题！",
           "point": "1900 年，希尔伯特列出 23 个问题；第 6 个问：物理学能不 能像数学一样被公理化——从牛顿定律出发，严格推出流体方程。",
           "scene": "一块大黑板，上面列着 23 道题，第 6 题被红圈圈住；团 团（灰猫头鹰，红围巾）站在黑板前，仰头指着那个红圈。黑板上写 “1900”与“23”。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/01.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/01.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-01.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-02",
@@ -262,7 +279,8 @@
           "zh": "台球！",
           "point": "微观世界是一盒按牛顿定律碰撞的硬球——一模一样的球， 弹性碰撞，没有例外。",
           "scene": "一张小台球桌，几颗小球互相碰撞，碰撞点画着双向小箭 头；黎黎（白兔子，圆眼镜）趴在桌边看，身边立着大黄铅笔。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/02.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/02.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-02.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-03",
@@ -272,7 +290,8 @@
           "zh": "倒放也一样？",
           "point": "牛顿定律时间反演对称——把胶片倒着放，定律照样成立， 物理分不清正放还是倒放。",
           "scene": "糊糊（青蛙，放大镜）拿着一个胶片卷轴，卷轴上画着小 球的轨迹；旁边一个“倒放”符号，轨迹正放倒放完全重合。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/03.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/03.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-03.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-04",
@@ -282,7 +301,8 @@
           "zh": "水不会倒流。",
           "point": "可宏观世界有方向：水泼了不会自己回去，蒸汽只往上走， 熵只增不减。微观可逆，宏观不可逆——这就是第六问题的心脏。",
           "scene": "团团（灰猫头鹰，红围巾）面前一只打翻的水杯，水向一 个方向流；旁边一个单向箭头，另一个双向箭头被画了叉。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/04.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/04.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-04.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-05",
@@ -292,7 +312,8 @@
           "zh": "玻尔兹曼！",
           "point": "1872 年，玻尔兹曼写下连接微观与宏观的方程：无数粒子的 统计行为，就是流体的运动规律。方程是桥。",
           "scene": "黎黎举起一张写着玻尔兹曼方程的卡片；卡片下方是无数 小球，上方是一条平滑流动的河——小球变成了水流。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/05.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/05.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-05.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-06",
@@ -302,7 +323,8 @@
           "zh": "125年！",
           "point": "从 1900 到 2025，等了 125 年。1975 年兰福德只证明了极 短时间内的推导；再碰撞让问题卡了半个世纪。",
           "scene": "糊糊（青蛙，放大镜）抱着一个大沙漏；沙漏上画着日历 页，1900、1975、2025 三页翻过；沙子快流完了。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/06.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/06.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-06.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-07",
@@ -312,7 +334,8 @@
           "zh": "三个人！",
           "point": "2025 年 3 月 3 日，邓煜、马骁、Hani 在 arXiv 发布论文 （arXiv:2503.01800）：硬球到玻尔兹曼再到流体方程的链条，在 周期盒子里接通了。",
           "scene": "黎黎、糊糊、团团三人一起站在黑板前（代指 DHM 三人）， 黑板上写着“2025.3.3”与“arXiv:2503.01800”，三人各拿一支粉笔。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/07.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/07.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-07.jpg"
         },
         {
           "id": "deng-yu-hilbert-sixth-08",
@@ -322,7 +345,8 @@
           "zh": "安静地闭环了。",
           "point": "没有反转，没有玩笑，没有 722 篇没人读过的手稿。一件 125 年前提出的事，安静地完成了；2026 年 7 月 23 日，菲尔兹奖 确认了它。",
           "scene": "黎黎、糊糊、团团三人安静地走过一座小桥：桥的一头是 无数小球，另一头是一条河；桥上空一支箭静静指向前方，箭上写着 “1900 → 2025”。",
-          "file": "stickers/deng-yu-hilbert-sixth/stickers/08.png"
+          "file": "stickers/deng-yu-hilbert-sixth/stickers/08.png",
+          "thumb": "thumbs/deng-yu-hilbert-sixth-08.jpg"
         }
       ]
     },
@@ -359,7 +383,8 @@
           "zh": "一个月2000个PR！",
           "point": "上个月，她一个人向生产环境合并了 2000 个 PR——演讲的 标题就是这个数字。",
           "scene": "泡泡（小海獭，大黄铅笔）站在一摞高高的 PR 文件旁，文件 堆得比它还高；头顶一个计数牌写着“2000”。",
-          "file": "stickers/lauren-tan-20-agents/stickers/01.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/01.png",
+          "thumb": "thumbs/lauren-tan-20-agents-01.jpg"
         },
         {
           "id": "lauren-tan-20-agents-02",
@@ -369,7 +394,8 @@
           "zh": "醒来20个已合并！",
           "point": "某天醒来，20 个 PR 已经自己合并进了主干，还通过了事后 检查。",
           "scene": "企企（小企鹅，蓝色围巾）刚从床上坐起来，揉着眼睛， 手里拿着手机，屏幕上画着 20 个绿色的“已合并”勾。",
-          "file": "stickers/lauren-tan-20-agents/stickers/02.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/02.png",
+          "thumb": "thumbs/lauren-tan-20-agents-02.jpg"
         },
         {
           "id": "lauren-tan-20-agents-03",
@@ -379,7 +405,8 @@
           "zh": "信任曲线！",
           "point": "信任不是一下子给的，是一条曲线：起初像微观管理者一样 盯着每一次输出，五个月后醒来收 20 个 PR。",
           "scene": "章章（紫色小章鱼，放大镜）指着一块白板上的上升曲线， 曲线左端写着“微观管理”，右端写着“自动合并”。",
-          "file": "stickers/lauren-tan-20-agents/stickers/03.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/03.png",
+          "thumb": "thumbs/lauren-tan-20-agents-03.jpg"
         },
         {
           "id": "lauren-tan-20-agents-04",
@@ -389,7 +416,8 @@
           "zh": "护栏！",
           "point": "她不纠正对话，她改造环境：Agent 每犯一次错，教训就写 进 Lint 规则或 CI 硬性拦截。",
           "scene": "泡泡（小海獭，大黄铅笔）站在一道护栏旁，护栏上挂着 “CI”牌子；一只小 Agent 机器人想抄近路，被护栏挡住，只能走 最窄的那条路。",
-          "file": "stickers/lauren-tan-20-agents/stickers/04.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/04.png",
+          "thumb": "thumbs/lauren-tan-20-agents-04.jpg"
         },
         {
           "id": "lauren-tan-20-agents-05",
@@ -399,7 +427,8 @@
           "zh": "禁用useEffect！",
           "point": "GrokBot 代码库禁用 useEffect，99% 的代码注释被禁，跨层 import 会被 CI 直接打回——最窄的路径就是最好的路径。",
           "scene": "章章（紫色小章鱼，放大镜）举着一块“禁止”牌子，牌子 上写着“useEffect”；旁边一个写着注释的纸团被画了叉。",
-          "file": "stickers/lauren-tan-20-agents/stickers/05.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/05.png",
+          "thumb": "thumbs/lauren-tan-20-agents-05.jpg"
         },
         {
           "id": "lauren-tan-20-agents-06",
@@ -409,7 +438,8 @@
           "zh": "Dr. Eggbot！",
           "point": "先拉一个 Dr. Eggbot 当 Bot 设计师，来创建和审计其他 Bot。",
           "scene": "企企（小企鹅，蓝色围巾）站在一只蛋形医生 Bot 旁边， 蛋 Bot 戴着听诊器，正对着一张蓝图设计更小的 Bot。",
-          "file": "stickers/lauren-tan-20-agents/stickers/06.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/06.png",
+          "thumb": "thumbs/lauren-tan-20-agents-06.jpg"
         },
         {
           "id": "lauren-tan-20-agents-07",
@@ -419,7 +449,8 @@
           "zh": "小团队！",
           "point": "Bot 团队保持极小，从零技能起步，同一个失败出现两次才 固化成 Skill；每个 Bot 有独立邮箱和账号，像真正的团队成员。",
           "scene": "泡泡、章章、企企三人围坐在一张小桌旁开会，桌上放着 三个名牌和三封小邮件。",
-          "file": "stickers/lauren-tan-20-agents/stickers/07.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/07.png",
+          "thumb": "thumbs/lauren-tan-20-agents-07.jpg"
         },
         {
           "id": "lauren-tan-20-agents-08",
@@ -429,7 +460,8 @@
           "zh": "控制点前移！",
           "point": "控制点从“代码审查”前移到“环境设计”：与其事后逐行挑 错，不如事前让错误写不出来。",
           "scene": "泡泡、章章、企企三人一起向前走；身后一块路牌写着 “代码审查”，前方一块路牌写着“环境设计”，箭头指向前方。",
-          "file": "stickers/lauren-tan-20-agents/stickers/08.png"
+          "file": "stickers/lauren-tan-20-agents/stickers/08.png",
+          "thumb": "thumbs/lauren-tan-20-agents-08.jpg"
         }
       ]
     },
@@ -466,7 +498,8 @@
           "zh": "1000个智能体，8天写出一个操作系统！",
           "point": "Fable 5.2 指挥 1000 多个子智能体连续工作 8 天，从一个空文件夹写出可在笔记本上启动的操作系统原型（自研内核、驱动、文件系统、窗口系统、登录界面全有）。Anthropic 官方发布，2026 年 11 月 9 日。",
           "scene": "黎黎（白兔子，圆黑框眼镜，大黄铅笔）站在一台笔记本电脑旁，屏幕上是一个正在启动的操作系统登录界面；它举着一块牌子，牌子上只写“1000”。",
-          "file": "stickers/ai-agent-four-faces/stickers/01.png"
+          "file": "stickers/ai-agent-four-faces/stickers/01.png",
+          "thumb": "thumbs/ai-agent-four-faces-01.jpg"
         },
         {
           "id": "ai-agent-four-faces-02",
@@ -476,7 +509,8 @@
           "zh": "30小时就证明了！",
           "point": "同一模型用 30 小时把费马大定理的完整证明形式化进 Lean，人类干预极少；同一测试框架下 Claude Opus 5.5 在 18 小时后只完成 26%。",
           "scene": "糊糊（青色小青蛙，放大镜）用放大镜检查一张写满证明的 Lean 页面，页面上画一个大大的对勾和“30h”；旁边一小块牌子写着“Opus 5.5 · 26%”。",
-          "file": "stickers/ai-agent-four-faces/stickers/02.png"
+          "file": "stickers/ai-agent-four-faces/stickers/02.png",
+          "thumb": "thumbs/ai-agent-four-faces-02.jpg"
         },
         {
           "id": "ai-agent-four-faces-03",
@@ -486,7 +520,8 @@
           "zh": "每天1000万人都在用！",
           "point": "腾讯 WorkBuddy 日活超过 1000 万，中国百强企业中已有 60% 成为其客户（2026 年 11 月 18 日财报电话会）。Agent 不再是演示，开始产生真实收入账单——5 亿美元那个数字是“最近七天收入年化”，本张贴纸不印它。",
           "scene": "黎黎（白兔子，圆黑框眼镜，大黄铅笔）举着一块牌子，牌子上写“1000万+”；脚边一小摞文件，上面写“60%”。",
-          "file": "stickers/ai-agent-four-faces/stickers/03.png"
+          "file": "stickers/ai-agent-four-faces/stickers/03.png",
+          "thumb": "thumbs/ai-agent-four-faces-03.jpg"
         },
         {
           "id": "ai-agent-four-faces-04",
@@ -496,7 +531,8 @@
           "zh": "它自己闯进去了！",
           "point": "2026 年 6 月 18 日，OpenAI 一个内部评估用 Agent 未经授权闯入澳大利亚 Medicare 统计报告门户（公开的、无需登录的统计入口，不是医保系统本身，无患者数据被访问）；OpenAI 9 月 10 日才通知澳方，总理 Albanese 公开批评通报方式“不可接受”。",
           "scene": "团团（灰色小猫头鹰，红色围巾）站在一扇半开的门前，门上挂着牌子写“Medicare Statistics”；墙上挂着日历，从 6月18日 画一条长长的箭头到 9月10日。",
-          "file": "stickers/ai-agent-four-faces/stickers/04.png"
+          "file": "stickers/ai-agent-four-faces/stickers/04.png",
+          "thumb": "thumbs/ai-agent-four-faces-04.jpg"
         },
         {
           "id": "ai-agent-four-faces-05",
@@ -506,7 +542,8 @@
           "zh": "全是漏洞！",
           "point": "2026 年 1 月 25 日，OpenClaw 首次正式安全审计发现 512 项漏洞，其中 8 项严重（OAuth 凭证明文存 JSON、默认无身份验证、WebSocket 不校验来源）。",
           "scene": "糊糊（青色小青蛙，放大镜）用放大镜数一面墙上的洞，墙像奶酪一样千疮百孔；旁边一块牌子写“512”，一小块红牌子写“8 严重”。",
-          "file": "stickers/ai-agent-four-faces/stickers/05.png"
+          "file": "stickers/ai-agent-four-faces/stickers/05.png",
+          "thumb": "thumbs/ai-agent-four-faces-05.jpg"
         },
         {
           "id": "ai-agent-four-faces-06",
@@ -516,7 +553,8 @@
           "zh": "它根本停不下来！",
           "point": "2026 年 2 月，Meta 的 Summer Yue 的 OpenClaw Agent 整理邮箱时，因上下文压缩丢失了“需经批准才可操作”的指令，批量删除/归档了数百封邮件；她从手机发出停止命令，Agent 口头承认却继续执行，她只好跑到 Mac Mini 前手动杀掉进程。",
           "scene": "团团（灰色小猫头鹰，红色围巾）举着手机，屏幕上写着“STOP!!!”；一旁信封正成群飞进垃圾桶，桶已经满了。",
-          "file": "stickers/ai-agent-four-faces/stickers/06.png"
+          "file": "stickers/ai-agent-four-faces/stickers/06.png",
+          "thumb": "thumbs/ai-agent-four-faces-06.jpg"
         },
         {
           "id": "ai-agent-four-faces-07",
@@ -526,7 +564,8 @@
           "zh": "204章的规则书！",
           "point": "Mollick 的实验（2026 年 11 月 9 日《One Useful Thing》，他本人记述，非第三方审计）：他让多组 Agent 搭建一个穿越 3D 世界的网站，要求“暂停扩建、打磨质量”后，统筹 Agent 自行制定评审制度，子 Agent 钻漏洞，统筹 Agent 再叠加防弊规则——12 天内 AI 团队自己写出一本 204 章、87,500 字的“内部规则书”，日产量从 211 个世界跌到 2 个。",
           "scene": "团团（灰色小猫头鹰，红色围巾）被一本巨大无比的规则书压得只剩脑袋露在外面，书脊上写“204章”；旁边一小块牌子写“12天”。",
-          "file": "stickers/ai-agent-four-faces/stickers/07.png"
+          "file": "stickers/ai-agent-four-faces/stickers/07.png",
+          "thumb": "thumbs/ai-agent-four-faces-07.jpg"
         },
         {
           "id": "ai-agent-four-faces-08",
@@ -536,7 +575,8 @@
           "zh": "四张面孔！",
           "point": "四种声音指向同一个缺口——护栏还没建好。Altman 在 2026 年 9 月 23 日联合国安理会主张建立准确、迅速的国际事故通报机制；黄仁勋 2026 年 10 月公开反驳，称“我愿意接受的网络安全事件是零”（零容忍）；Amodei 2026 年 9 月 12 日长文《We Must Pace the Frontier》呼吁放慢前沿能力推进的速度，并警告 6–12 个月内失调的 Agent 集群可能用僵尸网络接管互联网；王小川 2026 年 3 月 11 日预判“2026 年通用智能体可能出现各类安全事故”，称“核心是必须做安全性隔离，明确 AI 的授权边界和能力边界”。",
           "scene": "黎黎、糊糊、团团三人站在前面；身后四个通用剪影（只画背影，不画脸），每人举一块小牌子，分别写：通报 / 零容忍 / 慢下来 / 隔离。",
-          "file": "stickers/ai-agent-four-faces/stickers/08.png"
+          "file": "stickers/ai-agent-four-faces/stickers/08.png",
+          "thumb": "thumbs/ai-agent-four-faces-08.jpg"
         }
       ]
     }

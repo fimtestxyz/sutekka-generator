@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  var LS_KEY = 'sticker-showcase-index-v11';
+  var LS_KEY = 'sticker-showcase-index-v12';
   var LS_TTL_MS = 60 * 60 * 1000; // revalidate after 1 hour
   // DATA_V: bump whenever data/index.json changes in ANY way that must
   // reach users — not just a shape change. A content change (new batch,
@@ -23,7 +23,7 @@
   // version) — can serve stale data after a deploy. The ?v= on
   // app.js/styles.css is the same idea for the shell; all three
   // numbers move together.
-  var DATA_V = 11;
+  var DATA_V = 12;
   // LINKS_V: bump whenever data/payment-links.json changes — a new
   // product, a new price, or a new link. Same cache-busting idea as
   // DATA_V; the service worker caches the file under this ?v= too.
@@ -1365,6 +1365,29 @@
       '<p class="meta">The ' + pack.stickers.length + '-sticker pack is ' + priceLabel(pack.amount) + ' — save ' + priceLabel(saving) + ' vs buying singles one by one.</p>' + bar + '<p>' + addBtn + '</p></div>';
   }
 
+  /* Thumbnail for a cart line: the sticker itself for a single, the
+   * set cover for a set, the first sticker for the pack. Links back
+   * to the set page. Null while the index has not loaded yet — the
+   * cart re-renders when it does (applyData calls route()). */
+  function cartThumb(it) {
+    if (it.type === 'single') {
+      var rec = findStickerRecord(it.itemId);
+      if (!rec) return null;
+      return { src: rec.thumb || rec.file, alt: rec.title, href: '#/set/' + rec.setSlug };
+    }
+    if (it.type === 'set') {
+      var set = findSet(it.itemId);
+      if (!set) return null;
+      return { src: set.thumb || set.image, alt: set.title, href: '#/set/' + set.slug };
+    }
+    var pack = state.links && state.links.pack;
+    if (pack && pack.stickers && pack.stickers.length) {
+      var first = findStickerRecord(pack.stickers[0]);
+      if (first) return { src: first.thumb || first.file, alt: pack.title, href: '#/' };
+    }
+    return null;
+  }
+
   function renderCart() {
     var body = $('cartBody');
     if (!body) return;
@@ -1377,7 +1400,11 @@
         var entry = cartEntry(it.itemId, it.type);
         var title = entry ? entry.title : it.itemId;
         var qty = it.qty || 1;
-        return '<li><div><strong>' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + (entry ? ' · ' + priceLabel(entry.amount) + ' each' : '') + '</span></div>' +
+        var thumb = cartThumb(it);
+        var thumbHtml = thumb
+          ? '<a href="' + esc(thumb.href) + '" class="cart-thumb-link"><img class="cart-thumb" src="' + esc(thumb.src) + '" alt="' + esc(thumb.alt) + '" loading="lazy" decoding="async"></a>'
+          : '';
+        return '<li>' + thumbHtml + '<div class="cart-info"><strong>' + esc(title) + '</strong><br><span class="meta">SKU ' + esc(it.itemId) + ' · ' + cartItemLabel(it.type) + (entry ? ' · ' + priceLabel(entry.amount) + ' each' : '') + '</span></div>' +
           '<div class="cart-line"><span class="qty-stepper"><button data-qty-dec="' + esc(it.itemId) + '" aria-label="One fewer">−</button><span class="qty-count">' + qty + '</span><button data-qty-inc="' + esc(it.itemId) + '" aria-label="One more">+</button></span> ' +
           '<span>' + (entry ? priceLabel(entry.amount * qty) : '') + '</span> ' +
           '<button data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
@@ -1469,7 +1496,7 @@
     var found = null;
     (state.sets || []).forEach(function (rec) {
       (rec.stickers || []).forEach(function (s) {
-        if (s.id === id) found = { file: s.file, title: s.title, setSlug: rec.slug };
+        if (s.id === id) found = { file: s.file, thumb: s.thumb || s.file, title: s.title, setSlug: rec.slug };
       });
     });
     return found;

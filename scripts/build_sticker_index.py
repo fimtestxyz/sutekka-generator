@@ -255,7 +255,7 @@ def read_script(folder):
     return stickers
 
 
-def make_thumb(src, dst):
+def make_thumb(src, dst, width=THUMB_WIDTH):
     if Image is None:
         fail("Pillow is required for thumbnails: pip install Pillow")
     if os.path.exists(dst) and os.path.getmtime(dst) >= os.path.getmtime(src):
@@ -263,7 +263,7 @@ def make_thumb(src, dst):
     with Image.open(src) as im:
         im = im.convert("RGB")
         w, h = im.size
-        nw = THUMB_WIDTH
+        nw = width
         nh = round(h * nw / w)
         im = im.resize((nw, nh), Image.LANCZOS)
         im.save(dst, "JPEG", quality=THUMB_QUALITY, optimize=True)
@@ -679,6 +679,9 @@ def main():
                 "point": s.get("point", ""),
                 "scene": s.get("scene", ""),
                 "file": f"stickers/{slug}/stickers/{s['n']}.png",
+                # Small JPEG for cart thumbnails (the full PNG is
+                # 1600x1680 — too heavy to show at 56 px).
+                "thumb": f"thumbs/{slug}-{s['n']}.jpg",
             } for s in stickers],
             "order": order,
         })
@@ -803,6 +806,9 @@ def main():
             if os.path.isfile(src_png):
                 if stage_file(src_png, os.path.join(dst_stickers, s["n"] + ".png")):
                     staged += 1
+                # Per-sticker cart thumbnail, 320 px wide.
+                if make_thumb(src_png, os.path.join(THUMBS_DIR, r["slug"] + "-" + s["n"] + ".jpg"), width=320):
+                    thumbs_made += 1
             else:
                 warnings.append(f"{r['slug']}: missing stickers/{s['n']}.png — not staged")
         wrote_og, r["og_height"] = make_og_image(src, os.path.join(OG_DIR, r["slug"] + ".jpg"))

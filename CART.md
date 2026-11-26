@@ -72,6 +72,30 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.3 — cart lines show thumbnail + SKU + name (2026-11-27)
+
+User request: "cart page display show the sku id sticker name
+and the sticker img too thumbnail small one".
+
+- **Each cart line now shows:** a 56 px thumbnail (left), the item
+  title, and a meta line `SKU <id> · <type> · <unit price> each`.
+  Singles show the sticker itself; sets show the set cover
+  (`thumbs/<slug>.jpg`); the pack shows its first sticker. The
+  thumbnail links back to the set page.
+- **New thumbnails:** the build script (`build_sticker_index.py`)
+  now generates one 320 px JPEG per sticker
+  (`thumbs/<slug>-<nn>.jpg`, 40 files) and records it as `thumb`
+  on every sticker record in `data/index.json`. Set thumbs already
+  existed. The full PNGs are 1600×1680 — too heavy to show at
+  56 px. Sticker PNGs are RGB on white, so no transparency issue.
+  Thumbs + index.json are committed (the Vercel build regenerates
+  them on every deploy).
+- **Versioning (per the cache rule):** index.json changed, so
+  DATA_V 11 → 12 and LS_KEY `sticker-showcase-index-v12`; shell
+  app.js?v=28 / styles.css?v=22, SW v29.
+- Tests 155/155, typecheck clean. Live verify: (pending — browser
+  check running)
+
 ## v1.2 — quantity steppers (2026-11-27)
 
 The user sent a screenshot of dchtoons.com's product cards
