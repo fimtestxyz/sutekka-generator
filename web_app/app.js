@@ -1313,6 +1313,42 @@
     renderCart();
   }
 
+  /* ---------- remove confirmation: Lili the rabbit asks first ---------- */
+  /* Psychology, on purpose: (1) anthropomorphism — Lili asks in the
+   * first person, and disappointing a character you like is harder
+   * than tapping a button; (2) loss aversion + endowment — the copy
+   * says the sticker is already in your bag, so removing it feels
+   * like a loss, not a non-action; (3) default bias — "Keep it" is
+   * the big warm button, "remove" is small muted text; (4) one
+   * extra step of friction, so a stray tap can never delete. The
+   * stepper reaching 0 is NOT gated — that is N deliberate taps
+   * with the count visibly falling, not an accidental delete. */
+  var pendingRemoval = null; // { kind: 'line', itemId } | { kind: 'clear' }
+  function openRemoveModal(kind, itemId, title) {
+    pendingRemoval = kind === 'clear' ? { kind: 'clear' } : { kind: 'line', itemId: itemId };
+    if (kind === 'clear') {
+      $('removeModalTitle').textContent = 'Whoa — the whole bag?';
+      $('removeModalText').innerHTML = '“I packed every single one of these for you…”<br>— Lili 🐰';
+      $('removeModalKeep').textContent = 'Keep my bag';
+      $('removeModalConfirm').textContent = 'Yes, clear it all';
+    } else {
+      $('removeModalTitle').textContent = 'Wait — let me ask first?';
+      $('removeModalText').innerHTML = '“You picked ' + esc(title) + ' — I already tucked it into your bag. Are you sure you want to let it go?”<br>— Lili 🐰';
+      $('removeModalKeep').textContent = 'Keep it in my bag';
+      $('removeModalConfirm').textContent = 'Yes, remove it';
+    }
+    $('removeModal').hidden = false;
+    document.body.classList.add('modal-open');
+    gaEvent('cart_remove_prompt');
+    $('removeModalKeep').focus();
+  }
+  function closeRemoveModal() {
+    $('removeModal').hidden = true;
+    pendingRemoval = null;
+    // The drawer is open underneath, so the page stays locked.
+    if (!$('cartDrawer').classList.contains('open')) document.body.classList.remove('modal-open');
+  }
+
   /* One stepper per buyable item — the count shown is the cart
    * quantity, 0 when it is not in the cart. */
   function setStepper(el, itemId, type) {
@@ -2652,7 +2688,13 @@
     var imgBtn = t.closest ? t.closest('[data-cart-img]') : null;
     if (imgBtn) { openImageModal(imgBtn.getAttribute('data-cart-img'), imgBtn.getAttribute('data-cart-img-title')); return; }
     var remove = t.closest ? t.closest('[data-cart-remove]') : null;
-    if (remove) { removeFromCart(remove.getAttribute('data-cart-remove')); return; }
+    if (remove) {
+      var rId = remove.getAttribute('data-cart-remove');
+      var rIt = findCartItem(rId);
+      var rEntry = rIt ? cartEntry(rIt.itemId, rIt.type) : null;
+      openRemoveModal('line', rId, rEntry ? rEntry.title : rId);
+      return;
+    }
     var dec = t.closest ? t.closest('[data-qty-dec]') : null;
     if (dec) { var dId = dec.getAttribute('data-qty-dec'); var dIt = findCartItem(dId); if (dIt) setQty(dIt.type, dId, (dIt.qty || 1) - 1); return; }
     var inc = t.closest ? t.closest('[data-qty-inc]') : null;
@@ -2667,7 +2709,7 @@
     if (restore) { restoreDraft(parseInt(restore.getAttribute('data-draft-restore'), 10)); return; }
     var del = t.closest ? t.closest('[data-draft-delete]') : null;
     if (del) { deleteDraft(parseInt(del.getAttribute('data-draft-delete'), 10)); return; }
-    if (t.id === 'clearCartBtn') { clearCart(); return; }
+    if (t.id === 'clearCartBtn') { openRemoveModal('clear'); return; }
     if (t.id === 'checkoutBtn') { checkoutCart(); return; }
   });
   $('cartBody').addEventListener('submit', function (e) {
@@ -2693,6 +2735,16 @@
   $('cartBtn').addEventListener('click', function () { openCartDrawer(false); });
   $('cartDrawerClose').addEventListener('click', closeCartDrawer);
   $('cartDrawerBackdrop').addEventListener('click', closeCartDrawer);
+  $('removeModalKeep').addEventListener('click', function () { gaEvent('cart_remove_kept'); closeRemoveModal(); });
+  $('removeModalConfirm').addEventListener('click', function () {
+    var p = pendingRemoval;
+    closeRemoveModal();
+    if (!p) return;
+    gaEvent('cart_remove_confirmed');
+    if (p.kind === 'clear') clearCart(); else removeFromCart(p.itemId);
+  });
+  $('removeModalClose').addEventListener('click', closeRemoveModal);
+  $('removeModalBackdrop').addEventListener('click', closeRemoveModal);
   $('stickerModalPrev').addEventListener('click', function () { stickerNav(-1); });
   $('stickerModalNext').addEventListener('click', function () { stickerNav(1); });
   $('stickerGrid').addEventListener('click', function (e) {
@@ -2711,6 +2763,7 @@
       if (!$('columnModal').hidden) closeColumnModal();
       else if (!$('stickerModal').hidden) closeStickerModal();
       else if (!$('imageModal').hidden) closeImageModal();
+      else if (!$('removeModal').hidden) closeRemoveModal();
       else if ($('cartDrawer').classList.contains('open')) closeCartDrawer();
       return;
     }

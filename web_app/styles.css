@@ -411,6 +411,17 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .qty-stepper .qty-count { min-width: 28px; text-align: center; font-weight: 700; }
 .qty-stepper[hidden] { display: none; }
 
+/* Remove confirmation: Lili the rabbit asks first. The image is
+ * Lili's own sticker (riemann-rashomon-01, 320 px thumb). */
+.remove-modal-box { text-align: center; max-width: 360px; }
+.remove-modal-img { display: block; width: 128px; height: auto; margin: 2px auto 10px; border-radius: 14px; }
+.remove-modal-box h2 { margin: 0 28px 8px; font-size: 1.3rem; }
+.remove-modal-box p { margin: 0; line-height: 1.55; }
+.remove-modal-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 16px; }
+.remove-modal-keep { min-width: 220px; }
+.remove-modal-confirm { background: none; border: none; padding: 4px; color: var(--muted); text-decoration: underline; font: inherit; cursor: pointer; }
+.remove-modal-confirm:hover { color: var(--text); }
+
 /* Cart drawer: slides in from the right (DCHToons-style). The image
  * lightbox (z-50) stays above it, since it opens from the drawer. */
 .drawer-backdrop { position: fixed; inset: 0; background: rgba(29, 26, 22, 0.55); z-index: 39; opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s linear .25s; }

@@ -22,7 +22,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=25">
+<link rel="stylesheet" href="styles.css?v=26">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
@@ -193,7 +193,7 @@
   <p>Sticker Showcase · gobblemon.com — current affairs, in stickers. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=31" defer></script>
+<script src="app.js?v=32" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>
@@ -243,5 +243,18 @@
   </div>
   <div id="cartBody" class="drawer-body"><p>Loading…</p></div>
 </aside>
+<div id="removeModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="removeModalTitle">
+  <div class="modal-backdrop" id="removeModalBackdrop"></div>
+  <div class="modal-box remove-modal-box">
+    <button id="removeModalClose" class="modal-close" aria-label="Close">×</button>
+    <img id="removeModalImg" src="thumbs/riemann-rashomon-01.jpg" alt="Lili the rabbit" class="remove-modal-img">
+    <h2 id="removeModalTitle">Wait — let me ask first?</h2>
+    <p id="removeModalText"></p>
+    <div class="remove-modal-actions">
+      <button id="removeModalKeep" class="btn remove-modal-keep">Keep it in my bag</button>
+      <button id="removeModalConfirm" class="remove-modal-confirm">Yes, remove it</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
