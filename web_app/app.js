@@ -1366,24 +1366,26 @@
   }
 
   /* Thumbnail for a cart line: the sticker itself for a single, the
-   * set cover for a set, the first sticker for the pack. Links back
-   * to the set page. Null while the index has not loaded yet — the
-   * cart re-renders when it does (applyData calls route()). */
+   * set cover for a set, the first sticker for the pack. `full` is
+   * the original-size image the lightbox shows: the full PNG for a
+   * sticker, the full sheet for a set. Null while the index has not
+   * loaded yet — the cart re-renders when it does (applyData calls
+   * route()). */
   function cartThumb(it) {
     if (it.type === 'single') {
       var rec = findStickerRecord(it.itemId);
       if (!rec) return null;
-      return { src: rec.thumb || rec.file, alt: rec.title, href: '#/set/' + rec.setSlug };
+      return { src: rec.thumb || rec.file, full: rec.file, alt: rec.title };
     }
     if (it.type === 'set') {
       var set = findSet(it.itemId);
       if (!set) return null;
-      return { src: set.thumb || set.image, alt: set.title, href: '#/set/' + set.slug };
+      return { src: set.thumb || set.image, full: set.image, alt: set.title };
     }
     var pack = state.links && state.links.pack;
     if (pack && pack.stickers && pack.stickers.length) {
       var first = findStickerRecord(pack.stickers[0]);
-      if (first) return { src: first.thumb || first.file, alt: pack.title, href: '#/' };
+      if (first) return { src: first.thumb || first.file, full: first.file, alt: pack.title };
     }
     return null;
   }
@@ -1402,7 +1404,7 @@
         var qty = it.qty || 1;
         var thumb = cartThumb(it);
         var thumbHtml = thumb
-          ? '<a href="' + esc(thumb.href) + '" class="cart-thumb-link"><img class="cart-thumb" src="' + esc(thumb.src) + '" alt="' + esc(thumb.alt) + '" loading="lazy" decoding="async"></a>'
+          ? '<button type="button" class="cart-thumb-btn" data-cart-img="' + esc(thumb.full) + '" data-cart-img-title="' + esc(title) + '" aria-label="View full-size image: ' + esc(title) + '"><img class="cart-thumb" src="' + esc(thumb.src) + '" alt="' + esc(thumb.alt) + '" loading="lazy" decoding="async"></button>'
           : '';
         return '<li>' + thumbHtml + '<div class="cart-info"><strong class="cart-title">' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + '</span></div>' +
           '<span class="cart-price">' + (entry ? priceLabel(entry.amount * qty) : '') + '</span>' +
@@ -2366,6 +2368,26 @@
     if (m) history.replaceState(null, '', '#/set/' + m[1]);
   }
 
+  /* ---------- image lightbox (cart thumbnails) ---------- */
+  /* A cart thumbnail opens the original-size image — the full PNG
+   * for a sticker, the full sheet for a set — in the same modal
+   * pattern as the sticker and column modals. */
+  function openImageModal(src, title) {
+    $('imageModalTitle').textContent = title || '';
+    var img = $('imageModalImg');
+    img.src = src;
+    img.alt = title || '';
+    $('imageModal').hidden = false;
+    document.body.classList.add('modal-open');
+    gaEvent('cart_image_modal', { title: title || '' });
+  }
+
+  function closeImageModal() {
+    $('imageModal').hidden = true;
+    document.body.classList.remove('modal-open');
+    $('imageModalImg').removeAttribute('src');
+  }
+
   /* ---------- per-sticker like / collect / share ---------- */
   /* The modal's actions reuse the set-level endpoints with the
    * sticker id (<set-slug>-NN): the seed stores one Sticker row per
@@ -2601,6 +2623,8 @@
   // Cart page actions are delegated — renderCart rebuilds the body.
   $('cartBody').addEventListener('click', function (e) {
     var t = e.target;
+    var imgBtn = t.closest ? t.closest('[data-cart-img]') : null;
+    if (imgBtn) { openImageModal(imgBtn.getAttribute('data-cart-img'), imgBtn.getAttribute('data-cart-img-title')); return; }
     var remove = t.closest ? t.closest('[data-cart-remove]') : null;
     if (remove) { removeFromCart(remove.getAttribute('data-cart-remove')); return; }
     var dec = t.closest ? t.closest('[data-qty-dec]') : null;
@@ -2638,6 +2662,8 @@
   $('columnModalBackdrop').addEventListener('click', closeColumnModal);
   $('stickerModalClose').addEventListener('click', closeStickerModal);
   $('stickerModalBackdrop').addEventListener('click', closeStickerModal);
+  $('imageModalClose').addEventListener('click', closeImageModal);
+  $('imageModalBackdrop').addEventListener('click', closeImageModal);
   $('stickerModalPrev').addEventListener('click', function () { stickerNav(-1); });
   $('stickerModalNext').addEventListener('click', function () { stickerNav(1); });
   $('stickerGrid').addEventListener('click', function (e) {
@@ -2653,6 +2679,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !$('columnModal').hidden) closeColumnModal();
     if (e.key === 'Escape' && !$('stickerModal').hidden) closeStickerModal();
+    if (e.key === 'Escape' && !$('imageModal').hidden) closeImageModal();
     if (!$('stickerModal').hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       var tag = document.activeElement && document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return; // typing, not navigating

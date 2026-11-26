@@ -72,6 +72,29 @@ checks out through a server-side Checkout Session:
 - Discount codes on the cart (the links have none either).
 - Changing the single Buy buttons — they keep working exactly as now.
 
+## v1.5 — cart thumbnails open a full-size lightbox (2026-11-27)
+
+User request: "In cart when user click the thumbnail image,
+modal display original size image shown."
+
+- **Clicking a cart thumbnail now opens the same modal pattern
+  as the sticker/column modals** (backdrop, × button, Escape,
+  backdrop click, page scroll locked): the item title on top and
+  the original-size image below — the full 1600×1680 PNG for a
+  single sticker, the full sheet for a set, the first sticker's
+  full PNG for the pack. The thumbnail is now a `<button>`
+  (keyboard-accessible, focus ring) instead of a link to the set
+  page — the modal replaces that navigation.
+- **Verified at 390 px in local headless Chromium before
+  deploying:** single → `stickers/riemann-rashomon/stickers/01.png`
+  (naturalWidth 1600), set → `stickers/riemann-rashomon/sheet.png`
+  (3320 px), pack → first sticker's PNG; Escape and backdrop
+  clicks both close and clear the image. Screenshot in /tmp
+  (cart-modal-single.png — ephemeral).
+- Shell app.js?v=30 / styles.css?v=24, SW v31 (no index change,
+  DATA_V stays 12). Tests 155/155, typecheck clean. Live verify:
+  (pending — browser check running)
+
 ## v1.4 — cart layout rebuilt for phones (2026-11-27)
 
 The user (via a screenshot + a critique they forwarded) found the
