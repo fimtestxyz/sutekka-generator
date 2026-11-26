@@ -3,12 +3,16 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import webhookHandler from "../api/stripe/webhook.js";
 import {
   verifyStripeSignature,
   resolveOrderItem,
 } from "../api/_lib/stripe-webhook.js";
+import { resetLinksCache } from "../api/_lib/admin-orders.js";
 import {
   setAuthEnv,
   clearAuthEnv,
@@ -21,6 +25,17 @@ const require = createRequire(import.meta.url);
 const linkMap = require("../api/_lib/payment-link-map.js");
 const KNOWN_LINK_ID = Object.keys(linkMap)[0];
 const KNOWN_ITEM = linkMap[KNOWN_LINK_ID];
+
+// The real shop links data (local file, no network) — the webhook
+// pins files from it, so the pinning tests assert against the real
+// catalogue.
+const LINKS_DATA = JSON.parse(
+  fs.readFileSync(
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "web_app", "data", "payment-links.json"),
+    "utf8",
+  ),
+);
+const linksFetchFn = async () => ({ ok: true, json: async () => LINKS_DATA });
 
 const SECRET = "whsec_test_secret";
 const TS = 1793000000; // fixed "now" for the pure verify tests only;
@@ -43,6 +58,7 @@ function sessionEvent(overrides = {}) {
     currency: "sgd",
     customer_details: { email: "buyer@example.com" },
     metadata: { shop_item: "ai-agent-four-faces-03", shop_type: "single" },
+    payment_method_types: ["card"],
     ...overrides,
   };
   return JSON.stringify({
@@ -53,7 +69,7 @@ function sessionEvent(overrides = {}) {
 }
 
 function mockPrismaOrder() {
-  const calls = { upsert: [] };
+  const calls = { upsert: [], webhookEvent: [] };
   return {
     calls,
     order: {
@@ -62,10 +78,19 @@ function mockPrismaOrder() {
         return { id: "ord_1", ...args.create };
       },
     },
+    webhookEvent: {
+      create: async (args) => {
+        calls.webhookEvent.push(args);
+        return { id: "we_1", ...args.data };
+      },
+    },
   };
 }
 
-beforeEach(() => setAuthEnv());
+beforeEach(() => {
+  setAuthEnv();
+  resetLinksCache();
+});
 afterEach(() => restoreEnv());
 
 describe("verifyStripeSignature", () => {
@@ -117,7 +142,7 @@ describe("POST /api/stripe/webhook", () => {
     await webhookHandler(
       mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
       res,
-      { prisma, webhookSecret: SECRET },
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
     );
     assert.equal(res.statusCode, 200);
     assert.equal((await res.json()).received, true);
@@ -129,6 +154,65 @@ describe("POST /api/stripe/webhook", () => {
     assert.equal(data.amountTotal, 400);
     assert.equal(data.buyerEmail, "buyer@example.com");
     assert.equal(data.status, "paid");
+    // Admin pinning (ADMIN.md §3): the exact files bought + the
+    // payment method type are stored on the order at webhook time.
+    assert.equal(data.payMethodType, "card");
+    assert.deepEqual(data.filesJson, [
+      {
+        itemId: "ai-agent-four-faces-03",
+        file: "stickers/ai-agent-four-faces/stickers/03.png",
+        width: 1600,
+        height: 1680,
+      },
+    ]);
+    // A redelivery must never overwrite admin-managed fields: the
+    // update branch carries Stripe-owned facts only.
+    const update = prisma.calls.upsert[0].update;
+    assert.equal("status" in update, false);
+    assert.equal("printStatus" in update, false);
+    assert.equal("filesJson" in update, false);
+    assert.equal("payMethodType" in update, false);
+    // The processed event is logged for the admin health view.
+    assert.equal(prisma.calls.webhookEvent.length, 1);
+    assert.equal(prisma.calls.webhookEvent[0].data.type, "checkout.session.completed");
+    assert.equal(prisma.calls.webhookEvent[0].data.status, "ok");
+  });
+
+  it("pins all 8 files for a set purchase", async () => {
+    const prisma = mockPrismaOrder();
+    const raw = sessionEvent({
+      metadata: { shop_item: "riemann-rashomon", shop_type: "set" },
+    });
+    const res = mockRes();
+    await webhookHandler(
+      mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
+      res,
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
+    );
+    assert.equal(res.statusCode, 200);
+    const files = prisma.calls.upsert[0].create.filesJson;
+    assert.equal(files.length, 8);
+    assert.equal(files[0].file, "stickers/riemann-rashomon/stickers/01.png");
+    assert.equal(files[7].file, "stickers/riemann-rashomon/stickers/08.png");
+  });
+
+  it("stores null files when the links data cannot be fetched", async () => {
+    const prisma = mockPrismaOrder();
+    const raw = sessionEvent();
+    const res = mockRes();
+    await webhookHandler(
+      mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
+      res,
+      {
+        prisma,
+        webhookSecret: SECRET,
+        fetchFn: async () => {
+          throw new Error("network down");
+        },
+      },
+    );
+    assert.equal(res.statusCode, 200);
+    assert.equal(prisma.calls.upsert[0].create.filesJson, null);
   });
 
   it("falls back to the link map when the session has no metadata", async () => {
@@ -138,7 +222,7 @@ describe("POST /api/stripe/webhook", () => {
     await webhookHandler(
       mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
       res,
-      { prisma, webhookSecret: SECRET },
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
     );
     assert.equal(res.statusCode, 200);
     assert.equal(prisma.calls.upsert[0].create.itemId, KNOWN_ITEM.itemId);
@@ -151,7 +235,7 @@ describe("POST /api/stripe/webhook", () => {
     await webhookHandler(
       mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
       res,
-      { prisma, webhookSecret: SECRET },
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
     );
     assert.equal(res.statusCode, 200);
     assert.equal(prisma.calls.upsert[0].create.itemId, "unknown");
@@ -164,24 +248,29 @@ describe("POST /api/stripe/webhook", () => {
     await webhookHandler(
       mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw) }, body: raw }),
       res,
-      { prisma, webhookSecret: SECRET },
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
     );
     assert.equal(res.statusCode, 200);
     assert.deepEqual(await res.json(), { received: true, ignored: true });
     assert.equal(prisma.calls.upsert.length, 0);
+    // …but the ignored event is still logged for the health view.
+    assert.equal(prisma.calls.webhookEvent.length, 1);
+    assert.equal(prisma.calls.webhookEvent[0].data.type, "payment_intent.created");
   });
 
-  it("rejects a bad signature with 400", async () => {
+  it("rejects a bad signature with 400 and logs the failure", async () => {
     const prisma = mockPrismaOrder();
     const raw = sessionEvent();
     const res = mockRes();
     await webhookHandler(
       mockReq({ method: "POST", url: "/api/stripe/webhook", headers: { "stripe-signature": sign(raw, "whsec_wrong") }, body: raw }),
       res,
-      { prisma, webhookSecret: SECRET },
+      { prisma, webhookSecret: SECRET, fetchFn: linksFetchFn },
     );
     assert.equal(res.statusCode, 400);
     assert.equal(prisma.calls.upsert.length, 0);
+    assert.equal(prisma.calls.webhookEvent.length, 1);
+    assert.equal(prisma.calls.webhookEvent[0].data.status, "error");
   });
 
   it("answers 503 when the webhook secret is not configured", async () => {

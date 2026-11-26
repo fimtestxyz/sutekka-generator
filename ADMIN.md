@@ -35,23 +35,34 @@ Design rules:
   admin area — it is a separate credential, so a Google account problem
   can never lock the owner out of the shop, and the admin session is
   distinct from a buyer's Google session.
+- **First-run setup (how the password is set).** The password is never
+  sent through chat, never typed into a vault form for Muse, and never
+  stored as an env var. Instead: the first time anyone opens `#/kangle`
+  while no admin account exists, the page shows a one-time setup form
+  ("Create your admin account"). The owner types the username +
+  password there, on their own site; the server hashes it (scrypt,
+  Node built-in — no new dependency) and stores it in the database.
+  After the first account is created the setup form is gone for good
+  (`POST /api/admin/setup` returns 409 once an admin exists). The
+  owner must create the account immediately after deploy — the window
+  between deploy and first setup is the only time the form exists, and
+  the URL is unlinked, so the exposure is small, but it is real and the
+  owner should not leave it open.
 - **How the session works:** `POST /api/admin/login` checks the
-  password against a bcrypt hash, then sets an httpOnly, Secure,
-  SameSite=Lax cookie carrying a JWT signed with a server secret
-  (24-hour expiry; logout clears it). Every `/api/admin/*` endpoint
-  verifies the cookie; without it the answer is 401 and the frontend
-  shows the login form. No admin UI code path ever runs without a
-  verified session.
-- **Credentials live in Vercel env vars, never in the repo:**
-  `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` (bcrypt, generated once by a
-  script — the plain password is never written down anywhere), and
-  `ADMIN_SESSION_SECRET`. The owner sets them; the values are never
-  printed or committed.
+  password against the stored scrypt hash, then creates a random
+  32-byte session token, stores only its SHA-256 hash in the database
+  (`AdminSession`, 24-hour expiry), and sets an httpOnly, Secure,
+  SameSite=Lax cookie carrying the raw token. Every `/api/admin/*`
+  endpoint verifies the cookie against the stored hash; without it the
+  answer is 401 and the frontend shows the login form. No admin UI code
+  path ever runs without a verified session. Sessions are revocable:
+  logout deletes the row, and "revoke all sessions" deletes every row
+  for the admin. No `ADMIN_SESSION_SECRET` env var is needed.
 - **Rate limiting:** 5 failed logins → 15-minute lockout for that
   username + IP. Login attempts (success and failure) go to the audit
   log.
-- **One admin to start** (the owner). Multi-admin (a second login for a
-  helper) is v2 and needs a small AdminUser table — not in v1.
+- **One admin to start** (the owner). A second login is v2 and needs
+  only a second `AdminUser` row — the table exists from v1.
 
 ## 3. What the buyer gets: invoice and order details
 
@@ -241,6 +252,15 @@ Add to the `Order` model (Prisma, new migration):
 | `refundedAt` | DateTime? | set on refund, with `status = 'refunded'` |
 | `cancelReason` | String? | required when status → cancelled/refunded |
 
+New model `AdminUser`: `id`, `username` (unique), `passwordHash`
+(scrypt, `scrypt:<salt-hex>:<hash-hex>`), `createdAt`, `updatedAt`.
+Created once by the first-run setup; a second row is how v2 adds a
+helper.
+
+New model `AdminSession`: `id`, `tokenHash` (unique, SHA-256 of the
+random session token), `adminUserId` (FK), `expiresAt`, `createdAt`.
+Logout and "revoke all" delete rows; no JWT, no session secret.
+
 New model `AuditLog`: `id`, `adminUser` (username), `action`
 (e.g. `order.delivered`, `order.refunded`, `invoice.issued`,
 `print.shipped`, `settings.shop_closed`, `auth.login_failed`),
@@ -252,7 +272,23 @@ New model `InvoiceRequest`: `id`, `orderId` (unique), `buyerEmail`,
 `resolvedAt` — or fold it into Order as a `invoiceRequestedAt` flag.
 Prefer the separate table: it is the queue, and it keeps Order clean.
 
-No `AdminUser` table in v1 (single owner, env-var credential).
+New model `WebhookEvent`: `id`, `type` (e.g.
+`checkout.session.completed`), `stripeSessionId` (nullable),
+`status` (`ok` / `error`), `error` (nullable), `createdAt`. The
+webhook handler writes one row per event it processes — this is the
+webhook-health view's data.
+
+New model `SiteSetting`: `key` (unique, e.g. `shop_closed`,
+`announcement`, `hidden_items`), `value` (String, JSON for
+`hidden_items`). Read by a public `GET /api/settings`; written only
+by the admin.
+
+No `ADMIN_*` env vars in v1: the password lives in `AdminUser`, the
+session in `AdminSession`. (An earlier draft of this spec used
+`ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` / `ADMIN_SESSION_SECRET` env
+vars; that was changed at build time because the password would have
+had to travel through chat or the vault to reach Vercel, which is not
+acceptable — the first-run setup keeps it on the owner's own site.)
 
 ## 6. API endpoints
 
@@ -262,6 +298,7 @@ otherwise). All writes validate with Zod (same pattern as
 
 | Endpoint | Method | Purpose |
 |---|---|---|
+| `/api/admin/setup` | POST | One-time first-run setup `{username, password}` → creates the first `AdminUser`. Returns 409 once any admin exists. |
 | `/api/admin/login` | POST | `{username, password}` → session cookie. Rate-limited. |
 | `/api/admin/logout` | POST | Clears the cookie. |
 | `/api/admin/session` | GET | `{admin: {username} \| null}` — what the frontend checks. |
@@ -277,8 +314,9 @@ otherwise). All writes validate with Zod (same pattern as
 | `/api/admin/stats` | GET | Revenue by period, top sellers, refund rate. |
 | `/api/admin/webhooks` | GET | Recent webhook events + last-received time (from a small `WebhookEvent` log the webhook handler writes — v1 logs only failures + a heartbeat row; full event storage is v2). |
 | `/api/admin/audit` | GET | Audit log, paginated, filterable by admin/action/order. |
-| `/api/admin/settings` | GET/POST | Shop open/closed + announcement banner. |
-| `/api/admin/change-password` | POST | `{oldPassword, newPassword}` — re-hashes and updates the env var? No: env vars cannot be rewritten from a function. V1: password change is done by the owner in the Vercel Dashboard (update `ADMIN_PASSWORD_HASH`); the admin page links to the instructions. In-function rotation is v2 (needs a stored hash in the DB, i.e. an AdminUser table). |
+| `/api/admin/settings` | GET/POST | Shop open/closed + announcement banner + hidden items. |
+| `/api/admin/change-password` | POST | `{oldPassword, newPassword}` — verifies the old password, stores a new scrypt hash in `AdminUser`. (Possible in-function because the hash lives in the DB, not an env var.) |
+| `/api/admin/sessions` | GET/DELETE | List active sessions / revoke all (logout everywhere). |
 
 Buyer-facing additions (public, no admin session):
 
@@ -354,10 +392,11 @@ Versioning follows the existing convention: `app.js`/`styles.css`
 
 ## 10. Open decisions (need the owner before building)
 
-1. **Admin username + password.** The owner picks them; the hash is set
-   as `ADMIN_PASSWORD_HASH` on Vercel (via the Secure Vault flow —
-   never in chat, never in the repo). Nothing can be built until this
-   exists.
+1. **Admin username + password.** The owner picks them and types them
+   into the first-run setup form at `#/kangle` immediately after the
+   v1 deploy — the password never goes through chat or the vault, and
+   nothing can be built to need it first. The only action before the
+   build is: create the account the moment the deploy lands.
 2. **Invoice issuing: Dashboard link vs in-admin API.** In-admin issuing
    is one click, but it needs `STRIPE_SECRET_KEY` as a Vercel env var —
    a second live secret next to the webhook secret. Dashboard issuing

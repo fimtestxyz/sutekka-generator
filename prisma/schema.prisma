@@ -177,9 +177,110 @@ model Order {
   amountTotal           Int
   currency              String   @default("sgd")
   status                String   @default("paid")
+  // Admin / print / invoice fields (ADMIN.md §5). Stripe-owned facts
+  // (ids, email, item, amount) are set by the webhook; admin-managed
+  // fields (printStatus, shipping, tracking, notes, refund) are never
+  // overwritten by a webhook redelivery — see api/stripe/webhook.js.
+  payMethodType         String?
+  filesJson             Json?
+  printStatus           String   @default("none")
+  shippingName          String?
+  shippingAddress       Json?
+  trackingCourier       String?
+  trackingNumber        String?
+  invoiceId             String?
+  invoiceNumber         String?
+  adminNotes            String?  @db.Text
+  refundedAt            DateTime?
+  cancelReason          String?
+  invoiceRequestedAt    DateTime?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
+  invoiceRequest InvoiceRequest?
+
   @@index([buyerEmail])
   @@index([createdAt])
+  @@index([printStatus])
+  @@index([status])
+}
+
+// Admin account (ADMIN.md §2). Created once by the first-run setup
+// form at #/kangle; the password hash is scrypt (node:crypto), never
+// an env var. A second row is how a helper admin is added (v2).
+model AdminUser {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions AdminSession[]
+}
+
+// Admin session (ADMIN.md §2). The cookie carries a random token; only
+// its SHA-256 hash is stored. Logout / revoke-all delete rows; no JWT,
+// no session secret.
+model AdminSession {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique
+  adminUserId String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([expiresAt])
+}
+
+// Audit log (ADMIN.md §4.9). Append-only: every admin action that
+// touches money, fulfilment or settings writes one row. No updates,
+// no deletes.
+model AuditLog {
+  id        String   @id @default(cuid())
+  adminUser String
+  action    String
+  orderId   String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([createdAt])
+}
+
+// Buyer's formal-invoice request queue (ADMIN.md §4.2).
+model InvoiceRequest {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  buyerEmail String?
+  status     String   @default("open")
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+// Webhook health (ADMIN.md §4.9). One row per Stripe event the webhook
+// handler processes, ok or error — the admin health view reads this.
+model WebhookEvent {
+  id              String   @id @default(cuid())
+  type            String
+  stripeSessionId String?
+  status          String
+  error           String?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Site settings the admin can change (ADMIN.md §4.7): shop_closed,
+// announcement, hidden_items (JSON array of item ids). Read by the
+// public GET /api/settings; written only by the admin.
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

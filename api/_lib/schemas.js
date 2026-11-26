@@ -56,6 +56,93 @@ const bookmarkCreateSchema = z.object({
   stickerId: z.string().trim().min(1),
 });
 
+// --- Admin (ADMIN.md) ---
+
+const adminUsernameSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(32)
+  .regex(/^[A-Za-z0-9_-]+$/, {
+    message: "username may only contain letters, digits, _ and -",
+  });
+
+const adminPasswordSchema = z.string().min(10).max(200);
+
+const adminSetupSchema = z.object({
+  username: adminUsernameSchema,
+  password: adminPasswordSchema,
+});
+
+const adminLoginSchema = z.object({
+  username: z.string().trim().min(1).max(32),
+  password: z.string().min(1).max(200),
+});
+
+const adminChangePasswordSchema = z.object({
+  oldPassword: z.string().min(1).max(200),
+  newPassword: adminPasswordSchema,
+});
+
+const adminOrderStatusSchema = z.object({
+  status: z.enum(["delivered", "refunded", "cancelled"]),
+  reason: z.string().trim().min(1).max(500),
+});
+
+const adminOrderNoteSchema = z.object({
+  note: z.string().trim().max(2000),
+});
+
+const adminShippingAddressSchema = z.object({
+  line1: z.string().trim().min(1).max(200),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().min(1).max(100),
+  postal: z.string().trim().min(1).max(20),
+  country: z.string().trim().min(1).max(100),
+});
+
+const adminOrderShippingSchema = z.object({
+  name: z.string().trim().min(1).max(200).optional(),
+  address: adminShippingAddressSchema.optional(),
+  courier: z.string().trim().max(100).optional(),
+  trackingNumber: z.string().trim().max(100).optional(),
+});
+
+const adminOrderPrintSchema = z.object({
+  printStatus: z.enum(["none", "queued", "printing", "shipped", "delivered"]),
+});
+
+const adminOrderInvoiceSchema = z.object({
+  invoiceId: z.string().trim().min(1).max(100),
+  invoiceNumber: z.string().trim().min(1).max(100),
+});
+
+const adminInvoiceResolveSchema = z.object({
+  status: z.enum(["issued", "declined"]),
+});
+
+const adminSettingsSchema = z.object({
+  shopClosed: z.boolean().optional(),
+  announcement: z.string().trim().max(280).optional(),
+  hiddenItems: z.array(z.string().trim().min(1)).max(100).optional(),
+});
+
+// Buyer shipping address (public POST /api/orders/shipping) — same
+// shape as the admin's address, without the courier/tracking fields.
+const buyerShippingSchema = z.object({
+  sessionId: z.string().trim().min(1).optional(),
+  orderId: z.string().trim().min(1).optional(),
+  email: z.string().trim().email().max(254),
+  name: z.string().trim().min(1).max(200),
+  address: adminShippingAddressSchema,
+});
+
+const buyerInvoiceRequestSchema = z.object({
+  sessionId: z.string().trim().min(1).optional(),
+  orderId: z.string().trim().min(1).optional(),
+  email: z.string().trim().email().max(254),
+});
+
 /**
  * Validate `body` against a schema. Returns a flat result object
  * (not a discriminated union — tsc does not narrow the union form
@@ -85,5 +172,17 @@ module.exports = {
   commentCreateSchema,
   commentPatchSchema,
   bookmarkCreateSchema,
+  adminSetupSchema,
+  adminLoginSchema,
+  adminChangePasswordSchema,
+  adminOrderStatusSchema,
+  adminOrderNoteSchema,
+  adminOrderShippingSchema,
+  adminOrderPrintSchema,
+  adminOrderInvoiceSchema,
+  adminInvoiceResolveSchema,
+  adminSettingsSchema,
+  buyerShippingSchema,
+  buyerInvoiceRequestSchema,
   parseBody,
 };

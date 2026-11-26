@@ -19,6 +19,7 @@ const {
   readJsonBody,
   getQuery,
 } = require("../_lib/http");
+const { buyerFulfilment } = require("../_lib/admin-orders");
 
 function publicOrder(row) {
   return {
@@ -29,6 +30,9 @@ function publicOrder(row) {
     currency: row.currency,
     status: row.status,
     createdAt: row.createdAt,
+    // Fulfilment fields the buyer may see on their own order page
+    // (tracking, invoice state). No Stripe ids, no buyer email.
+    ...buyerFulfilment(row),
   };
 }
 

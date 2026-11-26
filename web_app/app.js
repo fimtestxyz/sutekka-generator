@@ -48,11 +48,16 @@
     engageReady: null, // null = unknown, true = API up, false = API down
     session: null, // Auth.js session user, or null when signed out
     authAvailable: null, // null = unknown, true = /api/auth up, false = not configured
-    links: null // payment-links.json: shop prices + Stripe Payment Link URLs
+    links: null, // payment-links.json: shop prices + Stripe Payment Link URLs
+    siteSettings: null, // GET /api/settings: shopClosed, announcement, hiddenItems
+    admin: null, // admin session user ({ username }) or null
+    adminSetupNeeded: false,
+    adminOrdersPage: 1,
+    adminOrdersFilter: { status: '', q: '' }
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download'), adminEl = $('admin');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -847,6 +852,7 @@
     loadConfig();
     loadSession();
     loadLinks();
+    loadSettings();
   }
 
   /* ---------- filtering ---------- */
@@ -1009,6 +1015,7 @@
     bookmarksEl.hidden = name !== 'bookmarks';
     collectionsEl.hidden = name !== 'collections';
     downloadEl.hidden = name !== 'download';
+    adminEl.hidden = name !== 'admin';
     // Active nav state: the reader lives under Latest.
     var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about' }[name] || null;
     document.querySelectorAll('.topnav a').forEach(function (a) {
@@ -1028,6 +1035,7 @@
     var query = new URLSearchParams(hashParts[1] || '');
     var parts = hashParts[0].replace(/^#\//, '').split('/');
     if (parts[0] === 'download') { renderDownload(query); showView('download'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'kangle') { renderAdmin(parts.slice(1)); showView('admin'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'set' && parts[1]) {
       openSet(parts[1]);
       // Deep link to one sticker: #/set/<slug>/sticker/<n> opens the set
@@ -1075,6 +1083,32 @@
     });
   }
 
+  /* Site settings (GET /api/settings, admin-controlled): shop closed
+   * hides every Buy button; hiddenItems hides one item's button.
+   * When the endpoint is down the shop stays open — the settings are
+   * an admin control, not a dependency of the storefront. */
+  function loadSettings() {
+    fetch('/api/settings', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        state.siteSettings = d;
+        var ann = $('announcement');
+        if (ann) {
+          if (d.announcement) { ann.textContent = d.announcement; ann.hidden = false; }
+          else ann.hidden = true;
+        }
+        renderPackCard();
+        renderBuyButtons();
+        if (state.currentSticker) renderStickerBuyBtn();
+      })
+      .catch(function () { /* settings unavailable — the shop stays open */ });
+  }
+
+  function shopClosed() { return !!(state.siteSettings && state.siteSettings.shopClosed); }
+  function itemHidden(itemId) {
+    return !!(state.siteSettings && state.siteSettings.hiddenItems && state.siteSettings.hiddenItems.indexOf(itemId) !== -1);
+  }
+
   function buyUrl(type, itemId) {
     var links = state.links;
     if (!links) return null;
@@ -1088,6 +1122,7 @@
   function openBuyLink(type, itemId) {
     var url = buyUrl(type, itemId);
     if (!url) return;
+    if (shopClosed() || itemHidden(itemId)) return;
     gaEvent('buy_click', { type: type, item: itemId });
     location.href = url;
   }
@@ -1096,7 +1131,7 @@
     var btn = $('buySetBtn');
     if (!btn) return;
     var entry = state.links && state.currentSlug ? state.links.sets[state.currentSlug] : null;
-    if (!entry) { btn.hidden = true; return; }
+    if (!entry || shopClosed() || itemHidden(state.currentSlug)) { btn.hidden = true; return; }
     btn.hidden = false;
     btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy this set — ' + priceLabel(entry.amount);
   }
@@ -1106,7 +1141,7 @@
     var s = state.currentSticker;
     if (!btn || !s) return;
     var entry = state.links ? state.links.singles[s.id] : null;
-    if (!entry) { btn.hidden = true; return; }
+    if (!entry || shopClosed() || itemHidden(s.id)) { btn.hidden = true; return; }
     btn.hidden = false;
     btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy — ' + priceLabel(entry.amount);
   }
@@ -1123,6 +1158,7 @@
   function renderPackCard() {
     var card = $('packCard');
     if (!card || !state.links || !state.links.pack) return;
+    if (shopClosed() || itemHidden('complete-pack-30')) { card.hidden = true; return; }
     var pack = state.links.pack;
     var counts = {};
     pack.stickers.forEach(function (id) {
@@ -1267,8 +1303,104 @@
         }).join('') + '</ul>' +
         '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>';
     }
+    // Fulfilment: print status + tracking, formal invoice, print
+    // shipping address. The buyer proves the order with the email
+    // they used at checkout (the page never shows it back).
+    if (order.printStatus && order.printStatus !== 'none') {
+      html += '<p><strong>Print:</strong> ' + esc(order.printStatus) + '</p>';
+      if (order.trackingNumber) {
+        html += '<p class="meta">Tracking: ' + esc((order.trackingCourier || '') + ' ' + order.trackingNumber) + '</p>';
+      }
+    }
+    if (order.invoiceNumber) {
+      html += '<p class="meta">Invoice ' + esc(order.invoiceNumber) + ' was issued — a copy was sent to your email.</p>';
+    } else if (!order.invoiceRequestedAt) {
+      html += '<div class="order-card"><p><strong>Need a formal invoice?</strong></p>' +
+        '<form id="invoiceRequestForm" class="comment-form" onsubmit="return false;">' +
+        '<input id="invoiceEmail" type="email" placeholder="Email used at checkout" required aria-label="Email used at checkout">' +
+        '<button type="submit">Request invoice</button> <span id="invoiceMsg" class="comment-msg" aria-live="polite"></span></form></div>';
+    } else {
+      html += '<p class="meta">Invoice requested — the shop will send it to your email.</p>';
+    }
+    if (order.hasShippingAddress) {
+      html += '<p class="meta">Shipping address on file — this order is in the print queue.</p>';
+    } else {
+      html += '<div class="order-card"><p><strong>Want this printed?</strong> Add your shipping address and the order joins the print queue.</p>' +
+        '<form id="shippingForm" class="comment-form" onsubmit="return false;">' +
+        '<input id="shipEmail" type="email" placeholder="Email used at checkout" required aria-label="Email used at checkout">' +
+        '<input id="shipName" type="text" placeholder="Full name" required aria-label="Full name">' +
+        '<input id="shipLine1" type="text" placeholder="Street address" required aria-label="Street address">' +
+        '<input id="shipLine2" type="text" placeholder="Apt / unit (optional)" aria-label="Apt or unit">' +
+        '<input id="shipCity" type="text" placeholder="City" required aria-label="City">' +
+        '<input id="shipPostal" type="text" placeholder="Postal code" required aria-label="Postal code">' +
+        '<input id="shipCountry" type="text" placeholder="Country" value="Singapore" required aria-label="Country">' +
+        '<button type="submit">Add shipping address</button> <span id="shipMsg" class="comment-msg" aria-live="polite"></span></form></div>';
+    }
+    state.downloadOrder = order;
+    state.downloadSessionId = sessionId || null;
     body.innerHTML = html;
     if (sessionId && order.status === 'paid') markDelivered(sessionId);
+  }
+
+  function downloadOrderKey() {
+    var o = state.downloadOrder;
+    if (!o) return null;
+    if (state.downloadSessionId) return { sessionId: state.downloadSessionId };
+    return { orderId: o.id };
+  }
+
+  function requestInvoice(e) {
+    e.preventDefault();
+    var email = ($('invoiceEmail').value || '').trim();
+    var msg = $('invoiceMsg');
+    var key = downloadOrderKey();
+    if (!key || !email) return;
+    key.email = email;
+    fetch('/api/orders/invoice-request', {
+      method: 'POST', credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(key)
+    }).then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
+      .then(function (x) {
+        if (!msg) return;
+        if (x.status === 201) msg.textContent = 'Invoice requested — the shop will send it to your email.';
+        else if (x.status === 409) msg.textContent = 'An invoice was already requested for this order.';
+        else if (x.status === 403) msg.textContent = 'That email does not match this order.';
+        else msg.textContent = 'Could not request the invoice right now.';
+      })
+      .catch(function () { if (msg) msg.textContent = 'Could not request the invoice right now.'; });
+  }
+
+  function submitShipping(e) {
+    e.preventDefault();
+    var msg = $('shipMsg');
+    var key = downloadOrderKey();
+    if (!key) return;
+    var address = {
+      line1: ($('shipLine1').value || '').trim(),
+      line2: ($('shipLine2').value || '').trim(),
+      city: ($('shipCity').value || '').trim(),
+      postal: ($('shipPostal').value || '').trim(),
+      country: ($('shipCountry').value || '').trim()
+    };
+    key.email = ($('shipEmail').value || '').trim();
+    key.name = ($('shipName').value || '').trim();
+    key.address = address;
+    fetch('/api/orders/shipping', {
+      method: 'POST', credentials: 'same-origin', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(key)
+    }).then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
+      .then(function (x) {
+        if (!msg) return;
+        if (x.status === 200) {
+          msg.textContent = 'Added — your order is in the print queue.';
+          if (state.downloadOrder) { state.downloadOrder.hasShippingAddress = true; state.downloadOrder.printStatus = 'queued'; }
+        }
+        else if (x.status === 403) msg.textContent = 'That email does not match this order.';
+        else msg.textContent = 'Could not save that address right now.';
+      })
+      .catch(function () { if (msg) msg.textContent = 'Could not save that address right now.'; });
   }
 
   function findOrder(e) {
@@ -1282,6 +1414,425 @@
       msg.textContent = 'Enter an email or an order id.';
       setTimeout(function () { msg.textContent = ''; }, 2500);
     }
+  }
+
+  /* ---------- admin (#/kangle) ---------- */
+  /* Shop admin (ADMIN.md): password login, orders, print queue,
+   * invoices, settings. The admin session is a cookie set by the
+   * /api/admin/* endpoints — this page never sees the password
+   * after it is typed, and never shows card details. */
+
+  function adminApi(path, opts) {
+    opts = opts || {};
+    opts.credentials = 'same-origin';
+    opts.cache = 'no-store';
+    if (opts.body && typeof opts.body !== 'string') {
+      opts.headers = { 'Content-Type': 'application/json' };
+      opts.body = JSON.stringify(opts.body);
+    }
+    return fetch('/api/admin/' + path, opts).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        return { status: r.status, data: d };
+      });
+    });
+  }
+
+  function adminNav(active) {
+    var links = [
+      ['dashboard', 'Dashboard', '#/kangle'],
+      ['orders', 'Orders', '#/kangle/orders'],
+      ['print', 'Print queue', '#/kangle/print'],
+      ['invoices', 'Invoices', '#/kangle/invoices'],
+      ['settings', 'Settings', '#/kangle/settings']
+    ];
+    return '<p class="admin-nav">' + links.map(function (l) {
+      return '<a href="' + l[2] + '"' + (l[0] === active ? ' class="active"' : '') + '>' + l[1] + '</a>';
+    }).join(' · ') + ' · <button data-admin-act="logout">Log out</button></p>';
+  }
+
+  function renderAdmin(parts) {
+    var body = $('adminBody');
+    body.innerHTML = '<p>Loading…</p>';
+    adminApi('session').then(function (x) {
+      if (x.status !== 200) { body.innerHTML = '<p>Could not reach the admin service right now.</p>'; return; }
+      state.admin = x.data.admin || null;
+      state.adminSetupNeeded = !!x.data.setupNeeded;
+      if (state.adminSetupNeeded) { renderAdminSetup(); return; }
+      if (!state.admin) { renderAdminLogin(); return; }
+      var view = parts[0] || 'dashboard';
+      if (view === 'orders' && parts[1]) renderAdminOrderDetail(parts[1]);
+      else if (view === 'orders') renderAdminOrders();
+      else if (view === 'print') renderAdminPrintQueue();
+      else if (view === 'invoices') renderAdminInvoices();
+      else if (view === 'settings') renderAdminSettings();
+      else renderAdminDashboard();
+    }).catch(function () {
+      body.innerHTML = '<p>Could not reach the admin service right now.</p>';
+    });
+  }
+
+  function renderAdminSetup() {
+    $('adminBody').innerHTML =
+      '<p>This shop has no admin account yet. Create one — this form only appears once, and the password is stored on this site only.</p>' +
+      '<form id="adminSetupForm" class="comment-form" onsubmit="return false;">' +
+      '<input id="adminSetupUser" type="text" placeholder="Username (3–32 letters, digits, _ or -)" required minlength="3" maxlength="32" autocomplete="username" aria-label="Admin username">' +
+      '<input id="adminSetupPass" type="password" placeholder="Password (at least 10 characters)" required minlength="10" autocomplete="new-password" aria-label="Admin password">' +
+      '<button type="submit">Create admin account</button> <span id="adminSetupMsg" class="comment-msg" aria-live="polite"></span></form>';
+  }
+
+  function renderAdminLogin() {
+    $('adminBody').innerHTML =
+      '<p>Sign in to manage the shop.</p>' +
+      '<form id="adminLoginForm" class="comment-form" onsubmit="return false;">' +
+      '<input id="adminLoginUser" type="text" placeholder="Username" required autocomplete="username" aria-label="Admin username">' +
+      '<input id="adminLoginPass" type="password" placeholder="Password" required autocomplete="current-password" aria-label="Admin password">' +
+      '<button type="submit">Sign in</button> <span id="adminLoginMsg" class="comment-msg" aria-live="polite"></span></form>';
+  }
+
+  function adminSetup(e) {
+    e.preventDefault();
+    var msg = $('adminSetupMsg');
+    adminApi('setup', { method: 'POST', body: {
+      username: ($('adminSetupUser').value || '').trim(),
+      password: $('adminSetupPass').value || ''
+    } }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 201) { state.admin = x.data.admin; location.hash = '#/kangle'; route(); }
+      else if (x.status === 409) msg.textContent = 'An admin account already exists — sign in instead.';
+      else msg.textContent = 'Could not create the account. Check the username and password rules.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function adminLogin(e) {
+    e.preventDefault();
+    var msg = $('adminLoginMsg');
+    adminApi('login', { method: 'POST', body: {
+      username: ($('adminLoginUser').value || '').trim(),
+      password: $('adminLoginPass').value || ''
+    } }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 200) { state.admin = x.data.admin; location.hash = '#/kangle'; route(); }
+      else if (x.status === 429) msg.textContent = 'Too many attempts — wait 15 minutes and try again.';
+      else msg.textContent = 'Wrong username or password.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function adminLogout() {
+    adminApi('logout', { method: 'POST' }).then(function () {
+      state.admin = null;
+      location.hash = '#/kangle';
+      route();
+    });
+  }
+
+  function money(cents) { return 'S$' + (cents / 100).toFixed(2); }
+
+  function orderStatusLabel(o) {
+    return esc(o.status) + (o.printStatus && o.printStatus !== 'none' ? ' · print: ' + esc(o.printStatus) : '');
+  }
+
+  function renderAdminDashboard() {
+    var body = $('adminBody');
+    body.innerHTML = adminNav('dashboard') + '<p>Loading…</p>';
+    Promise.all([adminApi('stats'), adminApi('invoices'), adminApi('print-queue'), adminApi('webhooks')]).then(function (xs) {
+      var stats = xs[0].data || {};
+      var invoices = xs[1].data || {};
+      var queue = xs[2].data || {};
+      var hooks = xs[3].data || {};
+      body.innerHTML = adminNav('dashboard') +
+        '<div class="admin-cards">' +
+        '<p class="order-card"><strong>' + (stats.paidOrders || 0) + '</strong> paid orders · <strong>' + money(stats.totalRevenue || 0) + '</strong> revenue</p>' +
+        '<p class="order-card"><strong>' + (stats.refundedOrders || 0) + '</strong> refunded · <strong>' + (stats.totalOrders || 0) + '</strong> orders total</p>' +
+        '<p class="order-card"><strong>' + ((invoices.requests || []).length) + '</strong> invoice requests open · <strong>' + ((queue.orders || []).length) + '</strong> in the print queue</p>' +
+        '<p class="order-card">Webhook: ' + (hooks.lastOkAt ? 'last event ' + esc(new Date(hooks.lastOkAt).toLocaleString()) : 'no events yet') + '</p>' +
+        '</div>' +
+        '<h2>Top sellers</h2>' +
+        '<ul>' + ((stats.topItems || []).map(function (t) {
+          return '<li>' + esc(t.itemId) + ' — ' + t.orders + ' orders · ' + money(t.revenue) + '</li>';
+        }).join('') || '<li>None yet.</li>') + '</ul>';
+    }).catch(function () {
+      body.innerHTML = adminNav('dashboard') + '<p>Could not load the dashboard right now.</p>';
+    });
+  }
+
+  function renderAdminOrders() {
+    var body = $('adminBody');
+    var f = state.adminOrdersFilter;
+    body.innerHTML = adminNav('orders') +
+      '<form id="adminOrdersFilterForm" class="comment-form" onsubmit="return false;">' +
+      '<select id="adminFilterStatus" aria-label="Filter by status">' +
+      [''].concat(['paid', 'delivered', 'refunded', 'cancelled']).map(function (s) {
+        return '<option value="' + s + '"' + (f.status === s ? ' selected' : '') + '>' + (s || 'All statuses') + '</option>';
+      }).join('') + '</select>' +
+      '<input id="adminFilterQ" type="search" placeholder="Search email, order id, session…" value="' + esc(f.q) + '" aria-label="Search orders">' +
+      '<button type="submit">Filter</button></form>' +
+      '<div id="adminOrdersList"><p>Loading…</p></div>';
+    var q = 'orders?page=' + state.adminOrdersPage + '&take=20' +
+      (f.status ? '&status=' + encodeURIComponent(f.status) : '') +
+      (f.q ? '&q=' + encodeURIComponent(f.q) : '');
+    adminApi(q).then(function (x) {
+      var list = $('adminOrdersList');
+      if (!list) return;
+      var d = x.data || {};
+      var orders = d.orders || [];
+      if (!orders.length) { list.innerHTML = '<p>No orders match.</p>'; return; }
+      list.innerHTML = '<table class="admin-table"><thead><tr><th>Order</th><th>Item</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+        orders.map(function (o) {
+          return '<tr><td><a href="#/kangle/orders/' + esc(o.id) + '">' + esc(o.id) + '</a><br><span class="meta">' + esc(o.buyerEmail || '') + '</span></td>' +
+            '<td>' + esc(o.itemId) + '</td><td>' + money(o.amountTotal) + '</td><td>' + orderStatusLabel(o) + '</td>' +
+            '<td>' + esc(new Date(o.createdAt).toLocaleDateString()) + '</td></tr>';
+        }).join('') + '</tbody></table>' +
+        '<p class="meta">' + (d.total || 0) + ' orders · page ' + (d.page || 1) + '</p>' +
+        '<p><button data-admin-act="page-prev"' + (state.adminOrdersPage <= 1 ? ' disabled' : '') + '>← Newer</button> ' +
+        '<button data-admin-act="page-next"' + (orders.length < 20 ? ' disabled' : '') + '>Older →</button></p>';
+    }).catch(function () {
+      var list = $('adminOrdersList');
+      if (list) list.innerHTML = '<p>Could not load orders right now.</p>';
+    });
+  }
+
+  function adminFilterOrders(e) {
+    e.preventDefault();
+    state.adminOrdersFilter = {
+      status: $('adminFilterStatus').value || '',
+      q: ($('adminFilterQ').value || '').trim()
+    };
+    state.adminOrdersPage = 1;
+    renderAdminOrders();
+  }
+
+  function renderAdminOrderDetail(orderId) {
+    var body = $('adminBody');
+    body.innerHTML = adminNav('orders') + '<p>Loading…</p>';
+    adminApi('orders/' + encodeURIComponent(orderId)).then(function (x) {
+      if (x.status === 404) { body.innerHTML = adminNav('orders') + '<p>Order not found.</p>'; return; }
+      var o = x.data.order;
+      var auditRows = x.data.audit || [];
+      var files = o.files || [];
+      body.innerHTML = adminNav('orders') +
+        '<h2>Order ' + esc(o.id) + '</h2>' +
+        '<p class="meta">' + esc(new Date(o.createdAt).toLocaleString()) + ' · ' + esc(o.status) + '</p>' +
+        '<table class="admin-table"><tbody>' +
+        '<tr><th>Buyer</th><td>' + esc(o.buyerEmail || '—') + '</td></tr>' +
+        '<tr><th>Item</th><td>' + esc(o.itemId) + ' (' + esc(o.itemType) + ')</td></tr>' +
+        '<tr><th>Amount</th><td>' + money(o.amountTotal) + ' ' + esc(o.currency.toUpperCase()) + '</td></tr>' +
+        '<tr><th>Payment</th><td>' + esc(o.payMethodType || '—') + ' · session <a href="https://dashboard.stripe.com/payments/' + esc(o.stripePaymentIntentId || '') + '" target="_blank" rel="noopener">' + esc(o.stripePaymentIntentId || o.stripeSessionId || '') + '</a></td></tr>' +
+        '<tr><th>Print</th><td>' + esc(o.printStatus) + (o.trackingNumber ? ' · ' + esc((o.trackingCourier || '') + ' ' + o.trackingNumber) : '') + '</td></tr>' +
+        '<tr><th>Shipping</th><td>' + (o.shippingAddress ? esc((o.shippingName || '') + ' — ' + [o.shippingAddress.line1, o.shippingAddress.line2, o.shippingAddress.city, o.shippingAddress.postal, o.shippingAddress.country].filter(Boolean).join(', ')) : '—') + '</td></tr>' +
+        '<tr><th>Invoice</th><td>' + esc(o.invoiceNumber || '—') + (o.invoiceRequestedAt ? ' · requested ' + esc(new Date(o.invoiceRequestedAt).toLocaleDateString()) : '') + '</td></tr>' +
+        '<tr><th>Notes</th><td>' + esc(o.adminNotes || '—') + '</td></tr>' +
+        '</tbody></table>' +
+        '<h3>Files' + (files.length ? ' (' + files.length + ')' : '') + '</h3>' +
+        (files.length ? '<ul class="download-list">' + files.map(function (f) {
+          return '<li><a href="' + esc(f.file) + '" download>' + esc(f.file) + '</a> · ' + f.width + '×' + f.height + ' · ' + Math.round(f.width / 5) + ' DPI at 5"</li>';
+        }).join('') + '</ul>' : '<p class="meta">Files were not pinned for this order (paid before pinning shipped). Resolve them from the item id above.</p>') +
+        '<h3>Status</h3>' +
+        '<form id="adminStatusForm" class="comment-form" onsubmit="return false;">' +
+        '<input type="hidden" id="adminStatusOrderId" value="' + esc(o.id) + '">' +
+        '<select id="adminStatusSelect" aria-label="New status">' +
+        ['delivered', 'refunded', 'cancelled'].map(function (s) { return '<option value="' + s + '">' + s + '</option>'; }).join('') +
+        '</select>' +
+        '<input id="adminStatusReason" type="text" placeholder="Reason (required)" required aria-label="Reason">' +
+        '<button type="submit">Change status</button> <span id="adminStatusMsg" class="comment-msg" aria-live="polite"></span></form>' +
+        '<h3>Print</h3><p>' +
+        ['queued', 'printing', 'shipped', 'delivered', 'none'].map(function (s) {
+          return '<button data-admin-act="print" data-admin-order="' + esc(o.id) + '" data-admin-value="' + s + '"' + (o.printStatus === s ? ' disabled' : '') + '>' + s + '</button> ';
+        }).join('') + '</p>' +
+        '<h3>Shipping &amp; tracking</h3>' +
+        '<form id="adminShipForm" class="comment-form" onsubmit="return false;">' +
+        '<input type="hidden" id="adminShipOrderId" value="' + esc(o.id) + '">' +
+        '<input id="adminShipName" type="text" placeholder="Recipient name" value="' + esc(o.shippingName || '') + '" aria-label="Recipient name">' +
+        '<input id="adminShipCourier" type="text" placeholder="Courier" value="' + esc(o.trackingCourier || '') + '" aria-label="Courier">' +
+        '<input id="adminShipTracking" type="text" placeholder="Tracking number" value="' + esc(o.trackingNumber || '') + '" aria-label="Tracking number">' +
+        '<button type="submit">Save shipping</button> <span id="adminShipMsg" class="comment-msg" aria-live="polite"></span></form>' +
+        '<h3>Invoice</h3><p class="meta">Issue the invoice in the <a href="https://dashboard.stripe.com/invoices/create" target="_blank" rel="noopener">Stripe Dashboard</a>, then record its id and number here.</p>' +
+        '<form id="adminInvoiceForm" class="comment-form" onsubmit="return false;">' +
+        '<input type="hidden" id="adminInvoiceOrderId" value="' + esc(o.id) + '">' +
+        '<input id="adminInvoiceId" type="text" placeholder="Stripe invoice id (in_…)" value="' + esc(o.invoiceId || '') + '" aria-label="Stripe invoice id">' +
+        '<input id="adminInvoiceNumber" type="text" placeholder="Invoice number" value="' + esc(o.invoiceNumber || '') + '" aria-label="Invoice number">' +
+        '<button type="submit">Record invoice</button> <span id="adminInvoiceMsg" class="comment-msg" aria-live="polite"></span></form>' +
+        '<h3>Notes</h3>' +
+        '<form id="adminNoteForm" class="comment-form" onsubmit="return false;">' +
+        '<input type="hidden" id="adminNoteOrderId" value="' + esc(o.id) + '">' +
+        '<textarea id="adminNoteText" rows="2" maxlength="2000" placeholder="Admin-only note…" aria-label="Admin note">' + esc(o.adminNotes || '') + '</textarea>' +
+        '<button type="submit">Save note</button> <span id="adminNoteMsg" class="comment-msg" aria-live="polite"></span></form>' +
+        '<h3>History</h3>' +
+        (auditRows.length ? '<ul>' + auditRows.map(function (a) {
+          return '<li><span class="meta">' + esc(new Date(a.createdAt).toLocaleString()) + '</span> ' + esc(a.action) + ' — ' + esc(a.adminUser) + '</li>';
+        }).join('') + '</ul>' : '<p class="meta">No admin actions recorded for this order yet.</p>');
+    }).catch(function () {
+      body.innerHTML = adminNav('orders') + '<p>Could not load that order right now.</p>';
+    });
+  }
+
+  function adminOrderStatus(e) {
+    e.preventDefault();
+    var id = $('adminStatusOrderId').value;
+    var msg = $('adminStatusMsg');
+    adminApi('orders/' + encodeURIComponent(id) + '/status', { method: 'POST', body: {
+      status: $('adminStatusSelect').value,
+      reason: ($('adminStatusReason').value || '').trim()
+    } }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 200) { msg.textContent = 'Status updated.'; renderAdminOrderDetail(id); }
+      else if (x.status === 409) msg.textContent = 'That change is not allowed from the current status.';
+      else msg.textContent = 'Could not change the status.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function adminOrderNote(e) {
+    e.preventDefault();
+    var id = $('adminNoteOrderId').value;
+    var msg = $('adminNoteMsg');
+    adminApi('orders/' + encodeURIComponent(id) + '/note', { method: 'POST', body: {
+      note: ($('adminNoteText').value || '').trim()
+    } }).then(function (x) {
+      if (msg) msg.textContent = x.status === 200 ? 'Note saved.' : 'Could not save the note.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function adminOrderShipping(e) {
+    e.preventDefault();
+    var id = $('adminShipOrderId').value;
+    var msg = $('adminShipMsg');
+    var body = {};
+    var name = ($('adminShipName').value || '').trim();
+    var courier = ($('adminShipCourier').value || '').trim();
+    var tracking = ($('adminShipTracking').value || '').trim();
+    if (name) body.name = name;
+    if (courier) body.courier = courier;
+    if (tracking) body.trackingNumber = tracking;
+    adminApi('orders/' + encodeURIComponent(id) + '/shipping', { method: 'POST', body: body }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 200) { msg.textContent = 'Saved.'; renderAdminOrderDetail(id); }
+      else msg.textContent = 'Could not save shipping.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function adminOrderInvoice(e) {
+    e.preventDefault();
+    var id = $('adminInvoiceOrderId').value;
+    var msg = $('adminInvoiceMsg');
+    adminApi('orders/' + encodeURIComponent(id) + '/invoice', { method: 'POST', body: {
+      invoiceId: ($('adminInvoiceId').value || '').trim(),
+      invoiceNumber: ($('adminInvoiceNumber').value || '').trim()
+    } }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 200) { msg.textContent = 'Invoice recorded.'; renderAdminOrderDetail(id); }
+      else msg.textContent = 'Could not record the invoice.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function renderAdminPrintQueue() {
+    var body = $('adminBody');
+    body.innerHTML = adminNav('print') + '<p>Loading…</p>';
+    adminApi('print-queue').then(function (x) {
+      var orders = (x.data && x.data.orders) || [];
+      if (!orders.length) { body.innerHTML = adminNav('print') + '<p>The print queue is empty.</p>'; return; }
+      body.innerHTML = adminNav('print') + orders.map(function (o) {
+        var files = o.files || [];
+        return '<div class="order-card"><p><strong>' + esc(o.itemId) + '</strong> · ' + money(o.amountTotal) + ' · ' + esc(o.status) + ' · print: <strong>' + esc(o.printStatus) + '</strong></p>' +
+          '<p class="meta">Order ' + esc(o.id) + ' · ' + esc(o.buyerEmail || '') + ' · ' + esc(new Date(o.createdAt).toLocaleDateString()) + '</p>' +
+          (o.shippingAddress ? '<p class="meta">' + esc((o.shippingName || '') + ' — ' + [o.shippingAddress.line1, o.shippingAddress.line2, o.shippingAddress.city, o.shippingAddress.postal, o.shippingAddress.country].filter(Boolean).join(', ')) + '</p>' : '<p class="meta">No shipping address yet.</p>') +
+          (o.trackingNumber ? '<p class="meta">Tracking: ' + esc((o.trackingCourier || '') + ' ' + o.trackingNumber) + '</p>' : '') +
+          (files.length ? '<ul class="download-list">' + files.map(function (f) {
+            return '<li><a href="' + esc(f.file) + '" download>' + esc(f.file) + '</a> · ' + f.width + '×' + f.height + '</li>';
+          }).join('') + '</ul>' : '') +
+          '<p>' + ['queued', 'printing', 'shipped', 'delivered'].map(function (s) {
+            return '<button data-admin-act="print" data-admin-order="' + esc(o.id) + '" data-admin-value="' + s + '"' + (o.printStatus === s ? ' disabled' : '') + '>' + s + '</button> ';
+          }).join('') + '<a href="#/kangle/orders/' + esc(o.id) + '">Details</a></p></div>';
+      }).join('');
+    }).catch(function () {
+      body.innerHTML = adminNav('print') + '<p>Could not load the print queue right now.</p>';
+    });
+  }
+
+  function renderAdminInvoices() {
+    var body = $('adminBody');
+    body.innerHTML = adminNav('invoices') + '<p>Loading…</p>';
+    adminApi('invoices').then(function (x) {
+      var d = x.data || {};
+      var requests = d.requests || [];
+      var issued = d.issued || [];
+      body.innerHTML = adminNav('invoices') +
+        '<h2>Requests</h2>' +
+        (requests.length ? requests.map(function (r) {
+          return '<p class="order-card">Order <a href="#/kangle/orders/' + esc(r.orderId) + '">' + esc(r.orderId) + '</a> · ' + esc(r.buyerEmail || '') + ' · ' + esc(new Date(r.createdAt).toLocaleDateString()) +
+            ' <button data-admin-act="resolve" data-admin-id="' + esc(r.id) + '" data-admin-value="issued">Mark issued</button> ' +
+            '<button data-admin-act="resolve" data-admin-id="' + esc(r.id) + '" data-admin-value="declined">Decline</button></p>';
+        }).join('') : '<p class="meta">No open requests.</p>') +
+        '<h2>Issued</h2>' +
+        (issued.length ? '<ul>' + issued.map(function (o) {
+          return '<li><a href="#/kangle/orders/' + esc(o.id) + '">' + esc(o.id) + '</a> — ' + esc(o.invoiceNumber || '') + ' · ' + money(o.amountTotal) + '</li>';
+        }).join('') + '</ul>' : '<p class="meta">None recorded yet.</p>');
+    }).catch(function () {
+      body.innerHTML = adminNav('invoices') + '<p>Could not load invoices right now.</p>';
+    });
+  }
+
+  function renderAdminSettings() {
+    var body = $('adminBody');
+    body.innerHTML = adminNav('settings') + '<p>Loading…</p>';
+    Promise.all([adminApi('settings'), adminApi('sessions')]).then(function (xs) {
+      var s = xs[0].data || {};
+      var sessions = (xs[1].data && xs[1].data.sessions) || [];
+      var setSlugs = [];
+      if (state.links) {
+        setSlugs = Object.keys(state.links.sets || {});
+      }
+      body.innerHTML = adminNav('settings') +
+        '<form id="adminSettingsForm" class="comment-form" onsubmit="return false;">' +
+        '<label><input id="adminShopClosed" type="checkbox"' + (s.shopClosed ? ' checked' : '') + '> Shop closed (hides every Buy button)</label>' +
+        '<input id="adminAnnouncement" type="text" maxlength="280" placeholder="Announcement banner (optional)" value="' + esc(s.announcement || '') + '" aria-label="Announcement banner">' +
+        '<p class="meta">Hide Buy buttons for:</p>' +
+        setSlugs.map(function (slug) {
+          var hidden = (s.hiddenItems || []).indexOf(slug) !== -1;
+          return '<label><input type="checkbox" data-hidden-item="' + esc(slug) + '"' + (hidden ? ' checked' : '') + '> ' + esc(slug) + '</label> ';
+        }).join('') +
+        '<label><input type="checkbox" data-hidden-item="complete-pack-30"' + ((s.hiddenItems || []).indexOf('complete-pack-30') !== -1 ? ' checked' : '') + '> Complete pack</label>' +
+        '<p><button type="submit">Save settings</button> <span id="adminSettingsMsg" class="comment-msg" aria-live="polite"></span></p></form>' +
+        '<h2>Change password</h2>' +
+        '<form id="adminPasswordForm" class="comment-form" onsubmit="return false;">' +
+        '<input id="adminOldPass" type="password" placeholder="Current password" required autocomplete="current-password" aria-label="Current password">' +
+        '<input id="adminNewPass" type="password" placeholder="New password (at least 10 characters)" required minlength="10" autocomplete="new-password" aria-label="New password">' +
+        '<button type="submit">Change password</button> <span id="adminPasswordMsg" class="comment-msg" aria-live="polite"></span></form>' +
+        '<h2>Sessions</h2><p class="meta">' + sessions.length + ' active session(s).</p>' +
+        '<p><button data-admin-act="revoke-sessions">Log out everywhere else</button></p>';
+    }).catch(function () {
+      body.innerHTML = adminNav('settings') + '<p>Could not load settings right now.</p>';
+    });
+  }
+
+  function adminSaveSettings(e) {
+    e.preventDefault();
+    var msg = $('adminSettingsMsg');
+    var hidden = [];
+    document.querySelectorAll('[data-hidden-item]').forEach(function (cb) {
+      if (cb.checked) hidden.push(cb.getAttribute('data-hidden-item'));
+    });
+    adminApi('settings', { method: 'POST', body: {
+      shopClosed: !!$('adminShopClosed').checked,
+      announcement: ($('adminAnnouncement').value || '').trim(),
+      hiddenItems: hidden
+    } }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 200) { msg.textContent = 'Settings saved.'; loadSettings(); }
+      else msg.textContent = 'Could not save settings.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
+  }
+
+  function adminChangePassword(e) {
+    e.preventDefault();
+    var msg = $('adminPasswordMsg');
+    adminApi('change-password', { method: 'POST', body: {
+      oldPassword: $('adminOldPass').value || '',
+      newPassword: $('adminNewPass').value || ''
+    } }).then(function (x) {
+      if (!msg) return;
+      if (x.status === 200) msg.textContent = 'Password changed. Other sessions were logged out.';
+      else if (x.status === 401) msg.textContent = 'Current password is wrong.';
+      else msg.textContent = 'Could not change the password.';
+    }).catch(function () { if (msg) msg.textContent = 'Could not reach the admin service.'; });
   }
 
   /* ---------- events ---------- */
@@ -1715,6 +2266,30 @@
     if (btn && btn.id === 'stickerLikeBtn') toggleStickerLike();
     if (btn && btn.id === 'stickerBookmarkBtn') toggleStickerBookmark();
     if (btn && btn.id === 'stickerShareBtn') shareSticker();
+    // Admin buttons live inside #adminBody and are re-rendered often,
+    // so they are handled here by delegation, not by direct binding.
+    var adminBtn = e.target && e.target.closest ? e.target.closest('[data-admin-act]') : null;
+    if (adminBtn && $('adminBody') && $('adminBody').contains(adminBtn)) {
+      var act = adminBtn.getAttribute('data-admin-act');
+      if (act === 'logout') adminLogout();
+      if (act === 'page-prev' && state.adminOrdersPage > 1) { state.adminOrdersPage -= 1; renderAdminOrders(); }
+      if (act === 'page-next') { state.adminOrdersPage += 1; renderAdminOrders(); }
+      if (act === 'print') {
+        var orderId = adminBtn.getAttribute('data-admin-order');
+        var value = adminBtn.getAttribute('data-admin-value');
+        adminApi('orders/' + encodeURIComponent(orderId) + '/print', { method: 'POST', body: { printStatus: value } })
+          .then(function () { route(); });
+      }
+      if (act === 'resolve') {
+        var reqId = adminBtn.getAttribute('data-admin-id');
+        var status = adminBtn.getAttribute('data-admin-value');
+        adminApi('invoices/' + encodeURIComponent(reqId) + '/resolve', { method: 'POST', body: { status: status } })
+          .then(function () { renderAdminInvoices(); });
+      }
+      if (act === 'revoke-sessions') {
+        adminApi('sessions', { method: 'DELETE' }).then(function () { renderAdminSettings(); });
+      }
+    }
     if (e.target && e.target.id === 'replyCancel') setReplyTo(null);
     var sortBtn = e.target && e.target.closest ? e.target.closest('[data-sort]') : null;
     if (sortBtn && $('bookmarksBody') && $('bookmarksBody').contains(sortBtn)) {
@@ -1736,6 +2311,17 @@
     if (e.target && e.target.id === 'profileForm') saveProfile(e);
     if (e.target && e.target.id === 'prefsForm') savePreferences(e);
     if (e.target && e.target.id === 'findOrderForm') findOrder(e);
+    if (e.target && e.target.id === 'invoiceRequestForm') requestInvoice(e);
+    if (e.target && e.target.id === 'shippingForm') submitShipping(e);
+    if (e.target && e.target.id === 'adminSetupForm') adminSetup(e);
+    if (e.target && e.target.id === 'adminLoginForm') adminLogin(e);
+    if (e.target && e.target.id === 'adminOrdersFilterForm') adminFilterOrders(e);
+    if (e.target && e.target.id === 'adminStatusForm') adminOrderStatus(e);
+    if (e.target && e.target.id === 'adminNoteForm') adminOrderNote(e);
+    if (e.target && e.target.id === 'adminShipForm') adminOrderShipping(e);
+    if (e.target && e.target.id === 'adminInvoiceForm') adminOrderInvoice(e);
+    if (e.target && e.target.id === 'adminSettingsForm') adminSaveSettings(e);
+    if (e.target && e.target.id === 'adminPasswordForm') adminChangePassword(e);
   });
 
   document.addEventListener('keydown', function (e) {

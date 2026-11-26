@@ -384,3 +384,21 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .download-list a { color: var(--accent); }
 .find-order { margin-top: 28px; }
 .find-order input { display: block; width: 100%; max-width: 420px; margin-bottom: 8px; }
+
+/* Announcement banner (admin-controlled, #/kangle settings). */
+.announcement {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px;
+}
+
+/* Admin (#/kangle): plain tables + forms, same visual language as
+ * the rest of the site. Nothing here is linked from the public nav. */
+.admin-nav { line-height: 2; }
+.admin-nav a.active { font-weight: 700; }
+.admin-cards { display: grid; gap: 12px; }
+.admin-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+.admin-table th, .admin-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.admin-table th { white-space: nowrap; }
+#admin input[type="text"], #admin input[type="email"], #admin input[type="password"], #admin input[type="search"], #admin select, #admin textarea { display: block; width: 100%; max-width: 420px; margin-bottom: 8px; }
+#admin label { display: block; margin-bottom: 8px; }
+#admin .comment-form { margin: 12px 0; }
