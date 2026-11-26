@@ -93,8 +93,11 @@ and the sticker img too thumbnail small one".
 - **Versioning (per the cache rule):** index.json changed, so
   DATA_V 11 → 12 and LS_KEY `sticker-showcase-index-v12`; shell
   app.js?v=28 / styles.css?v=22, SW v29.
-- Tests 155/155, typecheck clean. Live verify: (pending — browser
-  check running)
+- Tests 155/155, typecheck clean. Live verify 2026-11-27 ~05:41:
+  ALL PASS — set (cover thumb, SKU riemann-rashomon, S$15),
+  single (sticker thumb, SKU riemann-rashomon-01, S$4), pack
+  (first-sticker thumb, SKU complete-pack-30, S$29); subtotal
+  S$48; steppers + Remove re-tested on every line.
 
 ## v1.2 — quantity steppers (2026-11-27)
 
