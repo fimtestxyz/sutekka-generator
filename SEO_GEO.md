@@ -168,6 +168,28 @@ Cache headers (`vercel.json`): `/robots.txt`, `/sitemap.xml`,
 stale-while-revalidate=86400` — fresh within an hour of a publish.
 Share pages are `max-age=0, must-revalidate` (already the case).
 
+## Automation (GitHub Actions)
+
+`.github/workflows/seo-geo.yml` keeps the generated files true without
+a human remembering the build step:
+
+- **check** (pull requests only): runs the build in `--check` mode and
+  fails the PR if `index.json`, `inventory.json`, `robots.txt`,
+  `sitemap.xml`, `llms.txt` or `llms-full.txt` is stale.
+- **regenerate** (pushes to `main`, plus manual `workflow_dispatch`):
+  re-runs the build, re-verifies with `--check`, and commits back any
+  regenerated files as `chore(seo): regenerate SEO/GEO artifacts
+  [skip ci]` — generated files only, never hand-edited sources. The
+  `[skip ci]` tag keeps the bot's commit from re-triggering the
+  workflow; runs are serialised by a concurrency group.
+- The workflow **never deploys**. Deploy stays manual
+  (`deploy_sutekka.py`) — the editor-in-chief's publish decision is
+  the gate, and a deploy is a separate, deliberate step.
+
+Simulated locally before the first run: fresh tree passes `--check`;
+a corrupted `llms.txt` fails it with exit 1; a rebuild restores it
+and the commit step finds nothing to commit.
+
 ## Verification (after every publish)
 
 ```sh

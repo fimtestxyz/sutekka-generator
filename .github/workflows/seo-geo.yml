@@ -1,0 +1,91 @@
+name: SEO/GEO artifacts
+
+# Keeps the search/agent artifacts fresh whenever a set is published.
+# Two jobs:
+#   check      — pull requests only; fails if any generated file
+#                (index.json, inventory.json, robots.txt, sitemap.xml,
+#                llms.txt, llms-full.txt) is stale, so a PR cannot land
+#                with out-of-date artifacts.
+#   regenerate — pushes to main only; re-runs the build and commits back
+#                any regenerated files, so a publish that skipped the
+#                build step still lands with fresh artifacts.
+# The deploy to Vercel stays manual (deploy_sutekka.py) — this workflow
+# never deploys, it only keeps the repo's generated files true.
+# Full policy: SEO_GEO.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "stickers/**"
+      - "web_app/data/**"
+      - "web_app/index.html"
+      - "scripts/build_sticker_index.py"
+      - "vercel.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - "stickers/**"
+      - "web_app/data/**"
+      - "web_app/index.html"
+      - "scripts/build_sticker_index.py"
+      - "vercel.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-geo-main
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pillow is required even for --check: without it the sheet
+      # ratio falls back to 0.667 and index.json looks stale.
+      - name: Install Pillow
+        run: pip install Pillow
+      - name: Verify generated files are fresh
+        run: python3 scripts/build_sticker_index.py --check
+
+  regenerate:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Pillow
+        run: pip install Pillow
+      - name: Regenerate index + SEO/GEO artifacts
+        run: python3 scripts/build_sticker_index.py
+      - name: Verify freshness
+        run: python3 scripts/build_sticker_index.py --check
+      - name: Commit regenerated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Generated files only — never hand-edited sources.
+          git add web_app/data/index.json web_app/data/inventory.json \
+            web_app/robots.txt web_app/sitemap.xml \
+            web_app/llms.txt web_app/llms-full.txt \
+            web_app/share web_app/og/site.jpg \
+            web_app/thumbs web_app/stickers
+          if git diff --cached --quiet; then
+            echo "No generated files changed."
+            exit 0
+          fi
+          git commit -m "chore(seo): regenerate SEO/GEO artifacts [skip ci]"
+          # [skip ci] keeps this commit from re-triggering the workflow.
+          # If another push landed in the meantime, rebase and retry once.
+          git push origin main || { git pull --rebase origin main && git push origin main; }

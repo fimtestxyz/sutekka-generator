@@ -199,6 +199,9 @@ scripts/
    `scripts/build_sticker_index.py` 更新 `inventory.json`。同一趟构建
    还会重生成 SEO/GEO 文件（`robots.txt`、`sitemap.xml`、`llms.txt`、
    `llms-full.txt`、各套的分享页与首页 OG 图），见 `SEO_GEO.md`。
+   漏跑了也没关系：GitHub Actions（`.github/workflows/seo-geo.yml`）
+   会在 push 到 main 后自动重生成并提交（`[skip ci]`），PR 则只检查、
+   不提交；部署仍是手动跑 `deploy_sutekka.py`。
 3. 总编辑看 `sheet.png` + `qa.md`，决定发布 / 修改 / 放弃。
 3. 发布 = 加入 `stickers.json`（状态 published）+ 推送；网站画廊
    自动读取索引展示。
