@@ -9,6 +9,7 @@
 const { getPrisma } = require("../_lib/prisma");
 const { requireUser } = require("../_lib/require-user");
 const { cleanContent, publicComment, authorInclude } = require("../_lib/comments");
+const { commentPatchSchema, parseBody } = require("../_lib/schemas");
 const {
   sendJson,
   methodNotAllowed,
@@ -16,8 +17,6 @@ const {
   readJsonBody,
   getPathSegments,
 } = require("../_lib/http");
-
-const MAX_CONTENT = 1000;
 
 /**
  * @param {import("http").IncomingMessage} req
@@ -63,17 +62,14 @@ async function commentHandler(req, res, deps = {}) {
       sendJson(res, 400, { error: "invalid_json" });
       return;
     }
-    const errors = [];
-    let content = "";
-    if (!body || typeof body !== "object" || typeof body.content !== "string") {
-      errors.push("content must be a string");
-    } else {
-      content = cleanContent(body.content.trim());
-      if (!content) errors.push("content must not be empty");
-      else if (content.length > MAX_CONTENT) errors.push(`content must be at most ${MAX_CONTENT} characters`);
+    const parsed = parseBody(commentPatchSchema, body);
+    if (!parsed.ok) {
+      sendJson(res, 400, { error: "invalid_body", details: parsed.details });
+      return;
     }
-    if (errors.length > 0) {
-      sendJson(res, 400, { error: "invalid_body", details: errors });
+    const content = cleanContent(parsed.data.content);
+    if (!content) {
+      sendJson(res, 400, { error: "invalid_body", details: ["content must not be empty"] });
       return;
     }
     const row = await prisma.comment.update({

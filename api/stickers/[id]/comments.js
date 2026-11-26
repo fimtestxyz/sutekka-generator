@@ -17,6 +17,7 @@ const { requireUser } = require("../../_lib/require-user");
 const { findSticker } = require("../../_lib/stickers");
 const { checkRateLimit } = require("../../_lib/rate-limit");
 const { cleanContent, publicComment, authorInclude } = require("../../_lib/comments");
+const { commentCreateSchema, parseBody } = require("../../_lib/schemas");
 const {
   sendJson,
   methodNotAllowed,
@@ -24,8 +25,6 @@ const {
   readJsonBody,
   getPathSegments,
 } = require("../../_lib/http");
-
-const MAX_CONTENT = 1000;
 
 /**
  * @param {import("http").IncomingMessage} req
@@ -77,27 +76,19 @@ async function commentsHandler(req, res, deps = {}) {
       sendJson(res, 400, { error: "invalid_json" });
       return;
     }
-    const errors = [];
-    let content = "";
-    if (!body || typeof body !== "object" || typeof body.content !== "string") {
-      errors.push("content must be a string");
-    } else {
-      content = cleanContent(body.content.trim());
-      if (!content) errors.push("content must not be empty");
-      else if (content.length > MAX_CONTENT) errors.push(`content must be at most ${MAX_CONTENT} characters`);
-    }
-    let parentId = null;
-    if (body && body.parentId !== undefined && body.parentId !== null) {
-      if (typeof body.parentId !== "string") {
-        errors.push("parentId must be a string");
-      } else {
-        parentId = body.parentId;
-      }
-    }
-    if (errors.length > 0) {
-      sendJson(res, 400, { error: "invalid_body", details: errors });
+    const parsed = parseBody(commentCreateSchema, body);
+    if (!parsed.ok) {
+      sendJson(res, 400, { error: "invalid_body", details: parsed.details });
       return;
     }
+    // Strip < > on write (engage.js parity); an all-bracket
+    // comment is empty after cleaning.
+    const content = cleanContent(parsed.data.content);
+    if (!content) {
+      sendJson(res, 400, { error: "invalid_body", details: ["content must not be empty"] });
+      return;
+    }
+    const parentId = parsed.data.parentId ?? null;
     if (!checkRateLimit(`comment:${uid}`)) {
       sendJson(res, 429, { error: "rate_limited" });
       return;

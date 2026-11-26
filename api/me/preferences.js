@@ -18,8 +18,7 @@
 const { getPrisma } = require("../_lib/prisma");
 const { requireUser } = require("../_lib/require-user");
 const { sendJson, methodNotAllowed, dbAvailable, readJsonBody } = require("../_lib/http");
-
-const MAX_KEYWORDS = 50;
+const { preferencesPutSchema, parseBody } = require("../_lib/schemas");
 
 /**
  * @param {import("http").IncomingMessage} req
@@ -59,41 +58,15 @@ async function preferencesHandler(req, res, deps = {}) {
       sendJson(res, 400, { error: "invalid_json" });
       return;
     }
-    const errors = [];
-    if (!body || typeof body !== "object" || !Array.isArray(body.keywords)) {
-      errors.push("keywords must be an array");
-    }
-    /** @type {Map<string, number>} */
-    const byKeyword = new Map();
-    if (Array.isArray(body && body.keywords)) {
-      if (body.keywords.length > MAX_KEYWORDS) {
-        errors.push(`at most ${MAX_KEYWORDS} keywords`);
-      }
-      for (const item of body.keywords) {
-        if (!item || typeof item !== "object" || typeof item.keyword !== "string") {
-          errors.push("each keyword entry needs a keyword string");
-          continue;
-        }
-        const keyword = item.keyword.trim();
-        if (!keyword || keyword.length > 40) {
-          errors.push("each keyword must be 1–40 characters");
-          continue;
-        }
-        let weight = 1;
-        if (item.weight !== undefined) {
-          if (typeof item.weight !== "number" || Number.isNaN(item.weight) || item.weight < 0 || item.weight > 2) {
-            errors.push(`weight for "${keyword}" must be a number 0–2`);
-            continue;
-          }
-          weight = item.weight;
-        }
-        byKeyword.set(keyword, weight);
-      }
-    }
-    if (errors.length > 0) {
-      sendJson(res, 400, { error: "invalid_body", details: errors });
+    const parsed = parseBody(preferencesPutSchema, body);
+    if (!parsed.ok) {
+      sendJson(res, 400, { error: "invalid_body", details: parsed.details });
       return;
     }
+    // Duplicate keywords (after trim) collapse, last one wins.
+    /** @type {Map<string, number>} */
+    const byKeyword = new Map();
+    for (const item of parsed.data.keywords) byKeyword.set(item.keyword, item.weight);
     const keywords = [...byKeyword.entries()].map(([keyword, weight]) => ({ keyword, weight }));
     const ops = [prisma.userPreference.deleteMany({ where: { userId: uid } })];
     if (keywords.length > 0) {

@@ -18,6 +18,7 @@
 const { getPrisma } = require("../_lib/prisma");
 const { requireUser } = require("../_lib/require-user");
 const { sendJson, methodNotAllowed, dbAvailable, readJsonBody } = require("../_lib/http");
+const { profilePatchSchema, parseBody } = require("../_lib/schemas");
 
 function publicUser(user) {
   return { id: user.id, email: user.email, name: user.name, image: user.image };
@@ -69,41 +70,23 @@ async function profileHandler(req, res, deps = {}) {
       sendJson(res, 400, { error: "invalid_body", details: ["body must be a JSON object"] });
       return;
     }
-    const errors = [];
-    /** @type {string | undefined} */
-    let name;
+    const parsed = parseBody(profilePatchSchema, body);
+    if (!parsed.ok) {
+      sendJson(res, 400, { error: "invalid_body", details: parsed.details });
+      return;
+    }
+    const { name } = parsed.data;
+    // Empty string clears the field; an absent field leaves it alone.
     /** @type {string | null | undefined} */
-    let bio;
+    const bio = parsed.data.bio === undefined ? undefined : parsed.data.bio || null;
     /** @type {string | null | undefined} */
-    let customAvatar;
-    if (body.name !== undefined) {
-      if (typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 100) {
-        errors.push("name must be 1–100 characters");
-      } else {
-        name = body.name.trim();
-      }
-    }
-    if (body.bio !== undefined) {
-      if (typeof body.bio !== "string" || body.bio.trim().length > 280) {
-        errors.push("bio must be at most 280 characters");
-      } else {
-        bio = body.bio.trim() || null;
-      }
-    }
-    if (body.customAvatar !== undefined) {
-      if (typeof body.customAvatar !== "string" || body.customAvatar.trim().length > 2048) {
-        errors.push("customAvatar must be at most 2048 characters");
-      } else if (body.customAvatar.trim() && !/^https:\/\//.test(body.customAvatar.trim())) {
-        errors.push("customAvatar must be an https:// URL");
-      } else {
-        customAvatar = body.customAvatar.trim() || null;
-      }
-    }
-    if (body.name === undefined && body.bio === undefined && body.customAvatar === undefined) {
-      errors.push("nothing to update: send name, bio and/or customAvatar");
-    }
-    if (errors.length > 0) {
-      sendJson(res, 400, { error: "invalid_body", details: errors });
+    const customAvatar =
+      parsed.data.customAvatar === undefined ? undefined : parsed.data.customAvatar || null;
+    if (name === undefined && bio === undefined && customAvatar === undefined) {
+      sendJson(res, 400, {
+        error: "invalid_body",
+        details: ["nothing to update: send name, bio and/or customAvatar"],
+      });
       return;
     }
 

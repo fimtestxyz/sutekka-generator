@@ -14,6 +14,7 @@
 const { getPrisma } = require("../_lib/prisma");
 const { requireUser } = require("../_lib/require-user");
 const { findSticker } = require("../_lib/stickers");
+const { bookmarkCreateSchema, parseBody } = require("../_lib/schemas");
 const {
   sendJson,
   methodNotAllowed,
@@ -100,11 +101,12 @@ async function bookmarksHandler(req, res, deps = {}) {
         sendJson(res, 400, { error: "invalid_json" });
         return;
       }
-      if (!body || typeof body !== "object" || typeof body.stickerId !== "string" || !body.stickerId.trim()) {
-        sendJson(res, 400, { error: "invalid_body", details: ["stickerId must be a non-empty string"] });
+      const parsed = parseBody(bookmarkCreateSchema, body);
+      if (!parsed.ok) {
+        sendJson(res, 400, { error: "invalid_body", details: parsed.details });
         return;
       }
-      const sticker = await findSticker(prisma, body.stickerId.trim());
+      const sticker = await findSticker(prisma, parsed.data.stickerId);
       if (!sticker) {
         sendJson(res, 404, { error: "sticker_not_found" });
         return;
