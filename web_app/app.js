@@ -34,13 +34,14 @@
     lastSentHash: null,
     currentSlug: null,
     replyTo: null, // thread id a comment reply goes to, or null
+    bookmarksSort: 'recent', // recent | oldest | title
     engageReady: null, // null = unknown, true = API up, false = API down
     session: null, // Auth.js session user, or null when signed out
     authAvailable: null // null = unknown, true = /api/auth up, false = not configured
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -93,6 +94,7 @@
         var hash = location.hash || '#/';
         if (hash === '#/login') renderLogin();
         if (hash === '#/profile') renderProfile();
+        if (hash === '#/bookmarks') renderBookmarks();
       })
       .catch(function () {
         state.authAvailable = false;
@@ -506,6 +508,92 @@
     });
   }
 
+  /* ---------- bookmarks ---------- */
+
+  function renderBookmarkBtn(bookmarked) {
+    var btn = $('bookmarkBtn');
+    if (!btn) return;
+    btn.textContent = bookmarked ? '🔖 Saved' : '🔖 Bookmark';
+    btn.setAttribute('aria-pressed', String(bookmarked));
+    btn.setAttribute('data-bookmarked', String(bookmarked));
+  }
+
+  function loadBookmarkState(slug) {
+    renderBookmarkBtn(false);
+    if (!state.session) return;
+    fetch('/api/me/bookmarks?stickerId=' + encodeURIComponent(slug), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { renderBookmarkBtn(Boolean(d.bookmarked)); })
+      .catch(function () { renderBookmarkBtn(false); });
+  }
+
+  function toggleBookmark() {
+    var slug = state.currentSlug;
+    if (!slug) return;
+    if (!state.session) { location.hash = '#/login'; return; }
+    var btn = $('bookmarkBtn');
+    var bookmarked = btn && btn.getAttribute('data-bookmarked') === 'true';
+    var method = bookmarked ? 'DELETE' : 'POST';
+    var url = bookmarked
+      ? '/api/me/bookmarks?stickerId=' + encodeURIComponent(slug)
+      : '/api/me/bookmarks';
+    var options = { method: method, credentials: 'same-origin', cache: 'no-store' };
+    if (!bookmarked) {
+      options.headers = { 'Content-Type': 'application/json' };
+      options.body = JSON.stringify({ stickerId: slug });
+    }
+    fetch(url, options)
+      .then(function (r) {
+        if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function () {
+        renderBookmarkBtn(!bookmarked);
+        gaEvent('bookmark', { slug: slug, bookmarked: !bookmarked });
+      })
+      .catch(function (e) {
+        if (e.message === 'signed out') return;
+        var msg = $('shareMsg');
+        if (msg) { msg.textContent = 'Could not save the bookmark.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
+      });
+  }
+
+  function renderBookmarks() {
+    var body = $('bookmarksBody');
+    if (!body) return;
+    if (!state.session) {
+      body.innerHTML = '<p>Sign in first to see your bookmarks.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      return;
+    }
+    if (state.authAvailable === false) {
+      body.innerHTML = '<p>Bookmarks are not set up yet — the site works fine without an account.</p>';
+      return;
+    }
+    body.innerHTML = '<p>Loading…</p>';
+    fetch('/api/me/bookmarks?sort=' + encodeURIComponent(state.bookmarksSort), { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        var labels = { recent: 'Recent', oldest: 'Oldest', title: 'Title A–Z' };
+        var sortHtml = '<div class="sort-row" role="group" aria-label="Sort bookmarks">' +
+          Object.keys(labels).map(function (s) {
+            return '<button type="button" data-sort="' + s + '"' +
+              (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
+          }).join('') + '</div>';
+        var cards = (d.bookmarks || []).map(function (b) {
+          var set = findSet(b.sticker.slug);
+          return set ? cardHtml(set) : '';
+        }).join('');
+        body.innerHTML = sortHtml +
+          (cards
+            ? '<div class="grid">' + cards + '</div>'
+            : '<p class="empty">No bookmarks yet. Open a set and tap 🔖 Bookmark to save it here.</p>');
+      })
+      .catch(function () {
+        body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
+      });
+  }
+
   function postFeedback(e) {
     e.preventDefault();
     var text = $('feedbackText').value.trim();
@@ -732,6 +820,7 @@
     gaEvent('set_view', { slug: slug });
     loadLikes(slug);
     loadComments(slug);
+    loadBookmarkState(slug);
   }
 
   /* ---------- routing ---------- */
@@ -742,6 +831,7 @@
     aboutEl.hidden = name !== 'about';
     loginEl.hidden = name !== 'login';
     profileEl.hidden = name !== 'profile';
+    bookmarksEl.hidden = name !== 'bookmarks';
   }
 
   function route() { routeInner(); trackPageView(); }
@@ -753,6 +843,7 @@
     if (parts[0] === 'about') { showView('about'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'login') { renderLogin(); showView('login'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'profile') { renderProfile(); showView('profile'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'bookmarks') { renderBookmarks(); showView('bookmarks'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'batch' && parts[1]) {
       state.batch = parts[1]; state.topic = null; state.shown = PAGE_SIZE;
       renderChips(); renderTopics(); renderGrid(); showView('home'); return;
@@ -963,7 +1054,14 @@
 
   document.addEventListener('click', function (e) {
     if (e.target && e.target.id === 'likeBtn') toggleLike();
+    if (e.target && e.target.id === 'bookmarkBtn') toggleBookmark();
     if (e.target && e.target.id === 'replyCancel') setReplyTo(null);
+    var sortBtn = e.target && e.target.closest ? e.target.closest('[data-sort]') : null;
+    if (sortBtn && $('bookmarksBody') && $('bookmarksBody').contains(sortBtn)) {
+      state.bookmarksSort = sortBtn.getAttribute('data-sort');
+      renderBookmarks();
+      return;
+    }
     var actBtn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
     if (actBtn && $('commentList') && $('commentList').contains(actBtn)) handleCommentAction(actBtn);
   });

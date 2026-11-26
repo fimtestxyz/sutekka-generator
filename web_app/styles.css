@@ -250,3 +250,12 @@ body.modal-open { overflow: hidden; }
   border: 1px solid var(--border); border-radius: 999px;
   background: var(--surface); color: var(--text);
 }
+
+/* ---------- bookmarks ---------- */
+.sort-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.sort-row button {
+  padding: 8px 14px; font-size: 0.95rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text);
+}
+.sort-row button.active { background: var(--text); color: var(--bg); border-color: var(--text); }

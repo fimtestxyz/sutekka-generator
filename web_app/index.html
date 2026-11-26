@@ -28,6 +28,7 @@
   <a class="brand" href="#/">Sticker Showcase</a>
   <nav class="topnav">
     <a href="#/" data-nav="home">Latest</a>
+    <a href="#/bookmarks" data-nav="bookmarks">Bookmarks</a>
     <a href="#/about" data-nav="about">About</a>
   </nav>
   <span id="authArea" class="auth-area"><a href="#/login">Sign in</a></span>
@@ -67,6 +68,7 @@
   <div class="reader-tools">
     <button id="zoomBtn" aria-pressed="false">Zoom in</button>
     <button id="shareBtn">Share this set</button>
+    <button id="bookmarkBtn" aria-pressed="false">🔖 Bookmark</button>
     <button id="columnBtn" class="tap-me">👆 📰 专栏原文</button>
     <span id="shareMsg" class="share-msg" aria-live="polite"></span>
   </div>
@@ -136,6 +138,11 @@
 <main id="profile" class="view" hidden>
   <h1>Profile</h1>
   <div id="profileBody"><p>Loading…</p></div>
+</main>
+
+<main id="bookmarks" class="view" hidden>
+  <h1>Bookmarks</h1>
+  <div id="bookmarksBody"><p>Loading…</p></div>
 </main>
 
 <footer class="foot">

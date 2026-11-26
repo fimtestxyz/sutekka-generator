@@ -68,4 +68,14 @@ function getPathSegments(req) {
     });
 }
 
-module.exports = { sendJson, methodNotAllowed, dbAvailable, readJsonBody, getPathSegments };
+/**
+ * Query params of a request as URLSearchParams.
+ *
+ * @param {import("http").IncomingMessage} req
+ * @returns {URLSearchParams}
+ */
+function getQuery(req) {
+  return new URL(req.url || "/", "http://localhost").searchParams;
+}
+
+module.exports = { sendJson, methodNotAllowed, dbAvailable, readJsonBody, getPathSegments, getQuery };
