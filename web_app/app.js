@@ -59,7 +59,7 @@
   };
 
   var $ = function (id) { return document.getElementById(id); };
-  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download'), adminEl = $('admin'), cartEl = $('cart');
+  var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), downloadEl = $('download'), adminEl = $('admin');
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -128,7 +128,7 @@
     var el = $('authArea');
     if (!el) return;
     var u = state.session;
-    if (!u) { el.innerHTML = '<a href="#/login">Sign in</a>'; return; }
+    if (!u) { el.innerHTML = '<a href="#/login"><i class="fi fi-br-user"></i><span class="nav-label">Sign in</span></a>'; return; }
     // The user area is its own block, separate from the main nav: an
     // avatar button that opens a dropdown (Profile / Bookmarks /
     // Collections / Sign out) instead of three same-weight links.
@@ -1020,9 +1020,9 @@
     collectionsEl.hidden = name !== 'collections';
     downloadEl.hidden = name !== 'download';
     adminEl.hidden = name !== 'admin';
-    cartEl.hidden = name !== 'cart';
-    // Active nav state: the reader lives under Latest.
-    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about', cart: 'cart' }[name] || null;
+    // Active nav state: the reader lives under Latest. The cart is a
+    // drawer, not a page, so it never takes the active state.
+    var nav = { home: 'home', reader: 'home', bookmarks: 'bookmarks', collections: 'collections', about: 'about' }[name] || null;
     document.querySelectorAll('.topnav a').forEach(function (a) {
       a.classList.toggle('active', a.getAttribute('data-nav') === nav);
     });
@@ -1040,7 +1040,7 @@
     var query = new URLSearchParams(hashParts[1] || '');
     var parts = hashParts[0].replace(/^#\//, '').split('/');
     if (parts[0] === 'download') { renderDownload(query); showView('download'); window.scrollTo(0, 0); return; }
-    if (parts[0] === 'cart') { renderCart(); showView('cart'); window.scrollTo(0, 0); return; }
+    if (parts[0] === 'cart') { showView('home'); openCartDrawer(true); return; }
     if (parts[0] === 'kangle') { renderAdmin(parts.slice(1)); showView('admin'); window.scrollTo(0, 0); return; }
     if (parts[0] === 'set' && parts[1]) {
       openSet(parts[1]);
@@ -1388,6 +1388,30 @@
       if (first) return { src: first.thumb || first.file, full: first.file, alt: pack.title };
     }
     return null;
+  }
+
+  /* ---------- cart drawer ---------- */
+  /* The cart slides in from the right (DCHToons-style) instead of
+   * living on its own page. The bag button opens it over whatever
+   * page is showing; the #/cart route (deep links, Stripe cancel)
+   * opens it over the home view. */
+  var cartDrawerFromRoute = false;
+  function openCartDrawer(fromRoute) {
+    cartDrawerFromRoute = !!fromRoute;
+    renderCart();
+    $('cartDrawer').classList.add('open');
+    $('cartDrawerBackdrop').classList.add('open');
+    document.body.classList.add('modal-open');
+    $('cartDrawerClose').focus();
+  }
+  function closeCartDrawer() {
+    $('cartDrawer').classList.remove('open');
+    $('cartDrawerBackdrop').classList.remove('open');
+    document.body.classList.remove('modal-open');
+    if (cartDrawerFromRoute) {
+      cartDrawerFromRoute = false;
+      if ((location.hash || '') === '#/cart') history.replaceState(null, '', '#/');
+    }
   }
 
   function renderCart() {
@@ -2384,7 +2408,9 @@
 
   function closeImageModal() {
     $('imageModal').hidden = true;
-    document.body.classList.remove('modal-open');
+    // The lightbox can open from the cart drawer: leave the page
+    // locked while the drawer is still open underneath.
+    if (!$('cartDrawer').classList.contains('open')) document.body.classList.remove('modal-open');
     $('imageModalImg').removeAttribute('src');
   }
 
@@ -2664,6 +2690,9 @@
   $('stickerModalBackdrop').addEventListener('click', closeStickerModal);
   $('imageModalClose').addEventListener('click', closeImageModal);
   $('imageModalBackdrop').addEventListener('click', closeImageModal);
+  $('cartBtn').addEventListener('click', function () { openCartDrawer(false); });
+  $('cartDrawerClose').addEventListener('click', closeCartDrawer);
+  $('cartDrawerBackdrop').addEventListener('click', closeCartDrawer);
   $('stickerModalPrev').addEventListener('click', function () { stickerNav(-1); });
   $('stickerModalNext').addEventListener('click', function () { stickerNav(1); });
   $('stickerGrid').addEventListener('click', function (e) {
@@ -2677,9 +2706,14 @@
     }
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !$('columnModal').hidden) closeColumnModal();
-    if (e.key === 'Escape' && !$('stickerModal').hidden) closeStickerModal();
-    if (e.key === 'Escape' && !$('imageModal').hidden) closeImageModal();
+    if (e.key === 'Escape') {
+      // One press closes the topmost layer only.
+      if (!$('columnModal').hidden) closeColumnModal();
+      else if (!$('stickerModal').hidden) closeStickerModal();
+      else if (!$('imageModal').hidden) closeImageModal();
+      else if ($('cartDrawer').classList.contains('open')) closeCartDrawer();
+      return;
+    }
     if (!$('stickerModal').hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       var tag = document.activeElement && document.activeElement.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return; // typing, not navigating
