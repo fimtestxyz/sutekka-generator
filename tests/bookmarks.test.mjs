@@ -267,4 +267,49 @@ describe("DELETE /api/me/bookmarks", () => {
     );
     assert.equal(signedOut.statusCode, 401);
   });
+
+  it("clears one shelf at a time with ?scope=sets|stickers|all", async () => {
+    const rows = [
+      bookmarkRow({ id: "bm-set-a", sticker: { ...STICKER_ROW, id: "ck-a", slug: "set-a" } }),
+      bookmarkRow({ id: "bm-sticker", sticker: { ...STICKER_ROW, id: "ck-b", slug: "riemann-rashomon-01", title: "Sticker 01" } }),
+      bookmarkRow({ id: "bm-set-c", sticker: { ...STICKER_ROW, id: "ck-c", slug: "set-c", title: "Set C" } }),
+    ];
+    // The mock's deleteMany reports however many ids it was given.
+    const prismaFor = () => {
+      const p = mockPrismaBookmarks({ bookmarks: rows });
+      p.bookmark.deleteMany = async (args) => {
+        p.calls.deleteMany.push(args);
+        return { count: args.where.id.in.length };
+      };
+      return p;
+    };
+    const clear = async (scope) => {
+      const prisma = prismaFor();
+      const res = mockRes();
+      await bookmarksHandler(mockReq({ method: "DELETE", url: `/api/me/bookmarks?scope=${scope}` }), res, {
+        prisma,
+        sessionDeps: sessionDepsFor("u1"),
+      });
+      return { res, prisma };
+    };
+
+    const sets = await clear("sets");
+    assert.equal(sets.res.statusCode, 200);
+    assert.deepEqual(await sets.res.json(), { ok: true, removed: 2 });
+    assert.deepEqual(sets.prisma.calls.deleteMany, [{ where: { userId: "u1", id: { in: ["bm-set-a", "bm-set-c"] } } }]);
+
+    const stickers = await clear("stickers");
+    assert.deepEqual(await stickers.res.json(), { ok: true, removed: 1 });
+    assert.deepEqual(stickers.prisma.calls.deleteMany, [{ where: { userId: "u1", id: { in: ["bm-sticker"] } } }]);
+
+    const all = await clear("all");
+    assert.deepEqual(await all.res.json(), { ok: true, removed: 3 });
+
+    const bogus = mockRes();
+    await bookmarksHandler(mockReq({ method: "DELETE", url: "/api/me/bookmarks?scope=bogus" }), bogus, {
+      prisma: prismaFor(),
+      sessionDeps: sessionDepsFor("u1"),
+    });
+    assert.equal(bogus.statusCode, 400);
+  });
 });

@@ -8,7 +8,11 @@
 // POST adds a bookmark { stickerId }; creating one that already
 // exists is a 200, not an error (P2002 → return the existing row).
 // DELETE removes it: DELETE /api/me/bookmarks?stickerId=<...>.
-// Sign-in required for everything.
+// DELETE with ?scope=sets|stickers|all clears a whole shelf at
+// once — sets are whole-set bookmarks, stickers are individually
+// collected stickers (slug ends in -NN); `all` clears both.
+// Answers { ok: true, removed: <count> }. Sign-in required for
+// everything.
 "use strict";
 
 const { getPrisma } = require("./prisma");
@@ -132,6 +136,29 @@ async function bookmarksHandler(req, res, deps = {}) {
     }
 
     // DELETE
+    const scope = query.get("scope");
+    if (scope) {
+      if (scope !== "sets" && scope !== "stickers" && scope !== "all") {
+        sendJson(res, 400, { error: "invalid_body", details: ["scope must be sets, stickers or all"] });
+        return;
+      }
+      // Sets are whole-set bookmarks, stickers are individually
+      // collected ones — the slug suffix (-NN) tells them apart.
+      const isSticker = (slug) => /-\d{2}$/.test(slug);
+      const rows = await prisma.bookmark.findMany({
+        where: { userId: uid },
+        include: { sticker: { select: { id: true, slug: true } } },
+      });
+      const targets = rows.filter(
+        (r) => scope === "all" || (scope === "stickers" ? isSticker(r.sticker.slug) : !isSticker(r.sticker.slug)),
+      );
+      const ids = targets.map((r) => r.id);
+      const result = ids.length
+        ? await prisma.bookmark.deleteMany({ where: { userId: uid, id: { in: ids } } })
+        : { count: 0 };
+      sendJson(res, 200, { ok: true, removed: result.count });
+      return;
+    }
     const stickerId = query.get("stickerId");
     if (!stickerId) {
       sendJson(res, 400, { error: "invalid_body", details: ["stickerId query param is required"] });

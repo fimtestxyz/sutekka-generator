@@ -419,6 +419,14 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .qty-stepper .qty-count { min-width: 28px; text-align: center; font-weight: 700; }
 .qty-stepper[hidden] { display: none; }
 
+/* Empty saved shelves: Lili on a bookmark / peeking out of a folder.
+ * Same art + copy pattern as the empty cart. */
+.empty-saved { text-align: center; padding: 28px 8px 8px; max-width: 460px; margin: 0 auto; }
+.clear-row { text-align: right; margin: 2px 0 10px; }
+/* Small muted underlined link-button (clear-all actions). */
+.text-btn { background: none; border: none; padding: 0; cursor: pointer; color: var(--muted); font-size: 0.9rem; text-decoration: underline; text-underline-offset: 2px; }
+.text-btn:hover { color: var(--accent); }
+
 /* Empty cart: Lili peeking out of an empty bag, gently bobbing. */
 .empty-cart { text-align: center; padding: 28px 8px 8px; }
 .empty-art { width: 180px; height: auto; margin: 0 auto 6px; animation: empty-bob 2.4s ease-in-out infinite; }

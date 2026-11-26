@@ -677,8 +677,31 @@
     var cards = (items || []).filter(function (b) { return !isStickerBookmark(b); }).map(bookmarkCardHtml).join('');
     body.innerHTML = sortHtml +
       (cards
-        ? '<div class="grid">' + cards + '</div>'
-        : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No bookmarks yet. Open a set and tap <i class="fi fi-br-bookmark"></i> Bookmark to save it here.</p>');
+        ? '<p class="clear-row"><button type="button" class="text-btn" data-clear-saved="bookmarks">Clear all bookmarks</button></p><div class="grid">' + cards + '</div>'
+        : '<div class="empty-saved">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit peeking over a bookmark">' +
+        '<path d="M46,44 L48.5,49.5 L54,52 L48.5,54.5 L46,60 L43.5,54.5 L38,52 L43.5,49.5 Z" fill="#f5c542"/>' +
+        '<path d="M178,38 L180,43 L185,45 L180,47 L178,52 L176,47 L171,45 L176,43 Z" fill="#f5c542"/>' +
+        '<ellipse cx="88" cy="16" rx="10" ry="22" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 88 16)"/>' +
+        '<ellipse cx="88" cy="18" rx="4.5" ry="15" fill="#f7b8c4" transform="rotate(-14 88 18)"/>' +
+        '<ellipse cx="132" cy="20" rx="10" ry="20" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(22 132 20)"/>' +
+        '<ellipse cx="132" cy="22" rx="4.5" ry="14" fill="#f7b8c4" transform="rotate(22 132 22)"/>' +
+        '<path d="M72,22 L148,22 L148,152 L110,128 L72,152 Z" fill="#b3402a" stroke="#2b2620" stroke-width="4" stroke-linejoin="round"/>' +
+        '<circle cx="98" cy="72" r="9" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<circle cx="122" cy="72" r="9" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<line x1="107" y1="72" x2="113" y2="72" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M93,74 Q98,67 103,74" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M117,74 Q122,67 127,74" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<ellipse cx="91" cy="84" rx="4" ry="2.5" fill="#f7b8c4"/>' +
+        '<ellipse cx="129" cy="84" rx="4" ry="2.5" fill="#f7b8c4"/>' +
+        '<path d="M106,90 Q110,93 114,90" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M110,106 L112.5,111.5 L118,114 L112.5,116.5 L110,122 L107.5,116.5 L102,114 L107.5,111.5 Z" fill="#f5c542"/>' +
+        '</svg>' +
+        '<p class="empty-title">Nothing saved yet!</p>' +
+        '<p class="empty-text">Your shelf is empty — no sets tucked in here. Open any set and tap <i class="fi fi-br-bookmark"></i> Bookmark, and it’ll wait for you right here.</p>' +
+        '<p class="empty-hint">Single stickers? Tap <i class="fi fi-br-bookmark"></i> Collect on any sticker — they live in Collections.</p>' +
+        '<a class="btn" href="#/">Browse sets</a>' +
+        '</div>');
   }
 
   function renderCollectionsList(items) {
@@ -693,8 +716,36 @@
     var cards = (items || []).filter(isStickerBookmark).map(bookmarkCardHtml).join('');
     body.innerHTML = sortHtml +
       (cards
-        ? '<div class="grid">' + cards + '</div>'
-        : '<p class="empty"><img class="empty-icon" src="icons/education.png" alt="" width="512" height="512">No stickers collected yet. Open a sticker and tap <i class="fi fi-br-bookmark"></i> Collect to save it here.</p>');
+        ? '<p class="clear-row"><button type="button" class="text-btn" data-clear-saved="collections">Clear all collected stickers</button></p><div class="grid">' + cards + '</div>'
+        : '<div class="empty-saved">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit peeking out of a folder">' +
+        '<path d="M40,50 L42.5,55.5 L48,58 L42.5,60.5 L40,66 L37.5,60.5 L32,58 L37.5,55.5 Z" fill="#f5c542"/>' +
+        '<path d="M186,44 L188,49 L193,51 L188,53 L186,58 L184,53 L179,51 L184,49 Z" fill="#f5c542"/>' +
+        '<rect x="48" y="42" width="124" height="88" rx="8" fill="#f5c542" stroke="#2b2620" stroke-width="4"/>' +
+        '<ellipse cx="88" cy="34" rx="10" ry="22" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 88 34)"/>' +
+        '<ellipse cx="88" cy="36" rx="4.5" ry="15" fill="#f7b8c4" transform="rotate(-14 88 36)"/>' +
+        '<ellipse cx="132" cy="40" rx="10" ry="20" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(22 132 40)"/>' +
+        '<ellipse cx="132" cy="42" rx="4.5" ry="14" fill="#f7b8c4" transform="rotate(22 132 42)"/>' +
+        '<circle cx="110" cy="50" r="28" fill="#fff" stroke="#2b2620" stroke-width="4"/>' +
+        '<circle cx="98" cy="52" r="8" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<circle cx="122" cy="52" r="8" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<line x1="106" y1="52" x2="114" y2="52" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M93,54 Q98,47 103,54" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M117,54 Q122,47 127,54" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<ellipse cx="91" cy="60" rx="4" ry="2.5" fill="#f7b8c4"/>' +
+        '<ellipse cx="129" cy="60" rx="4" ry="2.5" fill="#f7b8c4"/>' +
+        '<path d="M106,64 Q110,67 114,64" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
+        '<g transform="translate(152,64) rotate(-14)">' +
+        '<rect x="-13" y="-14" width="26" height="28" rx="4" fill="#fff" stroke="#2b2620" stroke-width="3"/>' +
+        '<path d="M0,-8 L2,-2 L8,0 L2,2 L0,8 L-2,2 L-8,0 L-2,-2 Z" fill="#f5c542"/>' +
+        '</g>' +
+        '<path d="M48,72 L172,72 L166,140 Q166,144 162,144 L58,144 Q54,144 54,140 Z" fill="#eab543" stroke="#2b2620" stroke-width="4" stroke-linejoin="round"/>' +
+        '</svg>' +
+        '<p class="empty-title">No stickers collected yet!</p>' +
+        '<p class="empty-text">Your folder’s empty — not a single sticker in sight. Open any sticker and tap <i class="fi fi-br-bookmark"></i> Collect, and it’ll land right here.</p>' +
+        '<p class="empty-hint">Whole sets? Tap <i class="fi fi-br-bookmark"></i> Bookmark on any set — they live in Bookmarks.</p>' +
+        '<a class="btn" href="#/">Browse stickers</a>' +
+        '</div>');
   }
 
   function renderBookmarks() {
@@ -763,6 +814,28 @@
         if (!shownFromCache) {
           body.innerHTML = '<p>Could not load your collection. Check your connection and reload.</p>';
         }
+      });
+  }
+
+  /* Clear a whole shelf at once — one bulk DELETE, then drop the
+   * caches and re-render from the server, so the tab shows the
+   * true state. The per-set map keeps only the other shelf's
+   * entries (sets vs -NN sticker ids). */
+  function clearSaved(scope) {
+    var body = scope === 'sets' ? $('bookmarksBody') : $('collectionsBody');
+    fetch('/api/me/bookmarks?scope=' + scope, { method: 'DELETE', credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function () {
+        var map = lsGet(LS_BOOKMARKED_KEY);
+        Object.keys(map).forEach(function (k) {
+          if (scope === 'sets' ? !/-\d{2}$/.test(k) : /-\d{2}$/.test(k)) delete map[k];
+        });
+        lsSet(LS_BOOKMARKED_KEY, map);
+        lsSet(LS_BOOKMARKS_KEY, {}); // the saved list changed — drop its cache
+        if (scope === 'sets') renderBookmarks(); else renderCollections();
+      })
+      .catch(function () {
+        if (body) body.insertAdjacentHTML('afterbegin', '<p class="comment-msg">Could not clear — check your connection and try again.</p>');
       });
   }
 
@@ -1323,14 +1396,26 @@
    * extra step of friction, so a stray tap can never delete. The
    * stepper reaching 0 is NOT gated — that is N deliberate taps
    * with the count visibly falling, not an accidental delete. */
-  var pendingRemoval = null; // { kind: 'line', itemId } | { kind: 'clear' }
+  var pendingRemoval = null; // { kind: 'line', itemId } | { kind: 'clear' } | { kind: 'bookmarks' } | { kind: 'collections' }
   function openRemoveModal(kind, itemId, title) {
-    pendingRemoval = kind === 'clear' ? { kind: 'clear' } : { kind: 'line', itemId: itemId };
+    if (kind === 'clear') pendingRemoval = { kind: 'clear' };
+    else if (kind === 'bookmarks' || kind === 'collections') pendingRemoval = { kind: kind };
+    else pendingRemoval = { kind: 'line', itemId: itemId };
     if (kind === 'clear') {
       $('removeModalTitle').textContent = 'Whoa — the whole bag?';
       $('removeModalText').innerHTML = '“I packed every single one of these for you…”<br>— Lili 🐰';
       $('removeModalKeep').textContent = 'Keep my bag';
       $('removeModalConfirm').textContent = 'Yes, clear it all';
+    } else if (kind === 'bookmarks') {
+      $('removeModalTitle').textContent = 'Clear all your bookmarks?';
+      $('removeModalText').innerHTML = '“Every set you tucked away — gone in one tap. Sure?”<br>— Lili 🐰';
+      $('removeModalKeep').textContent = 'Keep them';
+      $('removeModalConfirm').textContent = 'Yes, clear them';
+    } else if (kind === 'collections') {
+      $('removeModalTitle').textContent = 'Clear your whole collection?';
+      $('removeModalText').innerHTML = '“Every sticker you collected — gone in one tap. Sure?”<br>— Lili 🐰';
+      $('removeModalKeep').textContent = 'Keep them';
+      $('removeModalConfirm').textContent = 'Yes, clear them';
     } else {
       $('removeModalTitle').textContent = 'Wait — let me ask first?';
       $('removeModalText').innerHTML = '“You picked ' + esc(title) + ' — I already tucked it into your bag. Are you sure you want to let it go?”<br>— Lili 🐰';
@@ -1339,7 +1424,7 @@
     }
     $('removeModal').hidden = false;
     document.body.classList.add('modal-open');
-    gaEvent('cart_remove_prompt');
+    gaEvent(kind === 'bookmarks' || kind === 'collections' ? 'saved_clear_prompt' : 'cart_remove_prompt');
     $('removeModalKeep').focus();
   }
   function closeRemoveModal() {
@@ -2765,13 +2850,18 @@
   $('cartBtn').addEventListener('click', function () { openCartDrawer(false); });
   $('cartDrawerClose').addEventListener('click', closeCartDrawer);
   $('cartDrawerBackdrop').addEventListener('click', closeCartDrawer);
-  $('removeModalKeep').addEventListener('click', function () { gaEvent('cart_remove_kept'); closeRemoveModal(); });
+  $('removeModalKeep').addEventListener('click', function () {
+    gaEvent(pendingRemoval && (pendingRemoval.kind === 'bookmarks' || pendingRemoval.kind === 'collections') ? 'saved_clear_kept' : 'cart_remove_kept');
+    closeRemoveModal();
+  });
   $('removeModalConfirm').addEventListener('click', function () {
     var p = pendingRemoval;
     closeRemoveModal();
     if (!p) return;
-    gaEvent('cart_remove_confirmed');
-    if (p.kind === 'clear') clearCart(); else removeFromCart(p.itemId);
+    if (p.kind === 'clear') { gaEvent('cart_remove_confirmed'); clearCart(); }
+    else if (p.kind === 'bookmarks') { gaEvent('saved_clear_confirmed'); clearSaved('sets'); }
+    else if (p.kind === 'collections') { gaEvent('saved_clear_confirmed'); clearSaved('stickers'); }
+    else { gaEvent('cart_remove_confirmed'); removeFromCart(p.itemId); }
   });
   $('removeModalClose').addEventListener('click', closeRemoveModal);
   $('removeModalBackdrop').addEventListener('click', closeRemoveModal);
@@ -2853,6 +2943,8 @@
       renderCollections();
       return;
     }
+    var clearBtn = e.target && e.target.closest ? e.target.closest('[data-clear-saved]') : null;
+    if (clearBtn) { openRemoveModal(clearBtn.getAttribute('data-clear-saved')); return; }
     var actBtn = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
     if (actBtn && $('commentList') && $('commentList').contains(actBtn)) handleCommentAction(actBtn);
   });
