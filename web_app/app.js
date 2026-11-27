@@ -55,6 +55,7 @@
     adminOrdersPage: 1,
     adminOrdersFilter: { status: '', q: '' },
     cart: [], // [{ itemId, type }] — one of each item; localStorage (CART.md)
+    lastSyncedCart: [], // cart as of the last successful server sync (CART_SYNC.md)
     cartDrafts: [] // [{ name, items, createdAt }] — named snapshots, localStorage
   };
 
@@ -112,6 +113,7 @@
         state.session = d && d.user ? d.user : null;
         renderAuthArea();
         if (state.session) prefetchBookmarks();
+        if (state.session) syncCartWithServer();
         var hash = location.hash || '#/';
         if (hash === '#/login') renderLogin();
         if (hash === '#/profile') renderProfile();
@@ -1399,6 +1401,7 @@
    * says so instead of failing silently. */
   var CART_KEY = 'sutekka-cart-v1';
   var CART_DRAFTS_KEY = 'sutekka-cart-drafts-v1';
+  var CART_SYNCED_KEY = 'sutekka-cart-synced-v1';
 
   /* Quantities are clamped 1–99; older saved carts and drafts
    * predate them and have no qty field, so they read as 1. */
@@ -1423,6 +1426,11 @@
       state.cart = Array.isArray(items) ? normaliseCartItems(items) : [];
     } catch (e) { state.cart = []; }
     try {
+      var syncRaw = localStorage.getItem(CART_SYNCED_KEY);
+      var synced = syncRaw ? JSON.parse(syncRaw) : [];
+      state.lastSyncedCart = Array.isArray(synced) ? normaliseCartItems(synced) : [];
+    } catch (e) { state.lastSyncedCart = []; }
+    try {
       var draw = localStorage.getItem(CART_DRAFTS_KEY);
       var drafts = draw ? JSON.parse(draw) : [];
       state.cartDrafts = Array.isArray(drafts) ? drafts.map(function (d) {
@@ -1435,6 +1443,113 @@
   function saveCart() {
     try { localStorage.setItem(CART_KEY, JSON.stringify(state.cart)); } catch (e) { /* private mode */ }
     updateCartBadge();
+    scheduleCartSync();
+  }
+
+  /* ---------- server-synced cart (CART_SYNC.md) ---------- */
+  /* A signed-in user's cart follows their account: on sign-in the
+   * server cart merges with this device's local cart, and every
+   * later change PUTs the full cart, debounced ~500 ms so stepper
+   * taps don't fire one PUT each. The local cart is the fallback:
+   * a failed fetch/PUT (or a 401 — session expired) never wipes
+   * it, and the merge is retried on the next page load.
+   * Signed-out users keep the local-only behaviour; sign-out
+   * leaves the local cart as is.
+   *
+   * Idempotence matters: after a merge + PUT the server cart
+   * equals the local cart, so merging the same server cart again
+   * must be a no-op — otherwise every page load would double the
+   * quantities. `lastSyncedCart` is the baseline: the cart as of
+   * the last sync, persisted in localStorage. A merge only adds
+   * the server's delta over that baseline (server qty minus
+   * synced qty, when positive), so genuinely new server-side
+   * additions still sum in, but an already-synced line never
+   * counts twice. */
+  var cartSyncTimer = null;
+
+  function saveLastSynced(items) {
+    try { localStorage.setItem(CART_SYNCED_KEY, JSON.stringify(items)); } catch (e) { /* private mode */ }
+  }
+
+  function mergeCarts(localItems, serverItems) {
+    var byKey = {};
+    var order = [];
+    function add(it) {
+      var key = it.type + ':' + it.itemId;
+      if (byKey[key]) byKey[key].qty = Math.min(99, byKey[key].qty + (it.qty || 1));
+      else {
+        byKey[key] = { itemId: it.itemId, type: it.type, qty: clampQty(it.qty) };
+        order.push(key);
+      }
+    }
+    (localItems || []).forEach(add);
+    (serverItems || []).forEach(add);
+    return order.map(function (k) { return byKey[k]; });
+  }
+
+  // Lines the server has that the last sync didn't: the genuinely
+  // new server-side additions. Per key, qty = server qty minus
+  // synced qty, kept only when positive.
+  function diffCarts(serverItems, syncedItems) {
+    var syncedQty = {};
+    (syncedItems || []).forEach(function (it) { syncedQty[it.type + ':' + it.itemId] = it.qty || 0; });
+    var out = [];
+    (serverItems || []).forEach(function (it) {
+      var extra = (it.qty || 1) - (syncedQty[it.type + ':' + it.itemId] || 0);
+      if (extra > 0) out.push({ itemId: it.itemId, type: it.type, qty: extra });
+    });
+    return out;
+  }
+
+  function syncCartWithServer() {
+    if (!state.session) return;
+    fetch('/api/me/cart', { credentials: 'same-origin' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        var serverItems = Array.isArray(d && d.items) ? normaliseCartItems(d.items) : [];
+        var merged = mergeCarts(state.cart, diffCarts(serverItems, state.lastSyncedCart));
+        // Record the merge optimistically: the server's delta is now
+        // incorporated locally, so a reload before the PUT lands
+        // must not add it again. The PUT (full replace, via
+        // saveCart below) converges the server to the merged cart.
+        state.lastSyncedCart = merged;
+        saveLastSynced(merged);
+        if (JSON.stringify(merged) !== JSON.stringify(state.cart)) {
+          state.cart = merged;
+          saveCart();
+        }
+      })
+      .catch(function () { /* server unreachable — local cart untouched */ });
+  }
+
+  function scheduleCartSync() {
+    if (!state.session) return;
+    if (cartSyncTimer) clearTimeout(cartSyncTimer);
+    cartSyncTimer = setTimeout(pushCartToServer, 500);
+  }
+
+  function pushCartToServer() {
+    cartSyncTimer = null;
+    if (!state.session) return;
+    // Capture the cart being sent: state.cart may change again
+    // while the PUT is in flight, and the baseline must record
+    // what the server actually received.
+    var sent = state.cart.map(function (it) { return { itemId: it.itemId, type: it.type, qty: it.qty }; });
+    fetch('/api/me/cart', {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: sent }),
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        state.lastSyncedCart = sent;
+        saveLastSynced(sent);
+      })
+      .catch(function () { /* offline — local cart is the fallback */ });
   }
 
   function saveDrafts() {

@@ -42,6 +42,7 @@ model User {
   preferences UserPreference[]
   bookmarks   Bookmark[]
   photos      Photo[]
+  cartItems   CartItem[]
   likes       Like[]
   comments    Comment[]
 }
@@ -149,6 +150,26 @@ model Photo {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+model CartItem {
+  // Server-synced cart (CART_SYNC.md): one row per cart line for a
+  // signed-in user, so the cart (and its navbar count) follows the
+  // account across devices. The local cart in localStorage stays the
+  // fallback — a failed sync never wipes it. Qty is clamped 1–99,
+  // same as the client steppers.
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  type      String
+  qty       Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId, type])
+  @@index([userId])
 }
 
 model Like {
