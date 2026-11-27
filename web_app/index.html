@@ -22,7 +22,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=31">
+<link rel="stylesheet" href="styles.css?v=32">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
@@ -31,8 +31,8 @@
     <a class="brand" href="#/">Sticker Showcase</a>
     <nav class="topnav" aria-label="Main navigation">
       <a href="#/" data-nav="home"><i class="fi fi-br-home"></i><span class="nav-label">Latest</span></a>
-      <a href="#/bookmarks" data-nav="bookmarks"><i class="fi fi-br-bookmark"></i><span class="nav-label">Bookmarks</span></a>
-      <a href="#/collections" data-nav="collections"><i class="fi fi-br-folder"></i><span class="nav-label">Collections</span></a>
+      <a href="#/bookmarks" data-nav="bookmarks"><i class="fi fi-br-bookmark"></i><span class="nav-label">Bookmarks</span><span id="bookmarksCount" class="nav-count" hidden>0</span></a>
+      <a href="#/collections" data-nav="collections"><i class="fi fi-br-folder"></i><span class="nav-label">Collections</span><span id="collectionsCount" class="nav-count" hidden>0</span></a>
       <a href="#/gallery" data-nav="gallery"><i class="fi fi-br-images"></i><span class="nav-label">Gallery</span></a>
       <button type="button" id="cartBtn" class="nav-cart-btn" aria-label="Cart"><i class="fi fi-br-shopping-bag"></i><span class="nav-label">Cart</span><span id="cartCount" class="cart-count" hidden>0</span></button>
       <a href="#/about" data-nav="about"><i class="fi fi-br-info"></i><span class="nav-label">About</span></a>
@@ -199,7 +199,7 @@
   <p>Sticker Showcase · gobblemon.com — current affairs, in stickers. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=37" defer></script>
+<script src="app.js?v=38" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>

@@ -112,6 +112,7 @@
       .then(function (d) {
         state.session = d && d.user ? d.user : null;
         renderAuthArea();
+        updateSavedBadges();
         if (state.session) prefetchBookmarks();
         if (state.session) syncCartWithServer();
         var hash = location.hash || '#/';
@@ -123,6 +124,7 @@
       .catch(function () {
         state.authAvailable = false;
         renderAuthArea();
+        updateSavedBadges();
       });
   }
 
@@ -609,6 +611,7 @@
     lsSet(LS_BOOKMARKED_KEY, map);
     renderBookmarkBtn(!bookmarked);
     lsSet(LS_BOOKMARKS_KEY, {}); // the saved list changed — drop its cache
+    updateSavedBadges();
     fetch(url, options)
       .then(function (r) {
         if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
@@ -618,6 +621,8 @@
       .then(function () {
         renderBookmarkBtn(!bookmarked);
         gaEvent('bookmark', { slug: slug, bookmarked: !bookmarked });
+        prefetchBookmarks(); // the cache was dropped — re-cache the
+        // post-toggle list so the map and badges converge on the truth
       })
       .catch(function (e) {
         // Undo the optimistic update, then report the failure.
@@ -625,6 +630,7 @@
         if (bookmarked) m[slug] = true; else delete m[slug];
         lsSet(LS_BOOKMARKED_KEY, m);
         renderBookmarkBtn(bookmarked);
+        updateSavedBadges();
         if (e.message === 'signed out') return;
         var msg = $('shareMsg');
         if (msg) { msg.textContent = 'Could not save the bookmark.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
@@ -640,8 +646,64 @@
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) {
         lsSet(LS_BOOKMARKS_KEY, { sort: 'recent', savedAt: Date.now(), bookmarks: d.bookmarks || [] });
+        syncBookmarkedMap(d.bookmarks || []);
+        updateSavedBadges();
       })
       .catch(function () { /* best effort only */ });
+  }
+
+  /* Keep the per-set map in step with the server list. The map is the
+   * button state (is THIS slug saved) and the badge fallback when the
+   * list cache was just dropped by a toggle — but on a fresh device it
+   * starts empty, so after one toggle the badges would collapse to
+   * only what was toggled here. Rebuilding it from every fresh list
+   * keeps the map, the tabs and the badges on the same truth; the
+   * toggles' own optimistic updates still land first, and the toggle
+   * success handler refreshes the list below, so a list fetched
+   * mid-toggle heals on the next refresh. */
+  function syncBookmarkedMap(items) {
+    var map = {};
+    (items || []).forEach(function (b) { if (b && b.sticker && b.sticker.slug) map[b.sticker.slug] = true; });
+    lsSet(LS_BOOKMARKED_KEY, map);
+  }
+
+  /* Nav count badges for the two saved shelves — the same treatment
+   * as the cart badge. Bookmarks = whole sets, Collections =
+   * individual stickers: the same split the two tabs use (a sticker
+   * id ends in -NN, a set slug never does). Counts come from the
+   * cached server list when it is there, else from the per-set map
+   * the toggles keep — either way the badge follows the newest local
+   * truth. The map is rebuilt from every fresh list (see
+   * syncBookmarkedMap), so the fallback is only ever used right after
+   * a toggle dropped the cache, never on a stale empty map.
+   * Signed-out visitors see no badges at all: the shelves are
+   * signed-in-only, so a stale cached count must never show. */
+  function savedCounts() {
+    var cached = lsGet(LS_BOOKMARKS_KEY);
+    var list = cached && cached.bookmarks;
+    if (list) {
+      return {
+        sets: list.filter(function (b) { return !isStickerBookmark(b); }).length,
+        stickers: list.filter(isStickerBookmark).length,
+      };
+    }
+    var map = lsGet(LS_BOOKMARKED_KEY);
+    var sets = 0, stickers = 0;
+    Object.keys(map).forEach(function (k) {
+      if (/-\d{2}$/.test(k)) stickers++; else sets++;
+    });
+    return { sets: sets, stickers: stickers };
+  }
+
+  function updateSavedBadges() {
+    var b = $('bookmarksCount'), c = $('collectionsCount');
+    if (!b || !c) return;
+    if (!state.session) { b.hidden = true; c.hidden = true; return; }
+    var n = savedCounts();
+    b.textContent = String(n.sets);
+    b.hidden = n.sets === 0;
+    c.textContent = String(n.stickers);
+    c.hidden = n.stickers === 0;
   }
 
   function bookmarkCardHtml(b) {
@@ -766,6 +828,7 @@
     var shownFromCache = false;
     if (cached && cached.sort === state.bookmarksSort && cached.bookmarks) {
       renderBookmarksList(cached.bookmarks);
+      updateSavedBadges();
       shownFromCache = true;
     } else {
       body.innerHTML = '<p>Loading…</p>';
@@ -775,7 +838,9 @@
       .then(function (d) {
         var items = d.bookmarks || [];
         lsSet(LS_BOOKMARKS_KEY, { sort: state.bookmarksSort, savedAt: Date.now(), bookmarks: items });
+        syncBookmarkedMap(items);
         renderBookmarksList(items);
+        updateSavedBadges();
       })
       .catch(function () {
         if (!shownFromCache) {
@@ -801,6 +866,7 @@
     var shownFromCache = false;
     if (cached && cached.sort === state.bookmarksSort && cached.bookmarks) {
       renderCollectionsList(cached.bookmarks);
+      updateSavedBadges();
       shownFromCache = true;
     } else {
       body.innerHTML = '<p>Loading…</p>';
@@ -810,7 +876,9 @@
       .then(function (d) {
         var items = d.bookmarks || [];
         lsSet(LS_BOOKMARKS_KEY, { sort: state.bookmarksSort, savedAt: Date.now(), bookmarks: items });
+        syncBookmarkedMap(items);
         renderCollectionsList(items);
+        updateSavedBadges();
       })
       .catch(function () {
         if (!shownFromCache) {
@@ -834,6 +902,7 @@
         });
         lsSet(LS_BOOKMARKED_KEY, map);
         lsSet(LS_BOOKMARKS_KEY, {}); // the saved list changed — drop its cache
+        updateSavedBadges();
         if (scope === 'sets') renderBookmarks(); else renderCollections();
       })
       .catch(function () {
@@ -2940,6 +3009,7 @@
     lsSet(LS_BOOKMARKED_KEY, map);
     renderStickerBookmark(!bookmarked);
     lsSet(LS_BOOKMARKS_KEY, {}); // the saved list changed — drop its cache
+    updateSavedBadges();
     fetch(url, options)
       .then(function (r) {
         if (r.status === 401) { location.hash = '#/login'; throw new Error('signed out'); }
@@ -2949,12 +3019,15 @@
       .then(function () {
         renderStickerBookmark(!bookmarked);
         gaEvent('sticker_bookmark', { sticker: id, bookmarked: !bookmarked });
+        prefetchBookmarks(); // the cache was dropped — re-cache the
+        // post-toggle list so the map and badges converge on the truth
       })
       .catch(function (e) {
         var m = lsGet(LS_BOOKMARKED_KEY);
         if (bookmarked) m[id] = true; else delete m[id];
         lsSet(LS_BOOKMARKED_KEY, m);
         renderStickerBookmark(bookmarked);
+        updateSavedBadges();
         if (e.message === 'signed out') return;
         var msg = $('stickerShareMsg');
         if (msg) { msg.textContent = 'Could not save it. Try again.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
