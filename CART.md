@@ -419,10 +419,11 @@ was never cleared (badge still showed 2 on the download page).
   card — wrapped with it in a `.add-cart-group` so the flex parent
   wraps them as one unit (without the wrapper the label landed on
   its own row, disconnected from the stepper — caught in the 390px
-  screenshot). At qty 0 the label shows; at qty >= 1 it hides and
-  the same stepper adjusts quantity. No separate Add button was
-  built: the user corrected that direction explicitly. The empty-cart
-  hint now reads "Tap + on the Add to cart stepper…".
+  screenshot). At qty 0 the label reads "Add to cart"; at qty >= 1
+  it switches to "In your bag" so the tap's result is visible next
+  to the stepper (and the navbar bag badge). No separate Add button
+  was built: the user corrected that direction explicitly. The
+  empty-cart hint now reads "Tap + on the Add to cart stepper…".
 - **Buy buttons hide behind an admin setting, hidden by default.**
   New `SiteSetting` key `hide_buy_buttons`, following the
   `uploads_enabled` pattern exactly: `adminSettingsSchema` + admin

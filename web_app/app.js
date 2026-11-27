@@ -1770,9 +1770,10 @@
 
   /* One stepper per buyable item — the count shown is the cart
    * quantity, 0 when it is not in the cart. The stepper IS the
-   * add-to-cart control: at qty 0 the "Add to cart" label beside
-   * it says so, and + puts one in the cart; at qty >= 1 the label
-   * hides and the same stepper adjusts quantity. */
+   * add-to-cart control: at qty 0 the label beside it reads
+   * "Add to cart", and + puts one in the cart; at qty >= 1 the
+   * label switches to "In your bag" so the tap's result is
+   * visible next to the stepper (and the navbar bag badge). */
   function setStepper(el, itemId, type, label) {
     if (!el) return;
     var entry = itemId && state.links ? cartEntry(itemId, type) : null;
@@ -1783,7 +1784,10 @@
     }
     el.hidden = false;
     var q = cartQty(itemId);
-    if (label) label.hidden = q !== 0;
+    if (label) {
+      label.hidden = false;
+      label.innerHTML = '<i class="fi fi-br-shopping-bag"></i> ' + (q === 0 ? 'Add to cart' : 'In your bag');
+    }
     var count = el.querySelector('.qty-count');
     if (count) count.textContent = String(q);
     var dec = el.querySelector('[data-step="dec"]');

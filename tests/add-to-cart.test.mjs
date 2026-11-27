@@ -4,8 +4,8 @@
 //
 //  FIX 1 — the +/- stepper IS the add-to-cart control. At qty 0 an
 //  "Add to cart" label (bag icon + text) sits beside the stepper so
-//  a user knows the + is how you add; at qty >= 1 the label hides
-//  and the same stepper adjusts quantity. No separate button.
+//  a user knows the + is how you add; at qty >= 1 the label switches
+//  to "In your bag" so the tap's result is visible. No separate button.
 //  FIX 2 — the three Buy buttons hide behind the hide_buy_buttons
 //  setting, hidden by default (an absent key means hidden).
 //  FIX 3 — once the download lookup confirms a session's orders are
@@ -246,6 +246,12 @@ function boot({ session = true, settings = {}, hash = "#/", indexSets = [], seed
     const el = doc.getElementById(id);
     return { hidden: el.hidden };
   };
+  // The label text is written via innerHTML (the stub has no DOM
+  // parsing, so textContent would not follow it).
+  const label = (id) => {
+    const el = doc.getElementById(id);
+    return { hidden: el.hidden, html: el.innerHTML };
+  };
   const badge = () => {
     const el = doc.getElementById("cartCount");
     return { text: el.textContent, hidden: el.hidden };
@@ -258,29 +264,29 @@ function boot({ session = true, settings = {}, hash = "#/", indexSets = [], seed
     (doc.getElementById(id)._handlers.click || []).forEach((fn) => fn({ target }));
   };
   const cartPuts = () => calls.filter((c) => c.url === "/api/me/cart" && c.method === "PUT");
-  return { doc, storage, calls, flush, wait, vis, badge, storedCart, fireStepper, cartPuts };
+  return { doc, storage, calls, flush, wait, vis, label, badge, storedCart, fireStepper, cartPuts };
 }
 
 const SET_CART = JSON.stringify([{ itemId: "riemann-rashomon", type: "set", qty: 1 }]);
 
 describe("Add to cart label on the stepper (stepper is the control)", () => {
-  it("set page: label + stepper show at qty 0; + adds, label hides", async () => {
+  it("set page: label reads Add to cart at qty 0, In your bag once added", async () => {
     const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
     await app.flush();
-    assert.deepEqual(app.vis("setAddLabel"), { hidden: false });
+    assert.deepEqual(app.label("setAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> Add to cart' });
     assert.deepEqual(app.vis("cartSetStepper"), { hidden: false });
     app.fireStepper("cartSetStepper", "inc");
     await app.flush();
-    assert.deepEqual(app.vis("setAddLabel"), { hidden: true });
+    assert.deepEqual(app.label("setAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> In your bag' });
     assert.deepEqual(app.vis("cartSetStepper"), { hidden: false });
     assert.deepEqual(app.badge(), { text: "1", hidden: false });
     assert.deepEqual(app.storedCart(), [{ itemId: "riemann-rashomon", type: "set", qty: 1 }]);
   });
 
-  it("stepper + raises qty and − back to 0 brings the label back", async () => {
+  it("stepper + raises qty and − back to 0 switches the label back", async () => {
     const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET], seedStorage: { "sutekka-cart-v1": SET_CART } });
     await app.flush();
-    assert.deepEqual(app.vis("setAddLabel"), { hidden: true });
+    assert.deepEqual(app.label("setAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> In your bag' });
     assert.deepEqual(app.vis("cartSetStepper"), { hidden: false });
     app.fireStepper("cartSetStepper", "inc");
     await app.flush();
@@ -290,29 +296,29 @@ describe("Add to cart label on the stepper (stepper is the control)", () => {
     await app.flush();
     assert.deepEqual(app.badge(), { text: "0", hidden: true });
     assert.deepEqual(app.storedCart(), []);
-    assert.deepEqual(app.vis("setAddLabel"), { hidden: false });
+    assert.deepEqual(app.label("setAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> Add to cart' });
     assert.deepEqual(app.vis("cartSetStepper"), { hidden: false });
   });
 
-  it("pack card: label shows at qty 0; + adds the complete pack", async () => {
+  it("pack card: label switches to In your bag once the pack is added", async () => {
     const app = boot({ hash: "#/", indexSets: [TEST_SET] });
     await app.flush();
-    assert.deepEqual(app.vis("packAddLabel"), { hidden: false });
+    assert.deepEqual(app.label("packAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> Add to cart' });
     assert.deepEqual(app.vis("packCartStepper"), { hidden: false });
     app.fireStepper("packCartStepper", "inc");
     await app.flush();
-    assert.deepEqual(app.vis("packAddLabel"), { hidden: true });
+    assert.deepEqual(app.label("packAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> In your bag' });
     assert.deepEqual(app.storedCart(), [{ itemId: "complete-pack-30", type: "pack", qty: 1 }]);
   });
 
-  it("sticker modal: label shows at qty 0; + adds the single", async () => {
+  it("sticker modal: label switches to In your bag once the single is added", async () => {
     const app = boot({ hash: "#/set/riemann-rashomon/sticker/01", indexSets: [TEST_SET] });
     await app.flush();
-    assert.deepEqual(app.vis("stickerAddLabel"), { hidden: false });
+    assert.deepEqual(app.label("stickerAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> Add to cart' });
     assert.deepEqual(app.vis("stickerCartStepper"), { hidden: false });
     app.fireStepper("stickerCartStepper", "inc");
     await app.flush();
-    assert.deepEqual(app.vis("stickerAddLabel"), { hidden: true });
+    assert.deepEqual(app.label("stickerAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> In your bag' });
     assert.deepEqual(app.storedCart(), [{ itemId: "riemann-rashomon-01", type: "single", qty: 1 }]);
   });
 });
@@ -342,9 +348,9 @@ describe("Buy buttons behind hide_buy_buttons (default hidden)", () => {
     assert.deepEqual(app.vis("buySetBtn"), { hidden: false });
     assert.deepEqual(app.vis("stickerBuyBtn"), { hidden: false });
     assert.deepEqual(app.vis("packBuyBtn"), { hidden: false });
-    // …while the Add to cart labels still show at qty 0.
-    assert.deepEqual(app.vis("setAddLabel"), { hidden: false });
-    assert.deepEqual(app.vis("stickerAddLabel"), { hidden: false });
+    // …while the Add to cart labels still read Add to cart at qty 0.
+    assert.deepEqual(app.label("setAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> Add to cart' });
+    assert.deepEqual(app.label("stickerAddLabel"), { hidden: false, html: '<i class="fi fi-br-shopping-bag"></i> Add to cart' });
   });
 });
 
