@@ -56,6 +56,7 @@
     adminOrdersFilter: { status: '', q: '' },
     cart: [], // [{ itemId, type }] — one of each item; localStorage (CART.md)
     lastSyncedCart: [], // cart as of the last successful server sync (CART_SYNC.md)
+    magnifyMode: false, // reader sheet magnifier on/off (Magnify button)
     cartDrafts: [] // [{ name, items, createdAt }] — named snapshots, localStorage
   };
 
@@ -1227,6 +1228,7 @@
   }
 
   function openSet(slug) {
+    setMagnifyMode(false); // a new sheet starts with the lens off
     var c = findSet(slug);
     if (!c) {
       readerEl.innerHTML = '<p class="empty">That sticker set does not exist yet. <a href="#/">Back to all sets</a>.</p>';
@@ -2784,10 +2786,30 @@
   });
 
   $('zoomBtn').addEventListener('click', function () { openReaderImage(); });
-  $('setImg').addEventListener('click', function () { openReaderImage(); });
+  $('magnifyBtn').addEventListener('click', function () { setMagnifyMode(!state.magnifyMode); });
+  $('setImg').addEventListener('click', function () { if (state.magnifyMode) return; openReaderImage(); });
   $('setImg').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openReaderImage(); }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!state.magnifyMode) openReaderImage(); }
   });
+  // Magnifier: a mouse hover shows the lens and it tracks the pointer;
+  // in magnify mode a finger drag moves it (lifted above the finger).
+  $('setImg').addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'touch') {
+      if (state.magnifyMode && magnifyDrag) showLensAt(e.clientX, e.clientY, -LENS_LIFT);
+      return;
+    }
+    if (state.magnifyMode) { showLensAt(e.clientX, e.clientY, 0); return; }
+    if (!showLensAt(e.clientX, e.clientY, 0)) hideLens();
+  });
+  $('setImg').addEventListener('pointerdown', function (e) {
+    if (!state.magnifyMode || e.pointerType !== 'touch') return;
+    magnifyDrag = true;
+    showLensAt(e.clientX, e.clientY, -LENS_LIFT);
+    if (e.preventDefault) e.preventDefault();
+  });
+  $('setImg').addEventListener('pointerup', function () { magnifyDrag = false; });
+  $('setImg').addEventListener('pointercancel', function () { magnifyDrag = false; });
+  $('setImg').addEventListener('pointerleave', function () { if (!state.magnifyMode) hideLens(); });
 
   /* ---------- column modal ---------- */
   /* The news column is the backdrop of a set: the reader's 专栏原文
@@ -2923,9 +2945,90 @@
     gaEvent(eventName || 'cart_image_modal', { title: title || '' });
   }
 
+  /* ---------- sheet magnifier (Amazon-style lens) ---------- */
+  /* A circular lens follows the pointer over the sheet image and shows
+   * the same sheet at 2.5x, so a detail can be inspected without
+   * opening the fullscreen lightbox. The lens reuses the sheet src
+   * already loaded in #setImg — no second download. Desktop: hover
+   * shows it; a plain click still opens the lightbox. Touch: the
+   * Magnify button toggles the mode, then a finger drag moves the
+   * lens (lifted above the finger so it stays visible) and taps do
+   * not open the lightbox until the mode is off. */
+  var MAGNIFY = 2.5;
+  var LENS_D = 180;
+  var LENS_R = LENS_D / 2;
+  var LENS_LIFT = 90; // touch: lens centre sits this far above the finger
+  var magnifyDrag = false;
+
+  function clampNum(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  /* Pure geometry, kept separate so it is unit-testable: rectW/H is the
+   * displayed image size, natW/H the sheet's natural size, px/py the
+   * pointer in displayed-image coords, liftY the lens-centre offset
+   * (0 for a mouse, -LENS_LIFT for a finger), lensD the rendered lens
+   * diameter (180px desktop, 120px on phones — see styles.css). The
+   * zoomed view stays centred on the pointer, clamped so the lens
+   * never shows blank background; the lens itself stays inside the
+   * displayed image. */
+  function magnifierLens(rectW, rectH, natW, natH, px, py, liftY, lensD) {
+    if (!rectW || !rectH || !natW || !natH) return null;
+    var d = lensD || LENS_D, r = d / 2;
+    var bgW = natW * MAGNIFY, bgH = natH * MAGNIFY;
+    var cx = clampNum(px * (natW / rectW) * MAGNIFY, r, bgW - r);
+    var cy = clampNum(py * (natH / rectH) * MAGNIFY, r, bgH - r);
+    return {
+      left: clampNum(px - r, 0, Math.max(0, rectW - d)),
+      top: clampNum(py + (liftY || 0) - r, 0, Math.max(0, rectH - d)),
+      bgX: -(cx - r),
+      bgY: -(cy - r),
+      bgW: bgW,
+      bgH: bgH
+    };
+  }
+
+  function showLensAt(clientX, clientY, liftY) {
+    var img = $('setImg');
+    if (!img) return false;
+    var src = img.getAttribute('src') || img.src;
+    if (!src || !img.getBoundingClientRect) return false;
+    var rect = img.getBoundingClientRect();
+    var lens = $('sheetLens');
+    if (!lens) return false;
+    // Unhide first: the rendered size (offsetWidth) is 0 while hidden,
+    // and the phone media query shrinks it to 120px.
+    lens.hidden = false;
+    var m = magnifierLens(rect.width, rect.height, img.naturalWidth, img.naturalHeight, clientX - rect.left, clientY - rect.top, liftY, lens.offsetWidth || LENS_D);
+    if (!m) { lens.hidden = true; return false; }
+    lens.style.backgroundImage = 'url("' + src + '")';
+    lens.style.backgroundSize = m.bgW + 'px ' + m.bgH + 'px';
+    lens.style.backgroundPosition = m.bgX + 'px ' + m.bgY + 'px';
+    lens.style.left = ((img.offsetLeft || 0) + m.left) + 'px';
+    lens.style.top = ((img.offsetTop || 0) + m.top) + 'px';
+    return true;
+  }
+
+  function hideLens() {
+    var lens = $('sheetLens');
+    if (lens) lens.hidden = true;
+  }
+
+  function setMagnifyMode(on) {
+    state.magnifyMode = !!on;
+    magnifyDrag = false;
+    var btn = $('magnifyBtn');
+    if (btn) btn.setAttribute('aria-pressed', state.magnifyMode ? 'true' : 'false');
+    // While the mode is on, a finger drag moves the lens instead of
+    // scrolling the page; off restores the stage's normal panning.
+    var stage = $('stage');
+    if (stage) stage.style.touchAction = state.magnifyMode ? 'none' : '';
+    if (!state.magnifyMode) hideLens();
+  }
+
   /* The reader's sheet image opens fullscreen in the image lightbox.
    * Both the Zoom in button and a click (or Enter/Space) on the sheet
-   * itself open it; the old in-page 220% stage zoom is gone. */
+   * itself open it; the old in-page 220% stage zoom is gone. While
+   * magnify mode is on, a tap on the sheet does not open it — the
+   * sheet belongs to the lens until the mode is off. */
   function openReaderImage() {
     var img = $('setImg');
     var src = img && (img.getAttribute('src') || img.src);
@@ -3269,6 +3372,7 @@
       else if (!$('imageModal').hidden) closeImageModal();
       else if (!$('removeModal').hidden) closeRemoveModal();
       else if ($('cartDrawer').classList.contains('open')) closeCartDrawer();
+      else if (state.magnifyMode) setMagnifyMode(false);
       return;
     }
     if (!$('stickerModal').hidden && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
@@ -3283,6 +3387,14 @@
     // Close the user menu when the tap lands outside it.
     var menu = e.target && e.target.closest ? e.target.closest('.user-menu') : null;
     if (!menu) document.querySelectorAll('details.user-menu[open]').forEach(function (d) { d.open = false; });
+    // Magnify mode: a tap outside the sheet (and not on the Magnify
+    // button itself) exits the mode. A tap on the sheet neither opens
+    // the lightbox nor exits while the mode is on.
+    if (state.magnifyMode) {
+      var t2 = e.target;
+      var inStage = t2 && t2.closest ? (t2.closest('#stage') || t2.closest('#magnifyBtn')) : false;
+      if (!inStage) setMagnifyMode(false);
+    }
     // closest('button'): the buttons contain <i> icons, and a tap on the
     // icon itself has the icon as e.target, not the button.
     var btn = e.target && e.target.closest ? e.target.closest('button') : null;

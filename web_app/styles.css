@@ -98,11 +98,31 @@ img { max-width: 100%; display: block; }
 #comicTitle { font-size: 1.7rem; margin: 4px 0; }
 .meta { color: var(--muted); margin: 0 0 14px; }
 .stage {
+  position: relative;
   margin: 0; background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); overflow: auto; max-height: 82vh;
   touch-action: pan-x pan-y;
 }
 .stage img { width: 100%; height: auto; margin: 0 auto; cursor: zoom-in; }
+/* Amazon-style magnifier lens over the sheet: a circle showing the
+ * same sheet at 2.5x, centred on the pointer (JS sets the background
+ * position/size). pointer-events none so it never steals the pointer. */
+.sheet-lens {
+  position: absolute; width: 180px; height: 180px; border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.2);
+  background-repeat: no-repeat; background-color: var(--surface);
+  pointer-events: none; z-index: 5;
+}
+.sheet-lens[hidden] { display: none; }
+/* Phones: the sheet is short (a wide sheet is ~180px tall at 390px),
+ * so a 180px lens would fill it entirely and the touch lift could
+ * never show — shrink the lens so it can sit above the finger. The
+ * JS reads the rendered size (offsetWidth), so this stays in sync. */
+@media (max-width: 719px) {
+  .sheet-lens { width: 120px; height: 120px; }
+}
+#magnifyBtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 #setImg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .reader-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
 .reader-tools button { border-radius: var(--radius); }
