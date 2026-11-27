@@ -428,6 +428,17 @@ button.shared { background: var(--ok); border-color: var(--ok); color: #fff; }
 .qty-stepper .qty-count { min-width: 28px; text-align: center; font-weight: 700; }
 .qty-stepper[hidden] { display: none; }
 
+/* "Add to cart" label beside each stepper: the stepper IS the
+ * add-to-cart control, and the label says so at qty 0. Once the
+ * item is in the cart the label hides and the same stepper
+ * adjusts quantity (see setStepper). The group wrapper keeps the
+ * label and the stepper on one line — without it the flex parent
+ * wraps them onto separate rows and the label reads as a stray. */
+.add-cart-group { display: inline-flex; align-items: center; gap: 8px; }
+.add-cart-label { font-size: 0.95rem; font-weight: 600; vertical-align: middle; white-space: nowrap; }
+.add-cart-label .fi { margin-right: 0.35em; }
+.add-cart-label[hidden] { display: none; }
+
 /* Personal gallery: photo grid + upload row. */
 .upload-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; }
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }

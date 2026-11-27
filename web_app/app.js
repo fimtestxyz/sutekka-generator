@@ -1390,6 +1390,11 @@
 
   function shopClosed() { return !!(state.siteSettings && state.siteSettings.shopClosed); }
   function uploadsEnabled() { return !!(state.siteSettings && state.siteSettings.uploadsEnabled); }
+  /* The direct-purchase Buy buttons are hidden by default: the
+   * setting is only false once the admin unchecks the toggle, so
+   * an absent key — and settings that have not loaded yet — both
+   * mean hidden. The cart checkout is the purchase path meanwhile. */
+  function buyButtonsHidden() { return !(state.siteSettings && state.siteSettings.hideBuyButtons === false); }
   function itemHidden(itemId) {
     return !!(state.siteSettings && state.siteSettings.hiddenItems && state.siteSettings.hiddenItems.indexOf(itemId) !== -1);
   }
@@ -1407,7 +1412,7 @@
   function openBuyLink(type, itemId) {
     var url = buyUrl(type, itemId);
     if (!url) return;
-    if (shopClosed() || itemHidden(itemId)) return;
+    if (shopClosed() || itemHidden(itemId) || buyButtonsHidden()) return;
     gaEvent('buy_click', { type: type, item: itemId });
     location.href = url;
   }
@@ -1416,7 +1421,7 @@
     var btn = $('buySetBtn');
     if (!btn) return;
     var entry = state.links && state.currentSlug ? state.links.sets[state.currentSlug] : null;
-    if (!entry || shopClosed() || itemHidden(state.currentSlug)) { btn.hidden = true; return; }
+    if (!entry || shopClosed() || itemHidden(state.currentSlug) || buyButtonsHidden()) { btn.hidden = true; return; }
     btn.hidden = false;
     btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy this set — ' + priceLabel(entry.amount);
   }
@@ -1426,7 +1431,7 @@
     var s = state.currentSticker;
     if (!btn || !s) return;
     var entry = state.links ? state.links.singles[s.id] : null;
-    if (!entry || shopClosed() || itemHidden(s.id)) { btn.hidden = true; return; }
+    if (!entry || shopClosed() || itemHidden(s.id) || buyButtonsHidden()) { btn.hidden = true; return; }
     btn.hidden = false;
     btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy — ' + priceLabel(entry.amount);
   }
@@ -1457,6 +1462,7 @@
     $('packCardText').textContent = pack.stickers.length + ' stickers — ' + parts.join(' · ') + '.';
     var btn = $('packBuyBtn');
     btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy the pack — ' + priceLabel(pack.amount);
+    btn.hidden = buyButtonsHidden();
     card.hidden = false;
   }
 
@@ -1763,13 +1769,21 @@
   }
 
   /* One stepper per buyable item — the count shown is the cart
-   * quantity, 0 when it is not in the cart. */
-  function setStepper(el, itemId, type) {
+   * quantity, 0 when it is not in the cart. The stepper IS the
+   * add-to-cart control: at qty 0 the "Add to cart" label beside
+   * it says so, and + puts one in the cart; at qty >= 1 the label
+   * hides and the same stepper adjusts quantity. */
+  function setStepper(el, itemId, type, label) {
     if (!el) return;
     var entry = itemId && state.links ? cartEntry(itemId, type) : null;
-    if (!entry || shopClosed() || itemHidden(itemId)) { el.hidden = true; return; }
+    if (!entry || shopClosed() || itemHidden(itemId)) {
+      el.hidden = true;
+      if (label) label.hidden = true;
+      return;
+    }
     el.hidden = false;
     var q = cartQty(itemId);
+    if (label) label.hidden = q !== 0;
     var count = el.querySelector('.qty-count');
     if (count) count.textContent = String(q);
     var dec = el.querySelector('[data-step="dec"]');
@@ -1779,10 +1793,10 @@
   }
 
   function renderCartButtons() {
-    setStepper($('cartSetStepper'), state.currentSlug, 'set');
+    setStepper($('cartSetStepper'), state.currentSlug, 'set', $('setAddLabel'));
     var s = state.currentSticker;
-    setStepper($('stickerCartStepper'), s ? s.id : null, 'single');
-    setStepper($('packCartStepper'), 'complete-pack-30', 'pack');
+    setStepper($('stickerCartStepper'), s ? s.id : null, 'single', $('stickerAddLabel'));
+    setStepper($('packCartStepper'), 'complete-pack-30', 'pack', $('packAddLabel'));
   }
 
   function refundLineHtml() {
@@ -1896,7 +1910,7 @@
         '</g></svg>' +
         '<p class="empty-title">Nothing in here yet!</p>' +
         '<p class="empty-text">Lili peeked inside — just echoes. Add a sticker, a set, or the complete pack, and she’ll tuck it in for you.</p>' +
-        '<p class="empty-hint">The buttons sit next to every Buy button.</p>' +
+        '<p class="empty-hint">Tap + on the Add to cart stepper on any sticker, set, or the complete pack.</p>' +
         '<button id="emptyCartBrowse" class="btn">Browse stickers</button>' +
         '</div>';
     } else {
@@ -2101,6 +2115,23 @@
     })();
   }
 
+  /* After a cart checkout lands on the download page, the paid
+   * lines leave the cart — only the lines this session bought,
+   * never the whole cart: it may hold other items for a later
+   * checkout. Called only once the lookup confirms the orders
+   * are paid, and only for a session (the post-checkout redirect);
+   * an unconfirmed lookup leaves the cart untouched. saveCart()
+   * updates the badge and PUTs the trimmed cart when signed in. */
+  function clearPurchasedCartLines(orders) {
+    var paid = (orders || []).filter(function (o) { return o && o.status === 'paid'; });
+    if (!paid.length || !state.cart.length) return;
+    var bought = {};
+    paid.forEach(function (o) { if (o.itemId) bought[o.itemId] = true; });
+    var before = state.cart.length;
+    state.cart = state.cart.filter(function (it) { return !bought[it.itemId]; });
+    if (state.cart.length !== before) saveCart();
+  }
+
   /* A cart payment owns one Order row per item (CART.md). One item
    * renders exactly like a single purchase; several items render one
    * card each, with their own files. The invoice/shipping forms live
@@ -2139,7 +2170,10 @@
     html += '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>';
     html += refundLineHtml();
     body.innerHTML = html;
-    if (sessionId && list.some(function (o) { return o.status === 'paid'; })) markDelivered(sessionId);
+    if (sessionId && list.some(function (o) { return o.status === 'paid'; })) {
+      markDelivered(sessionId);
+      clearPurchasedCartLines(list);
+    }
   }
 
   function renderOrderDownload(order, sessionId) {
@@ -2206,7 +2240,10 @@
     state.downloadOrder = order;
     state.downloadSessionId = sessionId || null;
     body.innerHTML = html;
-    if (sessionId && order.status === 'paid') markDelivered(sessionId);
+    if (sessionId && order.status === 'paid') {
+      markDelivered(sessionId);
+      clearPurchasedCartLines([order]);
+    }
   }
 
   function downloadOrderKey() {
@@ -2651,6 +2688,7 @@
         '<form id="adminSettingsForm" class="comment-form" onsubmit="return false;">' +
         '<label><input id="adminShopClosed" type="checkbox"' + (s.shopClosed ? ' checked' : '') + '> Shop closed (hides every Buy button)</label>' +
         '<label><input id="adminUploadsEnabled" type="checkbox"' + (s.uploadsEnabled ? ' checked' : '') + '> Allow photo uploads (personal gallery)</label>' +
+        '<label><input id="adminHideBuyButtons" type="checkbox"' + (s.hideBuyButtons ? ' checked' : '') + '> Hide Buy buttons (direct purchase)</label>' +
         '<input id="adminAnnouncement" type="text" maxlength="280" placeholder="Announcement banner (optional)" value="' + esc(s.announcement || '') + '" aria-label="Announcement banner">' +
         '<p class="meta">Hide Buy buttons for:</p>' +
         setSlugs.map(function (slug) {
@@ -2682,7 +2720,8 @@
       shopClosed: !!$('adminShopClosed').checked,
       announcement: ($('adminAnnouncement').value || '').trim(),
       hiddenItems: hidden,
-      uploadsEnabled: !!$('adminUploadsEnabled').checked
+      uploadsEnabled: !!$('adminUploadsEnabled').checked,
+      hideBuyButtons: !!$('adminHideBuyButtons').checked
     } }).then(function (x) {
       if (!msg) return;
       if (x.status === 200) { msg.textContent = 'Settings saved.'; loadSettings(); }

@@ -648,6 +648,9 @@ async function handleSettings(req, res, prisma, admin) {
       announcement: map.announcement || "",
       hiddenItems: map.hidden_items ? JSON.parse(map.hidden_items) : [],
       uploadsEnabled: map.uploads_enabled === "true",
+      // Buy buttons are hidden by default: an absent key means
+      // hidden, the admin unchecks the toggle to show them again.
+      hideBuyButtons: map.hide_buy_buttons !== "false",
     });
     return;
   }
@@ -683,6 +686,9 @@ async function handleSettings(req, res, prisma, admin) {
   }
   if (parsed.data.uploadsEnabled !== undefined) {
     updates.push(["uploads_enabled", String(parsed.data.uploadsEnabled)]);
+  }
+  if (parsed.data.hideBuyButtons !== undefined) {
+    updates.push(["hide_buy_buttons", String(parsed.data.hideBuyButtons)]);
   }
   for (const [key, value] of updates) {
     await prisma.siteSetting.upsert({

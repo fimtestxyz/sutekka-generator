@@ -405,3 +405,52 @@ Everything above is built. Tests 153/153 (was 142), typecheck clean.
   checkout says plainly that it is not connected yet. Once the key is
   set, verify with one test-mode cart purchase (two items, one
   payment) and check the webhook records one Order row per item.
+
+## Add-to-cart labelling, Buy-button toggle, post-checkout clear (2026-11-27)
+
+User report: "where is the add to cart button" — the only add-to-cart
+control was a tiny unlabeled `+` in the qty stepper beside each Buy
+button. And after the verified S$19 two-item test purchase the cart
+was never cleared (badge still showed 2 on the download page).
+
+- **The stepper IS the add-to-cart control — only its labelling
+  changed.** A "Add to cart" label (bag icon `fi-br-shopping-bag` +
+  text) sits beside each stepper — sticker modal, set page, pack
+  card — wrapped with it in a `.add-cart-group` so the flex parent
+  wraps them as one unit (without the wrapper the label landed on
+  its own row, disconnected from the stepper — caught in the 390px
+  screenshot). At qty 0 the label shows; at qty >= 1 it hides and
+  the same stepper adjusts quantity. No separate Add button was
+  built: the user corrected that direction explicitly. The empty-cart
+  hint now reads "Tap + on the Add to cart stepper…".
+- **Buy buttons hide behind an admin setting, hidden by default.**
+  New `SiteSetting` key `hide_buy_buttons`, following the
+  `uploads_enabled` pattern exactly: `adminSettingsSchema` + admin
+  handler GET/POST + public `GET /api/settings` all carry
+  `hideBuyButtons`; `#/kangle` Settings has a "Hide Buy buttons
+  (direct purchase)" checkbox. Default is hidden: an absent key
+  means hidden on both the server (`!== "false"`) and the client
+  (`buyButtonsHidden()` is true until settings explicitly say
+  false), so the checkbox shows checked on first load. The three
+  buttons (`stickerBuyBtn`, `buySetBtn`, `packBuyBtn`) hide, and
+  `openBuyLink` refuses while hidden; the cart checkout is the only
+  purchase path meanwhile. No new function file or endpoint.
+- **Post-checkout clear.** On `#/download`, once the lookup confirms
+  a session's orders are paid, `clearPurchasedCartLines` removes
+  ONLY those lines (by itemId) — never the whole cart, which may
+  hold items for a later checkout. `saveCart()` updates the badge
+  and PUTs the trimmed cart when signed in. An unconfirmed lookup
+  (404 / still polling) or an `order_id` lookup (no session) leaves
+  the cart untouched.
+- Verified: tests 190/190 (16 new: `tests/add-to-cart.test.mjs` vm
+  sandbox + `tests/settings.test.mjs`; two stale shape expectations
+  in `buyer-fulfilment.test.mjs` and one in `admin.test.mjs` updated
+  for the new field); typecheck clean; prisma valid. Headless 30/30
+  at 390px + 1280px against a mock API (labels, stepper adds, Buy
+  hidden by default / shown when the toggle is off, download clear
+  of bought lines only + server PUT, 404 leaves the cart alone).
+  Two headless failures on the first run were both test bugs
+  (same-document hash goto does not re-fetch settings — a real
+  reload is needed; the mock server cart merged into the 404 test's
+  cart), not app bugs. Live signed-in behaviour still needs the
+  user's phone.

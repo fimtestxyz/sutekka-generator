@@ -28,6 +28,9 @@ async function settingsHandler(req, res, deps = {}) {
       announcement: map.announcement || "",
       hiddenItems: map.hidden_items ? JSON.parse(map.hidden_items) : [],
       uploadsEnabled: map.uploads_enabled === "true",
+      // Buy buttons are hidden by default: an absent key means
+      // hidden, the admin unchecks the toggle to show them again.
+      hideBuyButtons: map.hide_buy_buttons !== "false",
     });
   } catch (e) {
     console.error("settingsHandler error", e);

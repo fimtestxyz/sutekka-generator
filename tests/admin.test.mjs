@@ -655,7 +655,7 @@ describe("settings and password", () => {
     const token = await setupAdmin(prisma);
     const get1 = mockRes();
     await adminHandler(authedReq({ url: "/api/admin/settings", token }), get1, { prisma });
-    assert.deepEqual(await get1.json(), { shopClosed: false, announcement: "", hiddenItems: [], uploadsEnabled: false });
+    assert.deepEqual(await get1.json(), { shopClosed: false, announcement: "", hiddenItems: [], uploadsEnabled: false, hideBuyButtons: true });
 
     const post = mockRes();
     await adminHandler(
@@ -663,7 +663,7 @@ describe("settings and password", () => {
         method: "POST",
         url: "/api/admin/settings",
         token,
-        body: JSON.stringify({ shopClosed: true, announcement: "Prints ship in 5 days", hiddenItems: ["riemann-rashomon"] }),
+        body: JSON.stringify({ shopClosed: true, announcement: "Prints ship in 5 days", hiddenItems: ["riemann-rashomon"], hideBuyButtons: false }),
       }),
       post,
       { prisma },
@@ -676,6 +676,7 @@ describe("settings and password", () => {
       announcement: "Prints ship in 5 days",
       hiddenItems: ["riemann-rashomon"],
       uploadsEnabled: false,
+      hideBuyButtons: false,
     });
   });
 

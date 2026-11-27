@@ -126,6 +126,7 @@ const adminSettingsSchema = z.object({
   announcement: z.string().trim().max(280).optional(),
   hiddenItems: z.array(z.string().trim().min(1)).max(100).optional(),
   uploadsEnabled: z.boolean().optional(),
+  hideBuyButtons: z.boolean().optional(),
 });
 
 // Buyer shipping address (public POST /api/orders/shipping) — same

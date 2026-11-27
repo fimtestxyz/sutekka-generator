@@ -267,6 +267,7 @@ describe("GET /api/settings", () => {
       announcement: "Hello",
       hiddenItems: ["riemann-rashomon"],
       uploadsEnabled: false,
+      hideBuyButtons: true,
     });
   });
 
@@ -274,6 +275,6 @@ describe("GET /api/settings", () => {
     const prisma = { siteSetting: { findMany: async () => [] } };
     const res = mockRes();
     await settingsHandler(mockReq({ method: "GET", url: "/api/settings" }), res, { prisma });
-    assert.deepEqual(await res.json(), { shopClosed: false, announcement: "", hiddenItems: [], uploadsEnabled: false });
+    assert.deepEqual(await res.json(), { shopClosed: false, announcement: "", hiddenItems: [], uploadsEnabled: false, hideBuyButtons: true });
   });
 });
