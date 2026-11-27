@@ -1170,10 +1170,7 @@
     var img = $('setImg');
     img.src = c.image;
     img.alt = c.title + ' — 贴纸合集，共 ' + (c.stickers || []).length + ' 张';
-    $('stage').classList.remove('zoomed');
-    var zoomBtn = $('zoomBtn');
-    zoomBtn.innerHTML = '<i class="fi fi-br-zoom-in"></i> Zoom in';
-    zoomBtn.setAttribute('aria-pressed', 'false');
+    img.setAttribute('aria-label', 'View full-size sheet: ' + c.title);
     $('stickerGrid').innerHTML = (c.stickers || []).map(stickerCellHtml).join('');
     // Character sheet: collapsed by default; the reader's open/close
     // preference is remembered in localStorage (see init wiring).
@@ -2559,18 +2556,10 @@
     state.shown += PAGE_SIZE; renderGrid();
   });
 
-  $('zoomBtn').addEventListener('click', function () {
-    var stage = $('stage');
-    var zoomed = stage.classList.toggle('zoomed');
-    this.innerHTML = zoomed ? '<i class="fi fi-br-zoom-out"></i> Zoom out' : '<i class="fi fi-br-zoom-in"></i> Zoom in';
-    this.setAttribute('aria-pressed', String(zoomed));
-  });
-  $('stage').addEventListener('click', function (e) {
-    if (e.target.tagName === 'IMG' && this.classList.contains('zoomed')) {
-      this.classList.remove('zoomed');
-      $('zoomBtn').innerHTML = '<i class="fi fi-br-zoom-in"></i> Zoom in';
-      $('zoomBtn').setAttribute('aria-pressed', 'false');
-    }
+  $('zoomBtn').addEventListener('click', function () { openReaderImage(); });
+  $('setImg').addEventListener('click', function () { openReaderImage(); });
+  $('setImg').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openReaderImage(); }
   });
 
   /* ---------- column modal ---------- */
@@ -2694,15 +2683,27 @@
   /* ---------- image lightbox (cart thumbnails) ---------- */
   /* A cart thumbnail opens the original-size image — the full PNG
    * for a sticker, the full sheet for a set — in the same modal
-   * pattern as the sticker and column modals. */
-  function openImageModal(src, title) {
+   * pattern as the sticker and column modals. The reader's sheet
+   * image uses the same modal (eventName 'reader_image_modal');
+   * cart thumbnails and gallery photos keep the default. */
+  function openImageModal(src, title, eventName) {
     $('imageModalTitle').textContent = title || '';
     var img = $('imageModalImg');
     img.src = src;
     img.alt = title || '';
     $('imageModal').hidden = false;
     document.body.classList.add('modal-open');
-    gaEvent('cart_image_modal', { title: title || '' });
+    gaEvent(eventName || 'cart_image_modal', { title: title || '' });
+  }
+
+  /* The reader's sheet image opens fullscreen in the image lightbox.
+   * Both the Zoom in button and a click (or Enter/Space) on the sheet
+   * itself open it; the old in-page 220% stage zoom is gone. */
+  function openReaderImage() {
+    var img = $('setImg');
+    var src = img && (img.getAttribute('src') || img.src);
+    if (!src) return;
+    openImageModal(src, $('setTitle').textContent || '', 'reader_image_modal');
   }
 
   function closeImageModal() {

@@ -99,9 +99,8 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius); overflow: auto; max-height: 82vh;
   touch-action: pan-x pan-y;
 }
-.stage img { width: 100%; height: auto; margin: 0 auto; }
-.stage.zoomed { cursor: zoom-out; }
-.stage.zoomed img { width: 220%; max-width: none; }
+.stage img { width: 100%; height: auto; margin: 0 auto; cursor: zoom-in; }
+#setImg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .reader-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
 .reader-tools button { border-radius: var(--radius); }
 .share-msg { color: var(--muted); font-size: 0.9rem; }
@@ -152,7 +151,6 @@ img { max-width: 100%; display: block; }
 @media (min-width: 720px) {
   .intro h1 { font-size: 2rem; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-  .stage.zoomed img { width: 160%; }
 }
 @media (prefers-color-scheme: dark) {
   :root {
