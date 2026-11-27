@@ -2958,18 +2958,18 @@
 
   /* ---------- sheet magnifier (Amazon-style lens) ---------- */
   /* A circular lens follows the pointer over the sheet image and shows
-   * the same sheet at 1.3x, so a detail can be inspected without
+   * the same sheet at 0.8x, so a detail can be inspected without
    * opening the fullscreen lightbox. The lens reuses the sheet src
    * already loaded in #setImg — no second download. Desktop: hover
    * shows it; a plain click still opens the lightbox. Touch: the
    * Magnify button toggles the mode, then a finger drag moves the
    * lens (lifted above the finger so it stays visible) and taps do
    * not open the lightbox until the mode is off. While the mode is
-   * on, #magnifyControls offers a zoom stepper (1x–1.5x) and lens
+   * on, #magnifyControls offers a zoom stepper (0.5x–1.5x) and lens
    * sizes S/M/L; the visitor's choices persist per device in
    * localStorage under MAGNIFY_PREFS_KEY. */
-  var MAGNIFY = 1.3; // default zoom; the stepper moves it 1x–1.5x
-  var MAGNIFY_MIN = 1, MAGNIFY_MAX = 1.5, MAGNIFY_STEP = 0.1;
+  var MAGNIFY = 0.8; // default zoom; the stepper moves it 0.5x–1.5x
+  var MAGNIFY_MIN = 0.5, MAGNIFY_MAX = 1.5, MAGNIFY_STEP = 0.1;
   var MAGNIFY_PREFS_KEY = 'sutekka-magnifier-v1';
   var MAGNIFY_SIZES = { S: 1, M: 1.5, L: 2 }; // multipliers on the base lens
   var magnifySize = 'L'; // default: the biggest lens
@@ -2992,18 +2992,26 @@
    * bigger than the sheet (L on a phone: 240px lens, ~180px sheet)
    * it pins to the image's top-left and only the zoomed content
    * inside it moves. Zoom comes from the MAGNIFY global, so the
-   * stepper changes it live. */
+   * stepper changes it live. Zoom below 1x shrinks the background,
+   * so on a small sheet the whole zoomed image can fit inside the
+   * lens (bgW <= d): then it is centred in the lens instead of
+   * clamped — the old clamp's range would invert (lo > hi) and pin
+   * the image to the lens's top-left corner. The lens's own
+   * background is the paper tone (styles.css), so the even margins
+   * around a centred small image read as paper, not blank white. */
   function magnifierLens(rectW, rectH, natW, natH, px, py, liftY, lensD) {
     if (!rectW || !rectH || !natW || !natH) return null;
     var d = lensD || LENS_D, r = d / 2;
     var bgW = natW * MAGNIFY, bgH = natH * MAGNIFY;
-    var cx = clampNum(px * (natW / rectW) * MAGNIFY, r, bgW - r);
-    var cy = clampNum(py * (natH / rectH) * MAGNIFY, r, bgH - r);
+    var pxNat = px * (natW / rectW) * MAGNIFY;
+    var pyNat = py * (natH / rectH) * MAGNIFY;
+    var bgX = bgW > d ? -(clampNum(pxNat, r, bgW - r) - r) : (d - bgW) / 2;
+    var bgY = bgH > d ? -(clampNum(pyNat, r, bgH - r) - r) : (d - bgH) / 2;
     return {
       left: clampNum(px - r, 0, Math.max(0, rectW - d)),
       top: clampNum(py + (liftY || 0) - r, 0, Math.max(0, rectH - d)),
-      bgX: -(cx - r),
-      bgY: -(cy - r),
+      bgX: bgX,
+      bgY: bgY,
       bgW: bgW,
       bgH: bgH
     };
@@ -3085,9 +3093,9 @@
   function loadMagnifierPrefs() {
     var p = lsGet(MAGNIFY_PREFS_KEY) || {};
     // In range: keep the visitor's zoom (snapped to the 0.1x step).
-    // Out of range — e.g. 3.25x saved under the old 1.5–5x range —
-    // fall back to the default instead of clamping to a bound, so an
-    // old preference never silently becomes the strongest zoom.
+    // Out of range — e.g. 3.25x saved under an older range — fall
+    // back to the default instead of clamping to a bound, so an old
+    // preference never silently becomes the strongest zoom.
     var z = (typeof p.zoom === 'number' && isFinite(p.zoom) && p.zoom >= MAGNIFY_MIN && p.zoom <= MAGNIFY_MAX) ? p.zoom : MAGNIFY;
     MAGNIFY = clampNum(Math.round(z / MAGNIFY_STEP) * MAGNIFY_STEP, MAGNIFY_MIN, MAGNIFY_MAX);
     MAGNIFY = Math.round(MAGNIFY * 100) / 100;
