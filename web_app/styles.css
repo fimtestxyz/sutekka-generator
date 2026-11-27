@@ -105,7 +105,8 @@ img { max-width: 100%; display: block; }
 }
 .stage img { width: 100%; height: auto; margin: 0 auto; cursor: zoom-in; }
 /* Amazon-style magnifier lens over the sheet: a circle showing the
- * same sheet at 2.5x, centred on the pointer (JS sets the background
+ * same sheet at 1.3x by default (the zoom stepper moves it 1x–1.5x),
+ * centred on the pointer (JS sets the background
  * position/size). pointer-events none so it never steals the pointer. */
 .sheet-lens {
   position: absolute; width: 180px; height: 180px; border-radius: 50%;

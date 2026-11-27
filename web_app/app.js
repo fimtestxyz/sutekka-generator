@@ -2958,18 +2958,18 @@
 
   /* ---------- sheet magnifier (Amazon-style lens) ---------- */
   /* A circular lens follows the pointer over the sheet image and shows
-   * the same sheet at 3.25x, so a detail can be inspected without
+   * the same sheet at 1.3x, so a detail can be inspected without
    * opening the fullscreen lightbox. The lens reuses the sheet src
    * already loaded in #setImg — no second download. Desktop: hover
    * shows it; a plain click still opens the lightbox. Touch: the
    * Magnify button toggles the mode, then a finger drag moves the
    * lens (lifted above the finger so it stays visible) and taps do
    * not open the lightbox until the mode is off. While the mode is
-   * on, #magnifyControls offers a zoom stepper (1.5x–5x) and lens
+   * on, #magnifyControls offers a zoom stepper (1x–1.5x) and lens
    * sizes S/M/L; the visitor's choices persist per device in
    * localStorage under MAGNIFY_PREFS_KEY. */
-  var MAGNIFY = 3.25; // default zoom; the stepper moves it 1.5x–5x
-  var MAGNIFY_MIN = 1.5, MAGNIFY_MAX = 5, MAGNIFY_STEP = 0.25;
+  var MAGNIFY = 1.3; // default zoom; the stepper moves it 1x–1.5x
+  var MAGNIFY_MIN = 1, MAGNIFY_MAX = 1.5, MAGNIFY_STEP = 0.1;
   var MAGNIFY_PREFS_KEY = 'sutekka-magnifier-v1';
   var MAGNIFY_SIZES = { S: 1, M: 1.5, L: 2 }; // multipliers on the base lens
   var magnifySize = 'L'; // default: the biggest lens
@@ -3049,7 +3049,7 @@
   }
 
   function setMagnifyZoom(next) {
-    // Clamp to the range and snap to the 0.25x step; the lens (if
+    // Clamp to the range and snap to the 0.1x step; the lens (if
     // visible) re-renders at the new zoom right away.
     var z = clampNum(Math.round(next / MAGNIFY_STEP) * MAGNIFY_STEP, MAGNIFY_MIN, MAGNIFY_MAX);
     z = Math.round(z * 100) / 100;
@@ -3084,7 +3084,11 @@
 
   function loadMagnifierPrefs() {
     var p = lsGet(MAGNIFY_PREFS_KEY) || {};
-    var z = (typeof p.zoom === 'number' && isFinite(p.zoom)) ? p.zoom : MAGNIFY;
+    // In range: keep the visitor's zoom (snapped to the 0.1x step).
+    // Out of range — e.g. 3.25x saved under the old 1.5–5x range —
+    // fall back to the default instead of clamping to a bound, so an
+    // old preference never silently becomes the strongest zoom.
+    var z = (typeof p.zoom === 'number' && isFinite(p.zoom) && p.zoom >= MAGNIFY_MIN && p.zoom <= MAGNIFY_MAX) ? p.zoom : MAGNIFY;
     MAGNIFY = clampNum(Math.round(z / MAGNIFY_STEP) * MAGNIFY_STEP, MAGNIFY_MIN, MAGNIFY_MAX);
     MAGNIFY = Math.round(MAGNIFY * 100) / 100;
     var val = $('magnifyZoomVal');
