@@ -115,13 +115,30 @@ img { max-width: 100%; display: block; }
   pointer-events: none; z-index: 5;
 }
 .sheet-lens[hidden] { display: none; }
+/* Lens sizes: S is the base (180px desktop, 120px phones), M is x1.5,
+ * L is x2 and the default. The JS reads the rendered size
+ * (offsetWidth), so the geometry follows whichever class is on. */
+.sheet-lens.lens-m { width: 270px; height: 270px; }
+.sheet-lens.lens-l { width: 360px; height: 360px; }
 /* Phones: the sheet is short (a wide sheet is ~180px tall at 390px),
  * so a 180px lens would fill it entirely and the touch lift could
  * never show — shrink the lens so it can sit above the finger. The
  * JS reads the rendered size (offsetWidth), so this stays in sync. */
 @media (max-width: 719px) {
   .sheet-lens { width: 120px; height: 120px; }
+  .sheet-lens.lens-m { width: 180px; height: 180px; }
+  .sheet-lens.lens-l { width: 240px; height: 240px; }
 }
+/* Magnifier controls: only visible while magnify mode is on. A
+ * compact row in the reader tools — zoom stepper plus S/M/L lens
+ * sizes. The [hidden] rule matters: .reader-tools is flex, and a
+ * plain display:flex on this div would override the UA hiding. */
+.magnify-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.magnify-controls[hidden] { display: none; }
+.magnify-ctl { display: inline-flex; gap: 6px; align-items: center; }
+.magnify-ctl-label { color: var(--muted); font-size: 0.9rem; }
+#magnifyZoomVal { min-width: 3.2em; text-align: center; font-variant-numeric: tabular-nums; }
+.magnify-size button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 #magnifyBtn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 #setImg:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .reader-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }

@@ -2787,6 +2787,17 @@
 
   $('zoomBtn').addEventListener('click', function () { openReaderImage(); });
   $('magnifyBtn').addEventListener('click', function () { setMagnifyMode(!state.magnifyMode); });
+  // Magnifier controls (visible only while the mode is on): the zoom
+  // stepper and the S/M/L lens sizes. Delegated on the row so the
+  // buttons need no per-button binding.
+  var magCtl = $('magnifyControls');
+  if (magCtl) magCtl.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!t) return;
+    if (t.id === 'magnifyZoomDec') setMagnifyZoom(MAGNIFY - MAGNIFY_STEP);
+    else if (t.id === 'magnifyZoomInc') setMagnifyZoom(MAGNIFY + MAGNIFY_STEP);
+    else if (t.getAttribute('data-mag-size')) applyMagnifierSize(t.getAttribute('data-mag-size'));
+  });
   $('setImg').addEventListener('click', function () { if (state.magnifyMode) return; openReaderImage(); });
   $('setImg').addEventListener('keydown', function (e) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!state.magnifyMode) openReaderImage(); }
@@ -2947,15 +2958,23 @@
 
   /* ---------- sheet magnifier (Amazon-style lens) ---------- */
   /* A circular lens follows the pointer over the sheet image and shows
-   * the same sheet at 2.5x, so a detail can be inspected without
+   * the same sheet at 3.25x, so a detail can be inspected without
    * opening the fullscreen lightbox. The lens reuses the sheet src
    * already loaded in #setImg — no second download. Desktop: hover
    * shows it; a plain click still opens the lightbox. Touch: the
    * Magnify button toggles the mode, then a finger drag moves the
    * lens (lifted above the finger so it stays visible) and taps do
-   * not open the lightbox until the mode is off. */
-  var MAGNIFY = 2.5;
-  var LENS_D = 180;
+   * not open the lightbox until the mode is off. While the mode is
+   * on, #magnifyControls offers a zoom stepper (1.5x–5x) and lens
+   * sizes S/M/L; the visitor's choices persist per device in
+   * localStorage under MAGNIFY_PREFS_KEY. */
+  var MAGNIFY = 3.25; // default zoom; the stepper moves it 1.5x–5x
+  var MAGNIFY_MIN = 1.5, MAGNIFY_MAX = 5, MAGNIFY_STEP = 0.25;
+  var MAGNIFY_PREFS_KEY = 'sutekka-magnifier-v1';
+  var MAGNIFY_SIZES = { S: 1, M: 1.5, L: 2 }; // multipliers on the base lens
+  var magnifySize = 'L'; // default: the biggest lens
+  var lastLensPos = null; // last {x, y, lift} shown, so a zoom/size change re-renders the lens
+  var LENS_D = 180; // base (S) lens diameter on desktop; 120px on phones, see styles.css
   var LENS_R = LENS_D / 2;
   var LENS_LIFT = 90; // touch: lens centre sits this far above the finger
   var magnifyDrag = false;
@@ -2966,10 +2985,14 @@
    * displayed image size, natW/H the sheet's natural size, px/py the
    * pointer in displayed-image coords, liftY the lens-centre offset
    * (0 for a mouse, -LENS_LIFT for a finger), lensD the rendered lens
-   * diameter (180px desktop, 120px on phones — see styles.css). The
-   * zoomed view stays centred on the pointer, clamped so the lens
-   * never shows blank background; the lens itself stays inside the
-   * displayed image. */
+   * diameter (base 180px desktop, 120px on phones, x1.5 for M, x2 for
+   * L — see styles.css). The zoomed view stays centred on the
+   * pointer, clamped so the lens never shows blank background; the
+   * lens itself stays inside the displayed image — when the lens is
+   * bigger than the sheet (L on a phone: 240px lens, ~180px sheet)
+   * it pins to the image's top-left and only the zoomed content
+   * inside it moves. Zoom comes from the MAGNIFY global, so the
+   * stepper changes it live. */
   function magnifierLens(rectW, rectH, natW, natH, px, py, liftY, lensD) {
     if (!rectW || !rectH || !natW || !natH) return null;
     var d = lensD || LENS_D, r = d / 2;
@@ -2999,6 +3022,7 @@
     lens.hidden = false;
     var m = magnifierLens(rect.width, rect.height, img.naturalWidth, img.naturalHeight, clientX - rect.left, clientY - rect.top, liftY, lens.offsetWidth || LENS_D);
     if (!m) { lens.hidden = true; return false; }
+    lastLensPos = { x: clientX, y: clientY, lift: liftY || 0 };
     lens.style.backgroundImage = 'url("' + src + '")';
     lens.style.backgroundSize = m.bgW + 'px ' + m.bgH + 'px';
     lens.style.backgroundPosition = m.bgX + 'px ' + m.bgY + 'px';
@@ -3012,17 +3036,83 @@
     if (lens) lens.hidden = true;
   }
 
+  function refreshLens() {
+    // Re-render the lens at its last position after a zoom/size change.
+    var lens = $('sheetLens');
+    if (lens && !lens.hidden && lastLensPos) showLensAt(lastLensPos.x, lastLensPos.y, lastLensPos.lift);
+  }
+
+  function magnifierZoomText(z) { return (Math.round(z * 100) / 100) + '×'; }
+
+  function saveMagnifierPrefs() {
+    lsSet(MAGNIFY_PREFS_KEY, { zoom: MAGNIFY, size: magnifySize });
+  }
+
+  function setMagnifyZoom(next) {
+    // Clamp to the range and snap to the 0.25x step; the lens (if
+    // visible) re-renders at the new zoom right away.
+    var z = clampNum(Math.round(next / MAGNIFY_STEP) * MAGNIFY_STEP, MAGNIFY_MIN, MAGNIFY_MAX);
+    z = Math.round(z * 100) / 100;
+    MAGNIFY = z;
+    var val = $('magnifyZoomVal');
+    if (val) val.textContent = magnifierZoomText(z);
+    var dec = $('magnifyZoomDec'), inc = $('magnifyZoomInc');
+    if (dec) dec.disabled = z <= MAGNIFY_MIN;
+    if (inc) inc.disabled = z >= MAGNIFY_MAX;
+    saveMagnifierPrefs();
+    refreshLens();
+  }
+
+  function applyMagnifierSize(size) {
+    if (!MAGNIFY_SIZES[size]) size = 'L';
+    magnifySize = size;
+    var lens = $('sheetLens');
+    if (lens) {
+      lens.classList.remove('lens-m', 'lens-l');
+      if (size === 'M') lens.classList.add('lens-m');
+      if (size === 'L') lens.classList.add('lens-l');
+    }
+    // The S/M/L buttons show which size is active.
+    var sizes = ['S', 'M', 'L'];
+    for (var i = 0; i < sizes.length; i++) {
+      var sb = $('magnifySize' + sizes[i]);
+      if (sb) sb.setAttribute('aria-pressed', sizes[i] === size ? 'true' : 'false');
+    }
+    saveMagnifierPrefs();
+    refreshLens();
+  }
+
+  function loadMagnifierPrefs() {
+    var p = lsGet(MAGNIFY_PREFS_KEY) || {};
+    var z = (typeof p.zoom === 'number' && isFinite(p.zoom)) ? p.zoom : MAGNIFY;
+    MAGNIFY = clampNum(Math.round(z / MAGNIFY_STEP) * MAGNIFY_STEP, MAGNIFY_MIN, MAGNIFY_MAX);
+    MAGNIFY = Math.round(MAGNIFY * 100) / 100;
+    var val = $('magnifyZoomVal');
+    if (val) val.textContent = magnifierZoomText(MAGNIFY);
+    var dec = $('magnifyZoomDec'), inc = $('magnifyZoomInc');
+    if (dec) dec.disabled = MAGNIFY <= MAGNIFY_MIN;
+    if (inc) inc.disabled = MAGNIFY >= MAGNIFY_MAX;
+    applyMagnifierSize(MAGNIFY_SIZES[p.size] ? p.size : 'L');
+  }
+
   function setMagnifyMode(on) {
     state.magnifyMode = !!on;
     magnifyDrag = false;
     var btn = $('magnifyBtn');
     if (btn) btn.setAttribute('aria-pressed', state.magnifyMode ? 'true' : 'false');
+    var controls = $('magnifyControls');
+    if (controls) controls.hidden = !state.magnifyMode;
     // While the mode is on, a finger drag moves the lens instead of
     // scrolling the page; off restores the stage's normal panning.
     var stage = $('stage');
     if (stage) stage.style.touchAction = state.magnifyMode ? 'none' : '';
     if (!state.magnifyMode) hideLens();
   }
+
+  // Apply the visitor's saved zoom/size now: this must run after the
+  // magnifier vars above are assigned (init runs top to bottom, and
+  // the wiring further up executes before this section).
+  loadMagnifierPrefs();
 
   /* The reader's sheet image opens fullscreen in the image lightbox.
    * Both the Zoom in button and a click (or Enter/Space) on the sheet
@@ -3388,11 +3478,11 @@
     var menu = e.target && e.target.closest ? e.target.closest('.user-menu') : null;
     if (!menu) document.querySelectorAll('details.user-menu[open]').forEach(function (d) { d.open = false; });
     // Magnify mode: a tap outside the sheet (and not on the Magnify
-    // button itself) exits the mode. A tap on the sheet neither opens
-    // the lightbox nor exits while the mode is on.
+    // button or its controls) exits the mode. A tap on the sheet
+    // neither opens the lightbox nor exits while the mode is on.
     if (state.magnifyMode) {
       var t2 = e.target;
-      var inStage = t2 && t2.closest ? (t2.closest('#stage') || t2.closest('#magnifyBtn')) : false;
+      var inStage = t2 && t2.closest ? (t2.closest('#stage') || t2.closest('#magnifyBtn') || t2.closest('#magnifyControls')) : false;
       if (!inStage) setMagnifyMode(false);
     }
     // closest('button'): the buttons contain <i> icons, and a tap on the

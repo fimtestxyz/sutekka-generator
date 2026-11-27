@@ -3,7 +3,7 @@
 // then drives the lens:
 //
 //  - a circular lens follows the pointer over #setImg and shows the
-//    same sheet at 2.5x; the zoomed view stays centred on the pointer
+//    same sheet at 3.25x; the zoomed view stays centred on the pointer
 //    and is clamped so the lens never shows blank background
 //  - desktop hover shows/tracks/hides it; a plain click still opens
 //    the fullscreen lightbox
@@ -11,6 +11,9 @@
 //    the lens (lifted above the finger), taps do not open the
 //    lightbox while the mode is on
 //  - Escape, or a tap outside the sheet, exits the mode
+//  - while the mode is on, #magnifyControls offers a zoom stepper
+//    (1.5x–5x, 0.25x steps) and S/M/L lens sizes, persisted per
+//    device in localStorage under 'sutekka-magnifier-v1'
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import vm from "node:vm";
@@ -317,7 +320,7 @@ function closeAllLayers(app) {
 }
 
 describe("magnifier lens geometry (mouse hover, 800px display of a 1600px sheet)", () => {
-  it("centres the 2.5x view on the pointer", async () => {
+  it("centres the 3.25x view on the pointer", async () => {
     const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
     await app.flush();
     rigSheet(app);
@@ -326,8 +329,8 @@ describe("magnifier lens geometry (mouse hover, 800px display of a 1600px sheet)
       hidden: false,
       left: "310px",
       top: "310px",
-      bgPos: "-1910px -1910px",
-      bgSize: "4000px 4000px",
+      bgPos: "-2510px -2510px",
+      bgSize: "5200px 5200px",
       bgImg: 'url("sheet.png")',
     });
   });
@@ -341,7 +344,7 @@ describe("magnifier lens geometry (mouse hover, 800px display of a 1600px sheet)
     assert.equal(l.hidden, false);
     assert.equal(l.left, "620px");
     assert.equal(l.top, "620px");
-    assert.equal(l.bgPos, "-3820px -3820px");
+    assert.equal(l.bgPos, "-5020px -5020px");
   });
 
   it("clamps at the left edge: lens at 0, zoomed view shows the edge", async () => {
@@ -352,7 +355,7 @@ describe("magnifier lens geometry (mouse hover, 800px display of a 1600px sheet)
     const l = lens(app);
     assert.equal(l.hidden, false);
     assert.equal(l.left, "0px");
-    assert.equal(l.bgPos, "0px -1910px");
+    assert.equal(l.bgPos, "0px -2510px");
   });
 
   it("mouseleave hides the lens", async () => {
@@ -366,7 +369,7 @@ describe("magnifier lens geometry (mouse hover, 800px display of a 1600px sheet)
     assert.equal(lens(app).hidden, true);
   });
 
-  it("phone-size lens (120px) lifts clear of the finger on a short sheet", async () => {
+  it("phone-size lens (120px, S) lifts clear of the finger on a short sheet", async () => {
     const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
     await app.flush();
     // A wide sheet at phone width: 360x180 displayed, 3600x1800 natural.
@@ -384,10 +387,42 @@ describe("magnifier lens geometry (mouse hover, 800px display of a 1600px sheet)
       hidden: false,
       left: "120px",
       top: "0px",
-      bgPos: "-4440px -2190px",
-      bgSize: "9000px 4500px",
+      bgPos: "-5790px -2865px",
+      bgSize: "11700px 5850px",
       bgImg: 'url("sheet.png")',
     });
+  });
+
+  it("default L lens (240px) on a 180px-tall phone sheet pins to the corner and still shows the right region", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    // Same wide sheet, but the lens (240px) is taller than the sheet
+    // (180px): left/top clamp to 0 and only the zoomed content moves.
+    const img = app.doc.getElementById("setImg");
+    img.naturalWidth = 3600;
+    img.naturalHeight = 1800;
+    img.offsetLeft = 0;
+    img.offsetTop = 0;
+    img.getBoundingClientRect = () => ({ left: 0, top: 0, width: 360, height: 180 });
+    app.doc.getElementById("sheetLens").offsetWidth = 240;
+    fire(app.doc.getElementById("magnifyBtn"), "click", {});
+    fire(img, "pointerdown", { pointerType: "touch", clientX: 180, clientY: 90, preventDefault() {} });
+    assert.deepEqual(lens(app), {
+      hidden: false,
+      left: "60px",
+      top: "0px",
+      bgPos: "-5730px -2805px",
+      bgSize: "11700px 5850px",
+      bgImg: 'url("sheet.png")',
+    });
+    // Bottom-right corner: the lens pins to the image's far edge and
+    // the zoomed view clamps to the sheet's far edge — no blank.
+    fire(img, "pointermove", { pointerType: "touch", clientX: 350, clientY: 170 });
+    const l = lens(app);
+    assert.equal(l.hidden, false);
+    assert.equal(l.left, "120px");
+    assert.equal(l.top, "0px");
+    assert.equal(l.bgPos, "-11255px -5405px");
   });
 
   it("no lens before the sheet has a natural size", async () => {
@@ -456,7 +491,7 @@ describe("Magnify mode (touch)", () => {
     assert.equal(l.hidden, false);
     assert.equal(l.left, "310px");
     assert.equal(l.top, "220px"); // 400 - 90 (lift) - 90 (radius)
-    assert.equal(l.bgPos, "-1910px -1910px"); // zoomed view still centred on the finger
+    assert.equal(l.bgPos, "-2510px -2510px"); // zoomed view still centred on the finger
     fire(img, "pointermove", { pointerType: "touch", clientX: 600, clientY: 200 });
     l = lens(app);
     assert.equal(l.left, "510px");
@@ -526,6 +561,157 @@ describe("Magnify mode (touch)", () => {
     (app.winHandlers.hashchange || []).forEach((fn) => fn({}));
     await app.flush();
     assert.equal(magnifyPressed(app), "false");
+    assert.equal(lens(app).hidden, true);
+  });
+});
+
+describe("magnifier zoom + lens size controls", () => {
+  const PREFS_KEY = "sutekka-magnifier-v1";
+  const zoomVal = (app) => app.doc.getElementById("magnifyZoomVal").textContent;
+  const sizePressed = (app, s) => app.doc.getElementById("magnifySize" + s).getAttribute("aria-pressed");
+  const storedPrefs = (app) => JSON.parse(app.storage.getItem(PREFS_KEY) || "{}");
+  const controlsHidden = (app) => app.doc.getElementById("magnifyControls").hidden;
+  // The stub DOM carries no HTML attributes, so rig the control
+  // buttons' ids / data attributes before firing their clicks.
+  const rigControls = (app) => {
+    for (const s of ["S", "M", "L"]) {
+      const el = app.doc.getElementById("magnifySize" + s);
+      el.id = "magnifySize" + s;
+      el.setAttribute("data-mag-size", s);
+    }
+    app.doc.getElementById("magnifyZoomDec").id = "magnifyZoomDec";
+    app.doc.getElementById("magnifyZoomInc").id = "magnifyZoomInc";
+  };
+  const fireControl = (app, el) => {
+    const target = { closest: (sel) => (sel === "button" ? el : null) };
+    fire(app.doc.getElementById("magnifyControls"), "click", { target });
+  };
+
+  it("defaults to 3.25x and size L, persisted on first load", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    assert.equal(zoomVal(app), "3.25×");
+    assert.equal(sizePressed(app, "L"), "true");
+    assert.equal(sizePressed(app, "S"), "false");
+    assert.equal(sizePressed(app, "M"), "false");
+    assert.deepEqual(storedPrefs(app), { zoom: 3.25, size: "L" });
+  });
+
+  it("zoom stepper moves in 0.25x steps and clamps at 1.5x and 5x", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    rigControls(app);
+    const inc = app.doc.getElementById("magnifyZoomInc");
+    const dec = app.doc.getElementById("magnifyZoomDec");
+    fireControl(app, inc);
+    assert.equal(zoomVal(app), "3.5×");
+    assert.equal(storedPrefs(app).zoom, 3.5);
+    fireControl(app, dec);
+    fireControl(app, dec);
+    assert.equal(zoomVal(app), "3×");
+    for (let i = 0; i < 8; i++) fireControl(app, inc);
+    assert.equal(zoomVal(app), "5×");
+    assert.equal(inc.disabled, true);
+    fireControl(app, inc);
+    assert.equal(zoomVal(app), "5×");
+    for (let i = 0; i < 14; i++) fireControl(app, dec);
+    assert.equal(zoomVal(app), "1.5×");
+    assert.equal(dec.disabled, true);
+    fireControl(app, dec);
+    assert.equal(zoomVal(app), "1.5×");
+    assert.equal(storedPrefs(app).zoom, 1.5);
+  });
+
+  it("a zoom change re-renders a visible lens at the new zoom", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    rigSheet(app);
+    rigControls(app);
+    fire(app.doc.getElementById("magnifyBtn"), "click", {});
+    const img = app.doc.getElementById("setImg");
+    fire(img, "pointerdown", { pointerType: "touch", clientX: 400, clientY: 400, preventDefault() {} });
+    assert.equal(lens(app).bgSize, "5200px 5200px");
+    fireControl(app, app.doc.getElementById("magnifyZoomInc"));
+    const l = lens(app);
+    assert.equal(l.bgSize, "5600px 5600px");
+    assert.equal(l.bgPos, "-2710px -2710px");
+    assert.equal(l.left, "310px");
+  });
+
+  it("size buttons switch the active size and persist it", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    rigControls(app);
+    fireControl(app, app.doc.getElementById("magnifySizeM"));
+    assert.equal(sizePressed(app, "M"), "true");
+    assert.equal(sizePressed(app, "L"), "false");
+    assert.equal(storedPrefs(app).size, "M");
+    fireControl(app, app.doc.getElementById("magnifySizeS"));
+    assert.equal(sizePressed(app, "S"), "true");
+    assert.equal(sizePressed(app, "M"), "false");
+    assert.equal(storedPrefs(app).size, "S");
+  });
+
+  it("desktop L lens (360px) geometry follows the rendered size", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    rigSheet(app);
+    app.doc.getElementById("sheetLens").offsetWidth = 360;
+    fire(app.doc.getElementById("setImg"), "pointermove", { pointerType: "mouse", clientX: 400, clientY: 400 });
+    assert.deepEqual(lens(app), {
+      hidden: false,
+      left: "220px",
+      top: "220px",
+      bgPos: "-2420px -2420px",
+      bgSize: "5200px 5200px",
+      bgImg: 'url("sheet.png")',
+    });
+  });
+
+  it("stored prefs load on boot; invalid values fall back to defaults", async () => {
+    const seeded = boot({
+      hash: "#/set/riemann-rashomon",
+      indexSets: [TEST_SET],
+      seedStorage: { [PREFS_KEY]: JSON.stringify({ zoom: 2, size: "M" }) },
+    });
+    await seeded.flush();
+    assert.equal(zoomVal(seeded), "2×");
+    assert.equal(sizePressed(seeded, "M"), "true");
+    assert.equal(sizePressed(seeded, "L"), "false");
+    const bad = boot({
+      hash: "#/set/riemann-rashomon",
+      indexSets: [TEST_SET],
+      seedStorage: { [PREFS_KEY]: JSON.stringify({ zoom: 99, size: "X" }) },
+    });
+    await bad.flush();
+    assert.equal(zoomVal(bad), "5×");
+    assert.equal(sizePressed(bad, "L"), "true");
+    const junk = boot({
+      hash: "#/set/riemann-rashomon",
+      indexSets: [TEST_SET],
+      seedStorage: { [PREFS_KEY]: "not json{" },
+    });
+    await junk.flush();
+    assert.equal(zoomVal(junk), "3.25×");
+    assert.equal(sizePressed(junk, "L"), "true");
+  });
+
+  it("controls show only while magnify mode is on, and tapping them does not exit the mode", async () => {
+    const app = boot({ hash: "#/set/riemann-rashomon", indexSets: [TEST_SET] });
+    await app.flush();
+    rigSheet(app);
+    // The stub ships hidden=false; the real page ships the row hidden.
+    app.doc.getElementById("magnifyControls").hidden = true;
+    assert.equal(controlsHidden(app), true);
+    fire(app.doc.getElementById("magnifyBtn"), "click", {});
+    assert.equal(controlsHidden(app), false);
+    closeAllLayers(app);
+    const onControls = { closest: (sel) => (sel === "#magnifyControls" ? {} : null) };
+    fireDoc(app, "click", { target: onControls });
+    assert.equal(magnifyPressed(app), "true");
+    assert.equal(controlsHidden(app), false);
+    fire(app.doc.getElementById("magnifyBtn"), "click", {});
+    assert.equal(controlsHidden(app), true);
     assert.equal(lens(app).hidden, true);
   });
 });

@@ -22,7 +22,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=34">
+<link rel="stylesheet" href="styles.css?v=35">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
@@ -85,6 +85,18 @@
   <div class="reader-tools">
     <button id="zoomBtn"><i class="fi fi-br-zoom-in"></i> Zoom in</button>
     <button id="magnifyBtn" aria-pressed="false"><i class="fi fi-br-search"></i> Magnify</button>
+    <div id="magnifyControls" class="magnify-controls" hidden>
+      <span class="magnify-ctl"><span class="magnify-ctl-label">Zoom</span>
+        <button type="button" id="magnifyZoomDec" aria-label="Less zoom">−</button>
+        <span id="magnifyZoomVal" aria-live="polite">3.25×</span>
+        <button type="button" id="magnifyZoomInc" aria-label="More zoom">+</button></span>
+      <span class="magnify-ctl"><span class="magnify-ctl-label">Lens</span>
+        <span class="magnify-size" role="group" aria-label="Lens size">
+          <button type="button" id="magnifySizeS" data-mag-size="S" aria-pressed="false">S</button>
+          <button type="button" id="magnifySizeM" data-mag-size="M" aria-pressed="false">M</button>
+          <button type="button" id="magnifySizeL" data-mag-size="L" aria-pressed="true">L</button>
+        </span></span>
+    </div>
     <button id="shareBtn"><i class="fi fi-br-share"></i> Share this set</button>
     <button id="bookmarkBtn" aria-pressed="false"><i class="fi fi-br-bookmark"></i> Bookmark</button>
     <button id="buySetBtn"><i class="fi fi-br-credit-card"></i> Buy this set</button>
@@ -203,7 +215,7 @@
   <p>Sticker Showcase · gobblemon.com — current affairs, in stickers. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=41" defer></script>
+<script src="app.js?v=42" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>
