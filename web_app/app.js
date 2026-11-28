@@ -34,7 +34,11 @@
     sets: [],
     series: [],
     batch: 'all',
-    lang: 'all',
+    lang: 'all', // CONTENT filter: which sets the grid shows (all / zh / en)
+    uiLang: 'en', // UI language: which language the chrome speaks (en / zh).
+    // The two "languages" are different things that share a word.
+    // They never share a variable, a localStorage key, or a toggle:
+    // state.lang is the content filter, state.uiLang is the UI.
     topic: null,
     q: '',
     shown: PAGE_SIZE,
@@ -62,6 +66,126 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var homeEl = $('home'), readerEl = $('reader'), aboutEl = $('about'), loginEl = $('login'), profileEl = $('profile'), bookmarksEl = $('bookmarks'), collectionsEl = $('collections'), galleryEl = $('gallery'), downloadEl = $('download'), adminEl = $('admin');
+
+  /* ---------- bilingual UI (EN / 中文) ---------- */
+  // The strings live in data/i18n/en.json + zh.json (flat
+  // dictionaries, identical key sets, dotted keys — the same
+  // pattern as the Gobblemon hub and the Sixth Panel comics site).
+  // applyLang() re-renders every element carrying a data-i18n*
+  // attribute, then re-renders the dynamic text via
+  // renderDynamicText(). The language resolves, in order:
+  //   1. ?lang=en|zh — a one-time override, then persisted
+  //   2. localStorage "sutekka-ui-lang-v1"
+  //   3. navigator.language (zh-* → zh, anything else → en)
+  // UI-only: the sticker art, the columns and the set/sticker
+  // titles stay Chinese. The admin (#/kangle) stays English-only,
+  // and so do the transactional/legal strings (the refund-policy
+  // line, the GST line, the invoice copy). The content filter
+  // (state.lang) is untouched — an English UI does NOT narrow the
+  // catalogue; the reader chooses that with the All / 中文 / EN
+  // filter.
+  var LS_UI_LANG_KEY = 'sutekka-ui-lang-v1';
+  var dicts = { en: null, zh: null };
+  function t(key) {
+    if (dicts[state.uiLang] && dicts[state.uiLang][key] != null) return dicts[state.uiLang][key];
+    if (dicts.en && dicts.en[key] != null) return dicts.en[key];
+    return key;
+  }
+  function applyLang(lang) {
+    // Both dictionaries failed to load (offline on first visit):
+    // leave the page in its static English instead of writing
+    // dictionary keys into the chrome.
+    if (!dicts.en && !dicts.zh) return;
+    state.uiLang = lang === 'zh' ? 'zh' : 'en';
+    document.documentElement.lang = state.uiLang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('meta.title');
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    });
+    document.querySelectorAll('[data-i18n-alt]').forEach(function (el) {
+      el.alt = t(el.getAttribute('data-i18n-alt'));
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+    });
+    document.querySelectorAll('[data-i18n-content]').forEach(function (el) {
+      el.setAttribute('content', t(el.getAttribute('data-i18n-content')));
+    });
+    document.querySelectorAll('.ui-lang-toggle [data-uilang]').forEach(function (btn) {
+      var active = btn.getAttribute('data-uilang') === state.uiLang;
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      btn.classList.toggle('active', active);
+    });
+    renderDynamicText();
+  }
+  function resolveLang() {
+    var q = null;
+    try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    if (q === 'en' || q === 'zh') {
+      try { localStorage.setItem(LS_UI_LANG_KEY, q); } catch (e) {}
+      return q;
+    }
+    try {
+      var saved = localStorage.getItem(LS_UI_LANG_KEY);
+      if (saved === 'en' || saved === 'zh') return saved;
+    } catch (e) {}
+    var nav = (navigator.language || 'en').toLowerCase();
+    return nav.indexOf('zh') === 0 ? 'zh' : 'en';
+  }
+  function setLang(lang) {
+    try { localStorage.setItem(LS_UI_LANG_KEY, lang); } catch (e) {}
+    applyLang(lang);
+  }
+  function loadDicts() {
+    return Promise.all(['en', 'zh'].map(function (lang) {
+      return fetch('data/i18n/' + lang + '.json', { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .then(function (d) { dicts[lang] = d; })
+        .catch(function () { /* stay in static English for this language */ });
+    }));
+  }
+  // Re-render the dynamic text after a language switch, without
+  // re-fetching what is already on the page where that is cheap:
+  // the home grid rebuilds from state, the reader re-opens in place
+  // (scroll position preserved), the cart drawer re-renders from
+  // local state, and the signed-in views re-render from their
+  // (cached) data. The download view re-renders from its cached
+  // order only — renderDownload() would restart the lookup poll
+  // and reset its 404-retry counter, so it is never called here.
+  // The admin is deliberately NOT re-rendered — it stays English
+  // in v1.
+  function renderDynamicText() {
+    renderChips();
+    renderTopics();
+    renderGrid();
+    renderAuthArea();
+    renderCartButtons();
+    if (!readerEl.hidden && state.currentSlug) {
+      var y = window.scrollY || 0;
+      openSet(state.currentSlug);
+      window.scrollTo(0, y);
+      if (state.currentSticker) {
+        var s = state.currentSticker;
+        renderStickerLike(lsGet(LS_LIKE_COUNTS_KEY)[s.id] || 0, Boolean(lsGet(LS_LIKED_KEY)[s.id]));
+        renderStickerBookmark(Boolean(lsGet(LS_BOOKMARKED_KEY)[s.id]));
+        renderStickerBuyBtn();
+        renderCartButtons();
+      }
+    }
+    if ($('cartDrawer').classList.contains('open')) renderCart();
+    if (!bookmarksEl.hidden) renderBookmarks();
+    if (!collectionsEl.hidden) renderCollections();
+    if (!galleryEl.hidden) renderGallery();
+    if (!profileEl.hidden) renderProfile();
+    if (!loginEl.hidden) renderLogin();
+    if (!downloadEl.hidden && state.downloadOrder) renderOrderDownload(state.downloadOrder, state.downloadSessionId);
+  }
 
   /* ---------- analytics (GA4) + engagement ---------- */
 
@@ -133,7 +257,7 @@
     var el = $('authArea');
     if (!el) return;
     var u = state.session;
-    if (!u) { el.innerHTML = '<a href="#/login"><i class="fi fi-br-user"></i><span class="nav-label">Sign in</span></a>'; return; }
+    if (!u) { el.innerHTML = '<a href="#/login"><i class="fi fi-br-user"></i><span class="nav-label">' + t('nav.signIn') + '</span></a>'; return; }
     // The user area is its own block, separate from the main nav: an
     // avatar button that opens a dropdown (Profile / Bookmarks /
     // Collections / Sign out) instead of three same-weight links.
@@ -142,13 +266,13 @@
       : '<span class="auth-avatar auth-avatar-fallback" aria-hidden="true">' + esc((u.name || u.email || '?').charAt(0).toUpperCase()) + '</span>';
     el.innerHTML =
       '<details class="user-menu">' +
-      '<summary>' + avatar + '<span class="auth-name">' + esc(u.name || u.email || 'Signed in') + '</span><i class="fi fi-br-angle-down"></i></summary>' +
+      '<summary>' + avatar + '<span class="auth-name">' + esc(u.name || u.email || t('auth.signedIn')) + '</span><i class="fi fi-br-angle-down"></i></summary>' +
       '<div class="user-menu-list">' +
-      '<a href="#/profile">Profile</a>' +
-      '<a href="#/bookmarks">Bookmarks</a>' +
-      '<a href="#/collections">Collections</a>' +
+      '<a href="#/profile">' + t('auth.profile') + '</a>' +
+      '<a href="#/bookmarks">' + t('auth.bookmarks') + '</a>' +
+      '<a href="#/collections">' + t('auth.collections') + '</a>' +
       '<hr>' +
-      '<a href="/api/auth/signout">Sign out</a>' +
+      '<a href="/api/auth/signout">' + t('auth.signOut') + '</a>' +
       '</div></details>';
   }
 
@@ -159,29 +283,29 @@
     if (u) {
       body.innerHTML = '';
       var p = document.createElement('p');
-      p.textContent = 'Signed in as ' + (u.name || u.email || '') + '.';
+      p.textContent = t('login.signedInAs').replace('{name}', u.name || u.email || '');
       body.appendChild(p);
       var out = document.createElement('a');
       out.href = '/api/auth/signout';
       out.className = 'btn';
-      out.textContent = 'Sign out';
+      out.textContent = t('auth.signOut');
       body.appendChild(out);
       return;
     }
     if (state.authAvailable === null) {
-      body.innerHTML = '<p>Checking sign-in…</p>';
+      body.innerHTML = '<p>' + t('login.checking') + '</p>';
       return;
     }
     if (state.authAvailable === false) {
-      body.innerHTML = '<p>Sign-in is not set up yet — the site works fine without an account. Likes and comments save on this device only for now.</p>';
+      body.innerHTML = '<p>' + t('login.notSetup') + '</p>';
       return;
     }
-    body.innerHTML = '<p>Sign in to like, comment and bookmark sticker sets. Browsing works without an account.</p>' +
+    body.innerHTML = '<p>' + t('login.intro') + '</p>' +
       '<form id="googleSigninForm" method="POST" action="/api/auth/signin/google">' +
       '<input type="hidden" name="csrfToken" value="">' +
       '<input type="hidden" name="callbackUrl" value="/">' +
-      '<button class="btn" type="submit" disabled>Continue with Google</button></form>' +
-      '<p class="meta">Google is only used to identify you here — no posts, no contacts. Sign-in asks for your Google profile and email, nothing else.</p>';
+      '<button class="btn" type="submit" disabled>' + t('login.google') + '</button></form>' +
+      '<p class="meta">' + t('login.googleNote') + '</p>';
     // Auth.js v5 signs in by POST with a CSRF token (a plain GET link to
     // /api/auth/signin/google is not a sign-in). Fetch the token first;
     // the fetch also sets the CSRF cookie the POST is checked against.
@@ -209,21 +333,21 @@
     var body = $('profileBody');
     if (!body) return;
     if (!state.session) {
-      body.innerHTML = '<p>Sign in first to edit your profile.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      body.innerHTML = '<p>' + t('profile.signInFirst') + '</p><p><a class="btn" href="#/login">' + t('nav.signIn') + '</a></p>';
       return;
     }
     if (state.authAvailable === false) {
-      body.innerHTML = '<p>Profile editing is not set up yet — the site works fine without an account.</p>';
+      body.innerHTML = '<p>' + t('profile.notSetup') + '</p>';
       return;
     }
-    body.innerHTML = '<p>Loading…</p>';
+    body.innerHTML = '<p>' + t('common.loading') + '</p>';
     Promise.all([
       profileFetch('/api/me/profile').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }),
       profileFetch('/api/me/preferences').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     ]).then(function (res) {
       renderProfileForms(res[0], res[1]);
     }).catch(function () {
-      body.innerHTML = '<p>Could not load your profile. Check your connection and reload.</p>';
+      body.innerHTML = '<p>' + t('profile.loadFailed') + '</p>';
     });
   }
 
@@ -237,19 +361,19 @@
     body.innerHTML =
       '<form id="profileForm" class="comment-form" onsubmit="return false;">' +
       '<img class="profile-deco" src="icons/smile.png" alt="" width="512" height="512">' +
-      '<h2>Profile</h2>' +
+      '<h2>' + t('profile.heading') + '</h2>' +
       (avatar ? '<p><img class="profile-avatar" src="' + esc(avatar) + '" alt=""></p>' : '') +
-      '<label class="field"><span>Name</span><input id="profileName" type="text" maxlength="100" value="' + esc(u.name || '') + '" autocomplete="nickname"></label>' +
-      '<label class="field"><span>Bio (max 280 characters)</span><textarea id="profileBio" rows="3" maxlength="280">' + esc(p.bio || '') + '</textarea></label>' +
-      '<label class="field"><span>Custom avatar URL (https:// — leave empty to use your Google photo)</span><input id="profileAvatar" type="text" inputmode="url" maxlength="2048" value="' + esc(p.customAvatar || '') + '" autocomplete="off"></label>' +
-      '<button type="submit">Save profile</button>' +
+      '<label class="field"><span>' + t('profile.name') + '</span><input id="profileName" type="text" maxlength="100" value="' + esc(u.name || '') + '" autocomplete="nickname"></label>' +
+      '<label class="field"><span>' + t('profile.bio') + '</span><textarea id="profileBio" rows="3" maxlength="280">' + esc(p.bio || '') + '</textarea></label>' +
+      '<label class="field"><span>' + t('profile.avatar') + '</span><input id="profileAvatar" type="text" inputmode="url" maxlength="2048" value="' + esc(p.customAvatar || '') + '" autocomplete="off"></label>' +
+      '<button type="submit">' + t('profile.save') + '</button>' +
       '<span id="profileMsg" class="comment-msg" aria-live="polite"></span>' +
       '</form>' +
       '<form id="prefsForm" class="comment-form" onsubmit="return false;">' +
-      '<h2>Keyword preferences</h2>' +
-      '<p class="meta">One keyword per line, optionally with =weight (0–2, default 1), e.g. <code>AI=1.5</code>. Stored on your account for future personalisation — the listing does not use them yet.</p>' +
-      '<label class="field"><span>Keywords</span><textarea id="prefsKeywords" rows="5">' + esc(kwLines) + '</textarea></label>' +
-      '<button type="submit">Save preferences</button>' +
+      '<h2>' + t('profile.prefsHeading') + '</h2>' +
+      '<p class="meta">' + t('profile.prefsHelp') + '</p>' +
+      '<label class="field"><span>' + t('profile.keywords') + '</span><textarea id="prefsKeywords" rows="5">' + esc(kwLines) + '</textarea></label>' +
+      '<button type="submit">' + t('profile.savePrefs') + '</button>' +
       '<span id="prefsMsg" class="comment-msg" aria-live="polite"></span>' +
       '</form>';
   }
@@ -263,18 +387,18 @@
     };
     var name = $('profileName').value.trim();
     if (name) body.name = name;
-    msg.textContent = 'Saving…';
+    msg.textContent = t('profile.saving');
     profileFetch('/api/me/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (!res.ok) {
-          msg.textContent = 'Could not save: ' + ((res.d.details && res.d.details.join('; ')) || res.d.error || 'error');
+          msg.textContent = t('common.saveFailedDetails').replace('{details}', (res.d.details && res.d.details.join('; ')) || res.d.error || 'error');
           return;
         }
         if (res.d.user) { state.session = res.d.user; renderAuthArea(); }
-        msg.textContent = 'Saved.';
+        msg.textContent = t('common.saved');
       })
-      .catch(function () { msg.textContent = 'Could not save. Check your connection.'; });
+      .catch(function () { msg.textContent = t('common.saveFailed'); });
   }
 
   function parseKeywords(text) {
@@ -287,9 +411,9 @@
       var weight = 1;
       if (parts.length > 1) {
         weight = parseFloat(parts.slice(1).join('='));
-        if (isNaN(weight) || weight < 0 || weight > 2) { errors.push('Bad weight: ' + t); return; }
+        if (isNaN(weight) || weight < 0 || weight > 2) { errors.push(t('profile.badWeight').replace('{v}', t)); return; }
       }
-      if (!keyword || keyword.length > 40) { errors.push('Bad keyword: ' + t); return; }
+      if (!keyword || keyword.length > 40) { errors.push(t('profile.badKeyword').replace('{v}', t)); return; }
       seen[keyword] = weight;
     });
     var keywords = Object.keys(seen).map(function (k) { return { keyword: k, weight: seen[k] }; });
@@ -301,17 +425,17 @@
     var msg = $('prefsMsg');
     var parsed = parseKeywords($('prefsKeywords').value);
     if (parsed.errors.length) { msg.textContent = parsed.errors[0]; return; }
-    msg.textContent = 'Saving…';
+    msg.textContent = t('profile.saving');
     profileFetch('/api/me/preferences', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: parsed.keywords }) })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (!res.ok) {
-          msg.textContent = 'Could not save: ' + ((res.d.details && res.d.details.join('; ')) || res.d.error || 'error');
+          msg.textContent = t('common.saveFailedDetails').replace('{details}', (res.d.details && res.d.details.join('; ')) || res.d.error || 'error');
           return;
         }
-        msg.textContent = 'Saved.';
+        msg.textContent = t('common.saved');
       })
-      .catch(function () { msg.textContent = 'Could not save. Check your connection.'; });
+      .catch(function () { msg.textContent = t('common.saveFailed'); });
   }
 
   function lsGet(key) {
@@ -325,10 +449,10 @@
     var btn = $('likeBtn'), countEl = $('likeCount'), note = $('likeNote');
     if (!btn) return;
     state.likeCount = count;
-    btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? 'Liked' : 'Like');
+    btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? t('reader.liked') : t('reader.like'));
     btn.setAttribute('aria-pressed', String(liked));
-    countEl.textContent = count > 0 ? count + (count === 1 ? ' like' : ' likes') : 'No likes yet';
-    note.textContent = localOnly ? 'Saved on this device only.' : '';
+    countEl.textContent = count > 0 ? (count === 1 ? t('reader.likes.one') : t('reader.likes.other').replace('{n}', count)) : t('reader.noLikes');
+    note.textContent = localOnly ? t('reader.likeLocal') : '';
   }
 
   function loadLikes(slug) {
@@ -403,12 +527,12 @@
     var html = '<article class="comment" data-id="' + esc(c.id) + '" data-thread="' + esc(thread) + '">' +
       '<p class="c-head">' +
       (avatar ? '<img class="c-avatar" src="' + esc(avatar) + '" alt="">' : '') +
-      '<strong>' + esc(c.user.name || 'Anonymous') + '</strong>' +
+      '<strong>' + esc(c.user.name || t('comments.anonymous')) + '</strong>' +
       (when ? ' <span class="c-time">' + esc(when) + '</span>' : '') + '</p>' +
       '<p class="c-text">' + esc(c.content || '') + '</p>' +
       '<p class="c-actions">' +
-      (state.session ? '<button type="button" data-act="reply">Reply</button>' : '') +
-      (mine ? ' <button type="button" data-act="edit">Edit</button> <button type="button" data-act="delete">Delete</button>' : '') +
+      (state.session ? '<button type="button" data-act="reply">' + t('comments.reply') + '</button>' : '') +
+      (mine ? ' <button type="button" data-act="edit">' + t('comments.edit') + '</button> <button type="button" data-act="delete">' + t('comments.delete') + '</button>' : '') +
       '</p>';
     if (c.replies && c.replies.length) {
       html += '<div class="c-replies">' + c.replies.map(function (r) { return commentHtml(r, thread); }).join('') + '</div>';
@@ -420,21 +544,21 @@
     var list = $('commentList'), msg = $('commentMsg');
     if (!list) return;
     list.innerHTML = '';
-    if (msg) msg.textContent = 'Loading comments…';
+    if (msg) msg.textContent = t('comments.loading');
     fetch('/api/stickers/' + encodeURIComponent(slug) + '/comments', { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) {
         state.engageReady = true;
         var comments = d.comments || [];
         list.innerHTML = comments.length ? comments.map(function (c) { return commentHtml(c); }).join('') :
-          '<p class="empty"><img class="empty-icon" src="icons/chat.png" alt="" width="512" height="512">No comments yet. Be the first.</p>';
+          '<p class="empty"><img class="empty-icon" src="icons/chat.png" alt="" width="512" height="512">' + t('comments.empty') + '</p>';
         if (msg) msg.textContent = '';
       })
       .catch(function () {
         state.engageReady = false;
         list.innerHTML = '';
         if (msg) {
-          msg.textContent = 'Comments are still being set up. Check back soon.';
+          msg.textContent = t('comments.setup');
         }
       });
   }
@@ -445,7 +569,7 @@
     if (!hint) return;
     if (!threadId) { hint.hidden = true; hint.innerHTML = ''; return; }
     hint.hidden = false;
-    hint.innerHTML = 'Replying to ' + esc(name || 'this thread') + ' <button type="button" id="replyCancel">Cancel</button>';
+    hint.innerHTML = esc(t('comments.replyingTo').replace('{name}', name || t('comments.thisThread'))) + ' <button type="button" id="replyCancel">' + t('comments.replyCancel') + '</button>';
   }
 
   function postComment(e) {
@@ -463,9 +587,11 @@
       .then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
       .then(function (res) {
         if (res.status === 401) { location.hash = '#/login'; return; }
-        if (res.status === 429) { if (msg) msg.textContent = 'Slow down — too many comments too fast.'; return; }
+        if (res.status === 429) { if (msg) msg.textContent = t('comments.rateLimit'); return; }
         if ((res.status !== 200 && res.status !== 201) || !res.d.comment) {
-          if (msg) msg.textContent = 'Could not post the comment. ' + ((res.d.details && res.d.details.join('; ')) || 'Try again.');
+          if (msg) msg.textContent = (res.d.details && res.d.details.length)
+            ? t('comments.postFailedDetails').replace('{details}', res.d.details.join('; '))
+            : t('comments.failed');
           return;
         }
         var list = $('commentList');
@@ -492,10 +618,10 @@
         }
         $('commentText').value = '';
         setReplyTo(null);
-        if (msg) msg.textContent = 'Comment posted.';
+        if (msg) msg.textContent = t('comments.posted');
         gaEvent('comment_post', { slug: slug });
       })
-      .catch(function () { if (msg) msg.textContent = 'Could not post the comment. Try again.'; });
+      .catch(function () { if (msg) msg.textContent = t('comments.failed'); });
   }
 
   function handleCommentAction(btn) {
@@ -510,11 +636,11 @@
       return;
     }
     if (act === 'delete') {
-      if (!window.confirm('Delete this comment? Replies to it are deleted too.')) return;
+      if (!window.confirm(t('comments.deleteConfirm'))) return;
       fetch('/api/comments/' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin' })
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .then(function () { article.remove(); })
-        .catch(function () { var msg = $('commentMsg'); if (msg) msg.textContent = 'Could not delete the comment.'; });
+        .catch(function () { var msg = $('commentMsg'); if (msg) msg.textContent = t('comments.deleteFailed'); });
       return;
     }
     if (act === 'edit') {
@@ -529,7 +655,7 @@
     var current = textEl.textContent;
     var wrap = document.createElement('div');
     wrap.className = 'c-edit';
-    wrap.innerHTML = '<textarea rows="3" maxlength="1000"></textarea> <button type="button" data-edit="save">Save</button> <button type="button" data-edit="cancel">Cancel</button>';
+    wrap.innerHTML = '<textarea rows="3" maxlength="1000"></textarea> <button type="button" data-edit="save">' + t('comments.editSave') + '</button> <button type="button" data-edit="cancel">' + t('comments.editCancel') + '</button>';
     var area = wrap.querySelector('textarea');
     area.value = current;
     textEl.hidden = true;
@@ -550,7 +676,7 @@
         .then(function (res) {
           if (res.status !== 200 || !res.d.comment) {
             var msg = $('commentMsg');
-            if (msg) msg.textContent = 'Could not save the edit.';
+            if (msg) msg.textContent = t('comments.editFailed');
             return;
           }
           textEl.textContent = res.d.comment.content;
@@ -559,7 +685,7 @@
         })
         .catch(function () {
           var msg = $('commentMsg');
-          if (msg) msg.textContent = 'Could not save the edit.';
+          if (msg) msg.textContent = t('comments.editFailed');
         });
     });
   }
@@ -569,14 +695,14 @@
   function renderBookmarkBtn(bookmarked) {
     var btn = $('bookmarkBtn');
     if (btn) {
-      btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Saved' : 'Bookmark');
+      btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? t('reader.bookmarked') : t('reader.bookmark'));
       btn.setAttribute('aria-pressed', String(bookmarked));
       btn.setAttribute('data-bookmarked', String(bookmarked));
     }
     // The mobile bottom bar's Save button mirrors the same state.
     var m = $('mobileSaveBtn');
     if (m) {
-      m.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Saved' : 'Save');
+      m.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? t('reader.saved') : t('reader.save'));
       m.setAttribute('aria-pressed', String(bookmarked));
       m.setAttribute('data-bookmarked', String(bookmarked));
     }
@@ -634,7 +760,7 @@
         updateSavedBadges();
         if (e.message === 'signed out') return;
         var msg = $('shareMsg');
-        if (msg) { msg.textContent = 'Could not save the bookmark.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
+        if (msg) { msg.textContent = t('saved.bookmarkFailed'); setTimeout(function () { msg.textContent = ''; }, 2500); }
       });
   }
 
@@ -732,8 +858,8 @@
   function renderBookmarksList(items) {
     var body = $('bookmarksBody');
     if (!body) return;
-    var labels = { recent: 'Recent', oldest: 'Oldest', title: 'Title A–Z' };
-    var sortHtml = '<div class="sort-row" role="group" aria-label="Sort bookmarks">' +
+    var labels = { recent: t('saved.sortRecent'), oldest: t('saved.sortOldest'), title: t('saved.sortTitle') };
+    var sortHtml = '<div class="sort-row" role="group" aria-label="' + t('saved.sortBookmarksAria') + '">' +
       Object.keys(labels).map(function (s) {
         return '<button type="button" data-sort="' + s + '"' +
           (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
@@ -742,9 +868,9 @@
     var cards = (items || []).filter(function (b) { return !isStickerBookmark(b); }).map(bookmarkCardHtml).join('');
     body.innerHTML = sortHtml +
       (cards
-        ? '<p class="clear-row"><button type="button" class="text-btn" data-clear-saved="bookmarks">Clear all bookmarks</button></p><div class="grid">' + cards + '</div>'
+        ? '<p class="clear-row"><button type="button" class="text-btn" data-clear-saved="bookmarks">' + t('saved.clearBookmarks') + '</button></p><div class="grid">' + cards + '</div>'
         : '<div class="empty-saved">' +
-        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit peeking over a bookmark">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="' + t('saved.emptyBookmarksArtAria') + '">' +
         '<path d="M46,44 L48.5,49.5 L54,52 L48.5,54.5 L46,60 L43.5,54.5 L38,52 L43.5,49.5 Z" fill="#f5c542"/>' +
         '<path d="M178,38 L180,43 L185,45 L180,47 L178,52 L176,47 L171,45 L176,43 Z" fill="#f5c542"/>' +
         '<ellipse cx="88" cy="16" rx="10" ry="22" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 88 16)"/>' +
@@ -762,18 +888,18 @@
         '<path d="M106,90 Q110,93 114,90" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
         '<path d="M110,106 L112.5,111.5 L118,114 L112.5,116.5 L110,122 L107.5,116.5 L102,114 L107.5,111.5 Z" fill="#f5c542"/>' +
         '</svg>' +
-        '<p class="empty-title">Nothing saved yet!</p>' +
-        '<p class="empty-text">Your shelf is empty — no sets tucked in here. Open any set and tap <i class="fi fi-br-bookmark"></i> Bookmark, and it’ll wait for you right here.</p>' +
-        '<p class="empty-hint">Single stickers? Tap <i class="fi fi-br-bookmark"></i> Collect on any sticker — they live in Collections.</p>' +
-        '<a class="btn" href="#/">Browse sets</a>' +
+        '<p class="empty-title">' + t('saved.emptyBookmarksTitle') + '</p>' +
+        '<p class="empty-text">' + t('saved.emptyBookmarksText') + '</p>' +
+        '<p class="empty-hint">' + t('saved.emptyBookmarksHint') + '</p>' +
+        '<a class="btn" href="#/">' + t('saved.browseSets') + '</a>' +
         '</div>');
   }
 
   function renderCollectionsList(items) {
     var body = $('collectionsBody');
     if (!body) return;
-    var labels = { recent: 'Recent', oldest: 'Oldest', title: 'Title A–Z' };
-    var sortHtml = '<div class="sort-row" role="group" aria-label="Sort collection">' +
+    var labels = { recent: t('saved.sortRecent'), oldest: t('saved.sortOldest'), title: t('saved.sortTitle') };
+    var sortHtml = '<div class="sort-row" role="group" aria-label="' + t('saved.sortCollectionAria') + '">' +
       Object.keys(labels).map(function (s) {
         return '<button type="button" data-sort="' + s + '"' +
           (state.bookmarksSort === s ? ' class="active"' : '') + '>' + labels[s] + '</button>';
@@ -781,9 +907,9 @@
     var cards = (items || []).filter(isStickerBookmark).map(bookmarkCardHtml).join('');
     body.innerHTML = sortHtml +
       (cards
-        ? '<p class="clear-row"><button type="button" class="text-btn" data-clear-saved="collections">Clear all collected stickers</button></p><div class="grid">' + cards + '</div>'
+        ? '<p class="clear-row"><button type="button" class="text-btn" data-clear-saved="collections">' + t('saved.clearCollections') + '</button></p><div class="grid">' + cards + '</div>'
         : '<div class="empty-saved">' +
-        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit peeking out of a folder">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="' + t('saved.emptyCollectionsArtAria') + '">' +
         '<path d="M40,50 L42.5,55.5 L48,58 L42.5,60.5 L40,66 L37.5,60.5 L32,58 L37.5,55.5 Z" fill="#f5c542"/>' +
         '<path d="M186,44 L188,49 L193,51 L188,53 L186,58 L184,53 L179,51 L184,49 Z" fill="#f5c542"/>' +
         '<rect x="48" y="42" width="124" height="88" rx="8" fill="#f5c542" stroke="#2b2620" stroke-width="4"/>' +
@@ -806,10 +932,10 @@
         '</g>' +
         '<path d="M48,72 L172,72 L166,140 Q166,144 162,144 L58,144 Q54,144 54,140 Z" fill="#eab543" stroke="#2b2620" stroke-width="4" stroke-linejoin="round"/>' +
         '</svg>' +
-        '<p class="empty-title">No stickers collected yet!</p>' +
-        '<p class="empty-text">Your folder’s empty — not a single sticker in sight. Open any sticker and tap <i class="fi fi-br-bookmark"></i> Collect, and it’ll land right here.</p>' +
-        '<p class="empty-hint">Whole sets? Tap <i class="fi fi-br-bookmark"></i> Bookmark on any set — they live in Bookmarks.</p>' +
-        '<a class="btn" href="#/">Browse stickers</a>' +
+        '<p class="empty-title">' + t('saved.emptyCollectionsTitle') + '</p>' +
+        '<p class="empty-text">' + t('saved.emptyCollectionsText') + '</p>' +
+        '<p class="empty-hint">' + t('saved.emptyCollectionsHint') + '</p>' +
+        '<a class="btn" href="#/">' + t('saved.browseStickers') + '</a>' +
         '</div>');
   }
 
@@ -817,11 +943,11 @@
     var body = $('bookmarksBody');
     if (!body) return;
     if (!state.session) {
-      body.innerHTML = '<p>Sign in first to see your bookmarks.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      body.innerHTML = '<p>' + t('saved.signInBookmarks') + '</p><p><a class="btn" href="#/login">' + t('nav.signIn') + '</a></p>';
       return;
     }
     if (state.authAvailable === false) {
-      body.innerHTML = '<p>Bookmarks are not set up yet — the site works fine without an account.</p>';
+      body.innerHTML = '<p>' + t('saved.notSetupBookmarks') + '</p>';
       return;
     }
     // Cache-first: show the last list instantly, refresh in the background.
@@ -832,7 +958,7 @@
       updateSavedBadges();
       shownFromCache = true;
     } else {
-      body.innerHTML = '<p>Loading…</p>';
+      body.innerHTML = '<p>' + t('common.loading') + '</p>';
     }
     fetch('/api/me/bookmarks?sort=' + encodeURIComponent(state.bookmarksSort), { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -845,7 +971,7 @@
       })
       .catch(function () {
         if (!shownFromCache) {
-          body.innerHTML = '<p>Could not load your bookmarks. Check your connection and reload.</p>';
+          body.innerHTML = '<p>' + t('saved.loadFailedBookmarks') + '</p>';
         }
       });
   }
@@ -854,11 +980,11 @@
     var body = $('collectionsBody');
     if (!body) return;
     if (!state.session) {
-      body.innerHTML = '<p>Sign in first to see your collection.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      body.innerHTML = '<p>' + t('saved.signInCollections') + '</p><p><a class="btn" href="#/login">' + t('nav.signIn') + '</a></p>';
       return;
     }
     if (state.authAvailable === false) {
-      body.innerHTML = '<p>Collections are not set up yet — the site works fine without an account.</p>';
+      body.innerHTML = '<p>' + t('saved.notSetupCollections') + '</p>';
       return;
     }
     // Same cache as Bookmarks (one list, two views); refresh in the
@@ -870,7 +996,7 @@
       updateSavedBadges();
       shownFromCache = true;
     } else {
-      body.innerHTML = '<p>Loading…</p>';
+      body.innerHTML = '<p>' + t('common.loading') + '</p>';
     }
     fetch('/api/me/bookmarks?sort=' + encodeURIComponent(state.bookmarksSort), { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -883,7 +1009,7 @@
       })
       .catch(function () {
         if (!shownFromCache) {
-          body.innerHTML = '<p>Could not load your collection. Check your connection and reload.</p>';
+          body.innerHTML = '<p>' + t('saved.loadFailedCollections') + '</p>';
         }
       });
   }
@@ -907,7 +1033,7 @@
         if (scope === 'sets') renderBookmarks(); else renderCollections();
       })
       .catch(function () {
-        if (body) body.insertAdjacentHTML('afterbegin', '<p class="comment-msg">Could not clear — check your connection and try again.</p>');
+        if (body) body.insertAdjacentHTML('afterbegin', '<p class="comment-msg">' + t('saved.clearFailed') + '</p>');
       });
   }
 
@@ -917,19 +1043,19 @@
     var body = $('galleryBody');
     if (!body) return;
     if (!state.session) {
-      body.innerHTML = '<p>Sign in first to see your gallery.</p><p><a class="btn" href="#/login">Sign in</a></p>';
+      body.innerHTML = '<p>' + t('gallery.signInFirst') + '</p><p><a class="btn" href="#/login">' + t('nav.signIn') + '</a></p>';
       return;
     }
     if (state.authAvailable === false) {
-      body.innerHTML = '<p>Gallery is not set up yet — the site works fine without an account.</p>';
+      body.innerHTML = '<p>' + t('gallery.notSetup') + '</p>';
       return;
     }
-    body.innerHTML = '<p>Loading…</p>';
+    body.innerHTML = '<p>' + t('common.loading') + '</p>';
     fetch('/api/me/photos', { credentials: 'same-origin', cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (d) { renderGalleryList(d.photos || []); })
       .catch(function () {
-        body.innerHTML = '<p>Could not load your gallery. Check your connection and reload.</p>';
+        body.innerHTML = '<p>' + t('gallery.loadFailed') + '</p>';
       });
   }
 
@@ -938,15 +1064,15 @@
     if (!body) return;
     var enabled = uploadsEnabled();
     var uploadBtn = enabled
-      ? '<label class="btn" for="photoFile">Upload a photo</label><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>'
-      : '<p class="meta">Photo uploads are turned off right now.</p>';
+      ? '<label class="btn" for="photoFile">' + t('gallery.upload') + '</label><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>'
+      : '<p class="meta">' + t('gallery.uploadsOff') + '</p>';
     var uploadFirstBtn = enabled
-      ? '<label class="btn" for="photoFile">Upload your first photo</label><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>'
-      : '<p class="meta">Photo uploads are turned off right now.</p>';
+      ? '<label class="btn" for="photoFile">' + t('gallery.uploadFirst') + '</label><input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>'
+      : '<p class="meta">' + t('gallery.uploadsOff') + '</p>';
     var msgHtml = '<p id="photoMsg" class="comment-msg" aria-live="polite"></p>';
     if (!photos.length) {
       body.innerHTML = msgHtml + '<div class="empty-saved">' +
-        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit framed like a photo">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="' + t('gallery.emptyArtAria') + '">' +
         '<path d="M36,44 L38.5,49.5 L44,52 L38.5,54.5 L36,60 L33.5,54.5 L28,52 L33.5,49.5 Z" fill="#f5c542"/>' +
         '<path d="M186,102 L188,107 L193,109 L188,111 L186,116 L184,111 L179,109 L184,107 Z" fill="#f5c542"/>' +
         '<ellipse cx="92" cy="28" rx="8" ry="20" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 92 28)"/>' +
@@ -966,19 +1092,19 @@
         '<path d="M106,98 Q110,101 114,98" fill="none" stroke="#2b2620" stroke-width="3" stroke-linecap="round"/>' +
         '<path d="M166,32 L168,38 L174,40 L168,42 L166,48 L164,42 L158,40 L164,38 Z" fill="#f5c542"/>' +
         '</svg>' +
-        '<p class="empty-title">No photos yet!</p>' +
-        '<p class="empty-text">Your gallery is empty — no snapshots tucked in here. Upload a photo of your stickers (or anything you love) and it’ll live right here, just for you.</p>' +
-        '<p class="empty-hint">Only you can see your photos — this gallery is yours alone.</p>' +
+        '<p class="empty-title">' + t('gallery.emptyTitle') + '</p>' +
+        '<p class="empty-text">' + t('gallery.emptyText') + '</p>' +
+        '<p class="empty-hint">' + t('gallery.emptyHint') + '</p>' +
         uploadFirstBtn +
         '</div>';
       return;
     }
     body.innerHTML = '<div class="upload-row">' + uploadBtn +
-      '<button type="button" class="text-btn" data-clear-photos>Clear all photos</button></div>' + msgHtml +
+      '<button type="button" class="text-btn" data-clear-photos">' + t('gallery.clearAll') + '</button></div>' + msgHtml +
       '<div class="gallery-grid">' + photos.map(function (p) {
         return '<figure class="photo-card">' +
-          '<button type="button" class="photo-view" data-photo-view="' + esc(p.url) + '" data-photo-title="' + esc(p.filename) + '" aria-label="View photo: ' + esc(p.filename) + '"><img src="' + esc(p.url) + '" alt="' + esc(p.filename) + '" loading="lazy" decoding="async"></button>' +
-          '<button type="button" class="photo-del" data-photo-del="' + esc(p.id) + '" aria-label="Delete photo: ' + esc(p.filename) + '">×</button>' +
+          '<button type="button" class="photo-view" data-photo-view="' + esc(p.url) + '" data-photo-title="' + esc(p.filename) + '" aria-label="' + esc(t('gallery.viewPhoto').replace('{name}', p.filename)) + '"><img src="' + esc(p.url) + '" alt="' + esc(p.filename) + '" loading="lazy" decoding="async"></button>' +
+          '<button type="button" class="photo-del" data-photo-del="' + esc(p.id) + '" aria-label="' + esc(t('gallery.deletePhoto').replace('{name}', p.filename)) + '">×</button>' +
           '<figcaption>' + esc(p.filename) + '</figcaption></figure>';
       }).join('') + '</div>';
   }
@@ -987,14 +1113,14 @@
     var msg = $('photoMsg');
     if (!file) return;
     if (file.type !== 'image/jpeg' && file.type !== 'image/png' && file.type !== 'image/webp' && file.type !== 'image/gif') {
-      if (msg) msg.textContent = 'That file is not a photo — JPEG, PNG, WebP or GIF only.';
+      if (msg) msg.textContent = t('gallery.notPhoto');
       return;
     }
     if (file.size > 4 * 1024 * 1024) {
-      if (msg) msg.textContent = 'That photo is over 4 MB — pick a smaller one.';
+      if (msg) msg.textContent = t('gallery.tooLarge');
       return;
     }
-    if (msg) msg.textContent = 'Uploading…';
+    if (msg) msg.textContent = t('gallery.uploading');
     fetch('/api/me/photos', {
       method: 'POST', credentials: 'same-origin', cache: 'no-store',
       headers: { 'Content-Type': file.type, 'X-Filename': file.name },
@@ -1012,11 +1138,11 @@
       .catch(function (e) {
         if (e.message === 'signed out') return;
         if (msg) {
-          msg.textContent = e.message === 'uploads_disabled' ? 'Photo uploads are turned off right now.'
-            : e.message === 'uploads_not_configured' ? 'Photo uploads aren’t set up yet — the shop owner is adding the storage key.'
-            : e.message === 'photo_limit_reached' ? 'Your gallery is full (20 photos) — delete one first.'
-            : e.message === 'photo_too_large' ? 'That photo is over 4 MB — pick a smaller one.'
-            : 'Could not upload that photo — check your connection and try again.';
+          msg.textContent = e.message === 'uploads_disabled' ? t('gallery.uploadsOff')
+            : e.message === 'uploads_not_configured' ? t('gallery.uploadsNotConfigured')
+            : e.message === 'photo_limit_reached' ? t('gallery.full')
+            : e.message === 'photo_too_large' ? t('gallery.tooLarge')
+            : t('gallery.uploadFailed');
         }
         var input = $('photoFile');
         if (input) input.value = '';
@@ -1029,7 +1155,7 @@
       .then(function () { renderGallery(); })
       .catch(function () {
         var msg = $('photoMsg');
-        if (msg) msg.textContent = 'Could not delete that photo — check your connection and try again.';
+        if (msg) msg.textContent = t('gallery.deleteFailed');
       });
   }
 
@@ -1039,7 +1165,7 @@
       .then(function () { renderGallery(); })
       .catch(function () {
         var msg = $('photoMsg');
-        if (msg) msg.textContent = 'Could not clear your gallery — check your connection and try again.';
+        if (msg) msg.textContent = t('gallery.clearFailed');
       });
   }
 
@@ -1057,15 +1183,15 @@
       .then(function (res) {
         if (res.status === 200 && res.d.ok) {
           $('feedbackText').value = '';
-          if (msg) msg.innerHTML = '<img class="empty-icon" src="icons/party.png" alt="" width="512" height="512">Thanks — feedback received.';
+          if (msg) msg.innerHTML = '<img class="empty-icon" src="icons/party.png" alt="" width="512" height="512">' + t('feedback.thanks');
           gaEvent('feedback', {});
         } else if (res.status === 429) {
-          if (msg) msg.textContent = 'Slow down — too many messages too fast.';
+          if (msg) msg.textContent = t('feedback.rateLimit');
         } else if (msg) {
-          msg.textContent = 'Feedback is still being set up. Check back soon.';
+          msg.textContent = t('feedback.setup');
         }
       })
-      .catch(function () { if (msg) msg.textContent = 'Could not send feedback. Try again.'; });
+      .catch(function () { if (msg) msg.textContent = t('feedback.failed'); });
   }
 
   /* ---------- data ---------- */
@@ -1103,6 +1229,7 @@
   }
 
   function init() {
+    loadDicts().then(function () { applyLang(resolveLang()); });
     var cached = loadCached();
     var indexP = fetchJson('data/index.json?v=' + DATA_V);
     var seriesP = fetchJson('data/series.json');
@@ -1119,7 +1246,7 @@
       }
     }).catch(function (err) {
       if (!cached) {
-        $('grid').innerHTML = '<p class="empty">Could not load the sticker sets list. Check your connection and reload.</p>';
+        $('grid').innerHTML = '<p class="empty">' + t('grid.loadError') + '</p>';
         console.error(err);
       }
     });
@@ -1153,7 +1280,7 @@
 
   function seriesTitle(id) {
     var b = state.series.find(function (s) { return String(s.id) === String(id); });
-    return b ? b.title : 'Series ' + id;
+    return b ? b.title : t('grid.seriesFallback').replace('{id}', id);
   }
 
   /* ---------- home grid ---------- */
@@ -1167,7 +1294,7 @@
 
   function cardHtml(c) {
     return '<a class="card" href="#/set/' + c.slug + '">' +
-      '<img src="' + c.thumb + '" alt="' + esc(c.title + ' — 贴纸合集') + '" loading="lazy" decoding="async" style="aspect-ratio:' + c.ratio + '">' +
+      '<img src="' + c.thumb + '" alt="' + esc(c.title + t('card.altSuffix')) + '" loading="lazy" decoding="async" style="aspect-ratio:' + c.ratio + '">' +
       '<div class="card-body"><h2>' + esc(c.title) + '</h2>' +
       '<p class="card-meta">' + esc(seriesTitle(c.batch)) + ' · ' + c.date + '</p></div></a>';
   }
@@ -1184,14 +1311,14 @@
     $('grid').innerHTML = shown.map(cardHtml).join('');
     $('empty').hidden = list.length !== 0;
     $('count').textContent = list.length === 0 ? '' :
-      list.length + (list.length === 1 ? ' set' : ' sets') +
+      (list.length === 1 ? t('grid.count.one') : t('grid.count.other').replace('{n}', list.length)) +
       (state.batch !== 'all' ? ' · ' + seriesTitle(state.batch) : '') +
       (state.topic ? ' · #' + state.topic : '');
     $('loadMore').hidden = list.length <= state.shown;
   }
 
   function renderChips() {
-    var html = '<button data-batch="all"' + (state.batch === 'all' ? ' class="active"' : '') + '>All</button>';
+    var html = '<button data-batch="all"' + (state.batch === 'all' ? ' class="active"' : '') + '>' + t('filter.all') + '</button>';
     state.series.forEach(function (b) {
       html += '<button data-batch="' + b.id + '"' +
         (String(state.batch) === String(b.id) ? ' class="active"' : '') + '>' +
@@ -1220,9 +1347,9 @@
   }
 
   function stickerCellHtml(s) {
-    return '<figure class="sticker-cell tappable" tabindex="0" role="button" data-n="' + esc(s.n) + '" aria-label="' + esc(s.title) + ' — 点开看这张贴纸的脚本">' +
+    return '<figure class="sticker-cell tappable" tabindex="0" role="button" data-n="' + esc(s.n) + '" aria-label="' + esc(s.title + t('sticker.cellAria')) + '">' +
       '<img src="' + s.file + '" alt="' + esc(stickerAlt(s)) + '" loading="lazy" decoding="async">' +
-      '<span class="tap-badge"><i class="fi fi-br-cursor-finger"></i> 点我</span>' +
+      '<span class="tap-badge"><i class="fi fi-br-cursor-finger"></i> ' + t('sticker.tapMe') + '</span>' +
       '<figcaption><span class="sticker-ja">' + esc(s.ja) + '</span>' +
       '<span class="sticker-zh">' + esc(s.zh) + '</span></figcaption></figure>';
   }
@@ -1231,7 +1358,7 @@
     setMagnifyMode(false); // a new sheet starts with the lens off
     var c = findSet(slug);
     if (!c) {
-      readerEl.innerHTML = '<p class="empty">That sticker set does not exist yet. <a href="#/">Back to all sets</a>.</p>';
+      readerEl.innerHTML = '<p class="empty">' + t('grid.notFound') + ' <a href="#/">' + t('grid.notFoundBack') + '</a>.</p>';
       showView('reader');
       return;
     }
@@ -1242,8 +1369,8 @@
     $('crumbBatch').textContent = ' / ' + seriesTitle(c.batch);
     var img = $('setImg');
     img.src = c.image;
-    img.alt = c.title + ' — 贴纸合集，共 ' + (c.stickers || []).length + ' 张';
-    img.setAttribute('aria-label', 'View full-size sheet: ' + c.title);
+    img.alt = c.title + t('reader.setImgAltSuffix').replace('{n}', (c.stickers || []).length);
+    img.setAttribute('aria-label', t('reader.setImgAriaWithTitle').replace('{title}', c.title));
     $('stickerGrid').innerHTML = (c.stickers || []).map(stickerCellHtml).join('');
     // Character sheet: collapsed by default; the reader's open/close
     // preference is remembered in localStorage (see init wiring).
@@ -1251,23 +1378,23 @@
     if (c.character_sheet) {
       cs.hidden = false;
       $('charSheetImg').src = c.character_sheet;
-      $('charSheetImg').alt = c.cast ? '角色介绍：' + c.cast : 'Character sheet';
+      $('charSheetImg').alt = c.cast ? t('reader.charSheetCastPrefix') + c.cast : t('reader.charSheet');
       $('charSheetCast').textContent = c.cast || '';
     } else {
       cs.hidden = true;
     }
     $('behindAngle').textContent = c.angle || '';
-    $('behindFacts').textContent = c.tags.length ? 'Topics: ' + c.tags.join(', ') : '';
-    $('behindQa').textContent = 'QA score ' + c.qa + '/10 — the minimum to publish is 7.';
+    $('behindFacts').textContent = c.tags.length ? t('reader.behindTopics') + c.tags.join(', ') : '';
+    $('behindQa').textContent = t('reader.behindQa').replace('{qa}', c.qa);
 
     var batchList = state.sets.filter(function (x) { return x.batch === c.batch; });
     var i = batchList.findIndex(function (x) { return x.slug === slug; });
     var prev = batchList[i - 1], next = batchList[i + 1];
     var prevLink = $('prevLink'), nextLink = $('nextLink');
     if (prev) { prevLink.href = '#/set/' + prev.slug; prevLink.removeAttribute('aria-disabled'); prevLink.textContent = '← ' + prev.title; }
-    else { prevLink.href = '#'; prevLink.setAttribute('aria-disabled', 'true'); prevLink.textContent = '← Previous'; }
+    else { prevLink.href = '#'; prevLink.setAttribute('aria-disabled', 'true'); prevLink.textContent = t('reader.prev'); }
     if (next) { nextLink.href = '#/set/' + next.slug; nextLink.removeAttribute('aria-disabled'); nextLink.textContent = next.title + ' →'; }
-    else { nextLink.href = '#'; nextLink.setAttribute('aria-disabled', 'true'); nextLink.textContent = 'Next →'; }
+    else { nextLink.href = '#'; nextLink.setAttribute('aria-disabled', 'true'); nextLink.textContent = t('reader.next'); }
 
     var strip = batchList.filter(function (x) { return x.slug !== slug; });
     $('seriesStrip').innerHTML = strip.map(cardHtml).join('');
@@ -1425,7 +1552,7 @@
     var entry = state.links && state.currentSlug ? state.links.sets[state.currentSlug] : null;
     if (!entry || shopClosed() || itemHidden(state.currentSlug) || buyButtonsHidden()) { btn.hidden = true; return; }
     btn.hidden = false;
-    btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy this set — ' + priceLabel(entry.amount);
+    btn.innerHTML = '<i class="fi fi-br-credit-card"></i> ' + t('reader.buySet').replace('{amount}', priceLabel(entry.amount));
   }
 
   function renderStickerBuyBtn() {
@@ -1435,7 +1562,7 @@
     var entry = state.links ? state.links.singles[s.id] : null;
     if (!entry || shopClosed() || itemHidden(s.id) || buyButtonsHidden()) { btn.hidden = true; return; }
     btn.hidden = false;
-    btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy — ' + priceLabel(entry.amount);
+    btn.innerHTML = '<i class="fi fi-br-credit-card"></i> ' + t('sticker.buy').replace('{amount}', priceLabel(entry.amount));
   }
 
   /* The pack is the first 30 stickers in inventory order; describe it
@@ -1459,11 +1586,11 @@
       if (slug) counts[slug] = (counts[slug] || 0) + 1;
     });
     var parts = Object.keys(counts).map(function (slug) {
-      return counts[slug] + ' from ' + (PACK_SET_NAMES[slug] || slug);
+      return t('pack.textPart').replace('{n}', counts[slug]).replace('{name}', PACK_SET_NAMES[slug] || slug);
     });
-    $('packCardText').textContent = pack.stickers.length + ' stickers — ' + parts.join(' · ') + '.';
+    $('packCardText').textContent = t('pack.text').replace('{n}', pack.stickers.length).replace('{parts}', parts.join(' · '));
     var btn = $('packBuyBtn');
-    btn.innerHTML = '<i class="fi fi-br-credit-card"></i> Buy the pack — ' + priceLabel(pack.amount);
+    btn.innerHTML = '<i class="fi fi-br-credit-card"></i> ' + t('pack.buyAmount').replace('{amount}', priceLabel(pack.amount));
     btn.hidden = buyButtonsHidden();
     card.hidden = false;
   }
@@ -1650,7 +1777,7 @@
   }
 
   function cartItemLabel(type) {
-    return type === 'single' ? 'Single sticker' : type === 'set' ? 'Full set' : 'Complete pack';
+    return type === 'single' ? t('cart.single') : type === 'set' ? t('cart.set') : t('cart.pack');
   }
 
   function isInCart(itemId) {
@@ -1728,35 +1855,35 @@
     else if (kind === 'photo') pendingRemoval = { kind: 'photo', photoId: itemId };
     else pendingRemoval = { kind: 'line', itemId: itemId };
     if (kind === 'clear') {
-      $('removeModalTitle').textContent = 'Whoa — the whole bag?';
-      $('removeModalText').innerHTML = '“I packed every single one of these for you…”<br>— Lili 🐰';
-      $('removeModalKeep').textContent = 'Keep my bag';
-      $('removeModalConfirm').textContent = 'Yes, clear it all';
+      $('removeModalTitle').textContent = t('remove.clearTitle');
+      $('removeModalText').innerHTML = t('remove.clearText');
+      $('removeModalKeep').textContent = t('remove.clearKeep');
+      $('removeModalConfirm').textContent = t('remove.clearConfirm');
     } else if (kind === 'bookmarks') {
-      $('removeModalTitle').textContent = 'Clear all your bookmarks?';
-      $('removeModalText').innerHTML = '“Every set you tucked away — gone in one tap. Sure?”<br>— Lili 🐰';
-      $('removeModalKeep').textContent = 'Keep them';
-      $('removeModalConfirm').textContent = 'Yes, clear them';
+      $('removeModalTitle').textContent = t('remove.bookmarksTitle');
+      $('removeModalText').innerHTML = t('remove.bookmarksText');
+      $('removeModalKeep').textContent = t('remove.bookmarksKeep');
+      $('removeModalConfirm').textContent = t('remove.bookmarksConfirm');
     } else if (kind === 'collections') {
-      $('removeModalTitle').textContent = 'Clear your whole collection?';
-      $('removeModalText').innerHTML = '“Every sticker you collected — gone in one tap. Sure?”<br>— Lili 🐰';
-      $('removeModalKeep').textContent = 'Keep them';
-      $('removeModalConfirm').textContent = 'Yes, clear them';
+      $('removeModalTitle').textContent = t('remove.collectionsTitle');
+      $('removeModalText').innerHTML = t('remove.collectionsText');
+      $('removeModalKeep').textContent = t('remove.collectionsKeep');
+      $('removeModalConfirm').textContent = t('remove.collectionsConfirm');
     } else if (kind === 'photo') {
-      $('removeModalTitle').textContent = 'Delete this photo?';
-      $('removeModalText').innerHTML = '“This one’s yours — once it’s gone, it’s gone. Sure?”<br>— Lili 🐰';
-      $('removeModalKeep').textContent = 'Keep it';
-      $('removeModalConfirm').textContent = 'Yes, delete it';
+      $('removeModalTitle').textContent = t('remove.photoTitle');
+      $('removeModalText').innerHTML = t('remove.photoText');
+      $('removeModalKeep').textContent = t('remove.photoKeep');
+      $('removeModalConfirm').textContent = t('remove.photoConfirm');
     } else if (kind === 'photos-clear') {
-      $('removeModalTitle').textContent = 'Clear your whole gallery?';
-      $('removeModalText').innerHTML = '“Every photo you uploaded — gone in one tap. Sure?”<br>— Lili 🐰';
-      $('removeModalKeep').textContent = 'Keep them';
-      $('removeModalConfirm').textContent = 'Yes, clear them';
+      $('removeModalTitle').textContent = t('remove.photosTitle');
+      $('removeModalText').innerHTML = t('remove.photosText');
+      $('removeModalKeep').textContent = t('remove.photosKeep');
+      $('removeModalConfirm').textContent = t('remove.photosConfirm');
     } else {
-      $('removeModalTitle').textContent = 'Wait — let me ask first?';
-      $('removeModalText').innerHTML = '“You picked ' + esc(title) + ' — I already tucked it into your bag. Are you sure you want to let it go?”<br>— Lili 🐰';
-      $('removeModalKeep').textContent = 'Keep it in my bag';
-      $('removeModalConfirm').textContent = 'Yes, remove it';
+      $('removeModalTitle').textContent = t('remove.lineTitle');
+      $('removeModalText').innerHTML = t('remove.lineText').replace('{title}', esc(title));
+      $('removeModalKeep').textContent = t('remove.lineKeep');
+      $('removeModalConfirm').textContent = t('remove.lineConfirm');
     }
     $('removeModal').hidden = false;
     document.body.classList.add('modal-open');
@@ -1788,7 +1915,7 @@
     var q = cartQty(itemId);
     if (label) {
       label.hidden = false;
-      label.innerHTML = '<i class="fi fi-br-shopping-bag"></i> ' + (q === 0 ? 'Add to cart' : 'In your bag');
+      label.innerHTML = '<i class="fi fi-br-shopping-bag"></i> ' + (q === 0 ? t('cart.addToCart') : t('cart.inYourBag'));
     }
     var count = el.querySelector('.qty-count');
     if (count) count.textContent = String(q);
@@ -1818,20 +1945,20 @@
     var pct = Math.min(100, Math.round(total / pack.amount * 100));
     var bar = '<div class="pack-bar"><div class="pack-bar-fill" style="width:' + pct + '%"></div></div>';
     if (isInCart(pack.item_id)) {
-      return '<div class="order-card"><p><strong>Complete pack in your cart ✓</strong></p>' +
-        '<p class="meta">All ' + pack.stickers.length + ' stickers — the whole collection in one payment.</p>' + bar + '</div>';
+      return '<div class="order-card"><p><strong>' + t('cart.packInCart') + '</strong></p>' +
+        '<p class="meta">' + t('cart.packInCartMeta').replace('{n}', pack.stickers.length) + '</p>' + bar + '</div>';
     }
     var singles = state.links.singles || {};
     var keys = Object.keys(singles);
     var singleAmt = keys.length ? singles[keys[0]].amount : 400;
     var saving = pack.stickers.length * singleAmt - pack.amount;
-    var addBtn = '<button data-pack-add="1">Add the pack — ' + priceLabel(pack.amount) + '</button>';
+    var addBtn = '<button data-pack-add="1">' + t('cart.addPack').replace('{amount}', priceLabel(pack.amount)) + '</button>';
     if (total >= pack.amount) {
-      return '<div class="order-card"><p><strong>Your cart is already worth ' + priceLabel(total) + '.</strong></p>' +
-        '<p class="meta">The complete ' + pack.stickers.length + '-sticker pack is ' + priceLabel(pack.amount) + ' — every sticker, one payment, save ' + priceLabel(saving) + ' vs buying singles.</p>' + bar + '<p>' + addBtn + '</p></div>';
+      return '<div class="order-card"><p><strong>' + t('cart.alreadyWorth').replace('{amount}', priceLabel(total)) + '</strong></p>' +
+        '<p class="meta">' + t('cart.packWorthMeta').replace('{n}', pack.stickers.length).replace('{amount}', priceLabel(pack.amount)).replace('{saving}', priceLabel(saving)) + '</p>' + bar + '<p>' + addBtn + '</p></div>';
     }
-    return '<div class="order-card"><p><strong>' + priceLabel(pack.amount - total) + ' away from the complete pack</strong></p>' +
-      '<p class="meta">The ' + pack.stickers.length + '-sticker pack is ' + priceLabel(pack.amount) + ' — save ' + priceLabel(saving) + ' vs buying singles one by one.</p>' + bar + '<p>' + addBtn + '</p></div>';
+    return '<div class="order-card"><p><strong>' + t('cart.packAway').replace('{amount}', priceLabel(pack.amount - total)) + '</strong></p>' +
+      '<p class="meta">' + t('cart.packAwayMeta').replace('{n}', pack.stickers.length).replace('{amount}', priceLabel(pack.amount)).replace('{saving}', priceLabel(saving)) + '</p>' + bar + '<p>' + addBtn + '</p></div>';
   }
 
   /* Thumbnail for a cart line: the sticker itself for a single, the
@@ -1890,7 +2017,7 @@
     var html = '';
     if (!items.length) {
       html += '<div class="empty-cart">' +
-        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="Lili the rabbit peeking out of an empty shopping bag">' +
+        '<svg class="empty-art" viewBox="0 0 220 180" role="img" aria-label="' + t('cart.emptyArtAria') + '">' +
         '<path d="M48,34 L50.5,39.5 L56,42 L50.5,44.5 L48,50 L45.5,44.5 L40,42 L45.5,39.5 Z" fill="#f5c542"/>' +
         '<path d="M176,30 L178,35 L183,37 L178,39 L176,44 L174,39 L169,37 L174,35 Z" fill="#f5c542"/>' +
         '<ellipse cx="88" cy="32" rx="10" ry="24" fill="#fff" stroke="#2b2620" stroke-width="4" transform="rotate(-14 88 32)"/>' +
@@ -1914,10 +2041,10 @@
         '<polygon points="0,64 -5,52 5,52" fill="#f6e3c5" stroke="#2b2620" stroke-width="3" stroke-linejoin="round"/>' +
         '<polygon points="0,64 -2,58 2,58" fill="#2b2620"/>' +
         '</g></svg>' +
-        '<p class="empty-title">Nothing in here yet!</p>' +
-        '<p class="empty-text">Lili peeked inside — just echoes. Add a sticker, a set, or the complete pack, and she’ll tuck it in for you.</p>' +
-        '<p class="empty-hint">Tap + on the Add to cart stepper on any sticker, set, or the complete pack.</p>' +
-        '<button id="emptyCartBrowse" class="btn">Browse stickers</button>' +
+        '<p class="empty-title">' + t('cart.emptyTitle') + '</p>' +
+        '<p class="empty-text">' + t('cart.emptyText') + '</p>' +
+        '<p class="empty-hint">' + t('cart.emptyHint') + '</p>' +
+        '<button id="emptyCartBrowse" class="btn">' + t('cart.browse') + '</button>' +
         '</div>';
     } else {
       html += '<ul class="cart-list">' + items.map(function (it) {
@@ -1926,32 +2053,32 @@
         var qty = it.qty || 1;
         var thumb = cartThumb(it);
         var thumbHtml = thumb
-          ? '<button type="button" class="cart-thumb-btn" data-cart-img="' + esc(thumb.full) + '" data-cart-img-title="' + esc(title) + '" aria-label="View full-size image: ' + esc(title) + '"><img class="cart-thumb" src="' + esc(thumb.src) + '" alt="' + esc(thumb.alt) + '" loading="lazy" decoding="async"></button>'
+          ? '<button type="button" class="cart-thumb-btn" data-cart-img="' + esc(thumb.full) + '" data-cart-img-title="' + esc(title) + '" aria-label="' + esc(t('cart.viewFull').replace('{title}', title)) + '"><img class="cart-thumb" src="' + esc(thumb.src) + '" alt="' + esc(thumb.alt) + '" loading="lazy" decoding="async"></button>'
           : '';
         return '<li>' + thumbHtml + '<div class="cart-info"><strong class="cart-title">' + esc(title) + '</strong><br><span class="meta">' + cartItemLabel(it.type) + '</span></div>' +
           '<span class="cart-price">' + (entry ? priceLabel(entry.amount * qty) : '') + '</span>' +
-          '<div class="cart-line"><span class="qty-stepper"><button data-qty-dec="' + esc(it.itemId) + '" aria-label="One fewer">−</button><span class="qty-count">' + qty + '</span><button data-qty-inc="' + esc(it.itemId) + '" aria-label="One more">+</button></span>' +
-          '<button class="cart-remove" data-cart-remove="' + esc(it.itemId) + '">Remove</button></div></li>';
+          '<div class="cart-line"><span class="qty-stepper"><button data-qty-dec="' + esc(it.itemId) + '" aria-label="' + t('cart.oneFewer') + '">−</button><span class="qty-count">' + qty + '</span><button data-qty-inc="' + esc(it.itemId) + '" aria-label="' + t('cart.oneMore') + '">+</button></span>' +
+          '<button class="cart-remove" data-cart-remove="' + esc(it.itemId) + '">' + t('cart.remove') + '</button></div></li>';
       }).join('') + '</ul>' +
-      '<p><strong>Subtotal: ' + priceLabel(cartTotal()) + ' SGD</strong></p>' +
+      '<p><strong>' + t('cart.subtotal').replace('{amount}', priceLabel(cartTotal())) + '</strong></p>' +
       packProgressHtml() +
-      '<p class="meta">One payment on Stripe — card, PayNow or Link. The files land on your download page right after payment.</p>' +
+      '<p class="meta">' + t('cart.onePayment') + '</p>' +
       refundLineHtml() +
-      '<p><button id="checkoutBtn">Checkout — ' + priceLabel(cartTotal()) + '</button> ' +
-      '<button id="clearCartBtn">Clear cart</button></p>' +
+      '<p><button id="checkoutBtn">' + t('cart.checkout').replace('{amount}', priceLabel(cartTotal())) + '</button> ' +
+      '<button id="clearCartBtn">' + t('cart.clear') + '</button></p>' +
       '<p id="checkoutMsg" class="comment-msg" aria-live="polite"></p>' +
-      '<div class="order-card"><p><strong>Save this cart as a draft</strong></p>' +
-      '<p class="meta">Come back later and restore it — on this device.</p>' +
+      '<div class="order-card"><p><strong>' + t('cart.saveDraftHeading') + '</strong></p>' +
+      '<p class="meta">' + t('cart.saveDraftHelp') + '</p>' +
       '<form id="draftForm" class="comment-form" onsubmit="return false;">' +
-      '<input id="draftName" type="text" placeholder="Draft name (e.g. for mum)" maxlength="60" aria-label="Draft name">' +
-      '<button type="submit">Save draft</button></form></div>';
+      '<input id="draftName" type="text" placeholder="' + t('cart.draftName') + '" maxlength="60" aria-label="' + t('cart.draftName') + '">' +
+      '<button type="submit">' + t('cart.saveDraft') + '</button></form></div>';
     }
     var drafts = state.cartDrafts;
     if (drafts.length) {
-      html += '<h2>Saved drafts</h2><ul class="cart-list">' + drafts.map(function (d, i) {
-        return '<li><div><strong>' + esc(d.name || 'Untitled draft') + '</strong><br><span class="meta">' + d.items.length + (d.items.length === 1 ? ' item' : ' items') + ' · ' + priceLabel(cartTotal(d.items)) + ' · ' + esc(new Date(d.createdAt).toLocaleDateString()) + '</span></div>' +
-          '<div class="cart-line"><button data-draft-restore="' + i + '">Restore</button> ' +
-          '<button data-draft-delete="' + i + '">Delete</button></div></li>';
+      html += '<h2>' + t('cart.savedDrafts') + '</h2><ul class="cart-list">' + drafts.map(function (d, i) {
+        return '<li><div><strong>' + esc(d.name || t('cart.untitledDraft')) + '</strong><br><span class="meta">' + (d.items.length === 1 ? t('cart.itemOne') : t('cart.itemsOther').replace('{n}', d.items.length)) + ' · ' + priceLabel(cartTotal(d.items)) + ' · ' + esc(new Date(d.createdAt).toLocaleDateString()) + '</span></div>' +
+          '<div class="cart-line"><button data-draft-restore="' + i + '">' + t('cart.restore') + '</button> ' +
+          '<button data-draft-delete="' + i + '">' + t('cart.delete') + '</button></div></li>';
       }).join('') + '</ul>';
     }
     body.innerHTML = html;
@@ -1961,7 +2088,7 @@
     var input = $('draftName');
     var name = input ? (input.value || '').trim() : '';
     if (!state.cart.length) return;
-    state.cartDrafts.push({ name: name || 'Untitled draft', items: state.cart.slice(), createdAt: new Date().toISOString() });
+    state.cartDrafts.push({ name: name || t('cart.untitledDraft'), items: state.cart.slice(), createdAt: new Date().toISOString() });
     saveDrafts();
     renderCart();
   }
@@ -1986,7 +2113,7 @@
     var btn = $('checkoutBtn');
     if (!state.cart.length) return;
     if (btn) btn.disabled = true;
-    if (msg) msg.textContent = 'Creating your checkout…';
+    if (msg) msg.textContent = t('cart.creating');
     fetch('/api/orders/checkout', {
       method: 'POST', credentials: 'same-origin', cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
@@ -2001,18 +2128,18 @@
         if (btn) btn.disabled = false;
         if (!msg) return;
         if (x.status === 503 && x.d.error === 'checkout_not_configured') {
-          msg.textContent = 'Checkout is not connected yet — the shop owner is adding the payment key. Your cart is saved; come back a little later.';
+          msg.textContent = t('cart.checkoutNotConfigured');
         } else if (x.status === 400 && x.d.error === 'unknown_item') {
-          msg.textContent = 'One item in your cart is no longer sold — remove it and try again.';
+          msg.textContent = t('cart.unknownItem');
         } else if (x.status === 429) {
-          msg.textContent = 'Too many tries — wait a minute and try again.';
+          msg.textContent = t('cart.tooMany');
         } else {
-          msg.textContent = 'Checkout could not start right now. Try again in a moment.';
+          msg.textContent = t('cart.checkoutFailed');
         }
       })
       .catch(function () {
         if (btn) btn.disabled = false;
-        if (msg) msg.textContent = 'Checkout could not start right now. Try again in a moment.';
+        if (msg) msg.textContent = t('cart.checkoutFailed');
       });
   }
 
@@ -2063,21 +2190,21 @@
     var orderId = query.get('order_id');
     var email = query.get('email');
     if (!sessionId && !orderId && !email) {
-      body.innerHTML = '<p class="meta">Paid for a sticker already? Your download link is on the page Stripe sent you to after checkout. If you lost it, look it up below.</p>';
+      body.innerHTML = '<p class="meta">' + t('download.noSession') + '</p>';
       return;
     }
     if (email && !orderId && !sessionId) {
-      body.innerHTML = '<p>Looking up orders for ' + esc(email) + '…</p>';
+      body.innerHTML = '<p>' + t('download.lookingUp').replace('{email}', esc(email)) + '</p>';
       fetch('/api/orders/lookup?email=' + encodeURIComponent(email), { credentials: 'same-origin', cache: 'no-store' })
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
         .then(function (d) {
           if (token !== downloadToken) return;
           var orders = d.orders || [];
           if (!orders.length) {
-            body.innerHTML = '<p>No orders found for that email. Check the spelling, or use the order id instead.</p>';
+            body.innerHTML = '<p>' + t('download.noOrdersEmail') + '</p>';
             return;
           }
-          body.innerHTML = '<p>' + orders.length + (orders.length === 1 ? ' order' : ' orders') + ' found:</p>' +
+          body.innerHTML = '<p>' + (orders.length === 1 ? t('download.ordersFoundOne') : t('download.ordersFoundOther').replace('{n}', orders.length)) + '</p>' +
             orders.map(function (o) {
               return '<p class="order-card"><a href="#/download?order_id=' + encodeURIComponent(o.id) + '">' + esc(orderTitle(o)) + '</a> · ' +
                 priceLabel(o.amountTotal) + ' · ' + esc(o.status) + ' · ' + esc(o.id) + '</p>';
@@ -2085,7 +2212,7 @@
         })
         .catch(function () {
           if (token !== downloadToken) return;
-          body.innerHTML = '<p>Could not look that up right now. Try again in a moment.</p>';
+          body.innerHTML = '<p>' + t('download.lookupFailed') + '</p>';
         });
       return;
     }
@@ -2095,7 +2222,7 @@
       ? '/api/orders/lookup?session_id=' + encodeURIComponent(sessionId)
       : '/api/orders/lookup?order_id=' + encodeURIComponent(orderId);
     var attempts = 0;
-    body.innerHTML = '<p>Confirming your payment…</p>';
+    body.innerHTML = '<p>' + t('download.confirming') + '</p>';
     (function poll() {
       fetch(url, { credentials: 'same-origin', cache: 'no-store' })
         .then(function (r) {
@@ -2115,8 +2242,8 @@
             return;
           }
           body.innerHTML = e.message === 'not_found'
-            ? '<p>No order matches that link yet. If you just paid, give it a few seconds and reload — or look the order up below by email or order id.</p>'
-            : '<p>Could not load that order right now. Try again in a moment.</p>';
+            ? '<p>' + t('download.noOrderYet') + '</p>'
+            : '<p>' + t('download.loadFailed') + '</p>';
         });
     })();
   }
@@ -2146,7 +2273,7 @@
     var body = $('downloadBody');
     var list = (orders || []).filter(Boolean);
     if (!list.length) {
-      body.innerHTML = '<p>No order found.</p>';
+      body.innerHTML = '<p>' + t('download.noOrder') + '</p>';
       return;
     }
     if (list.length === 1) {
@@ -2154,12 +2281,12 @@
       return;
     }
     if (!state.sets.length) {
-      body.innerHTML = '<p>Payment confirmed — loading your files…</p>';
+      body.innerHTML = '<p>' + t('download.loadingFiles') + '</p>';
       setTimeout(function () { renderOrdersDownload(list, sessionId); }, 500);
       return;
     }
     var total = list.reduce(function (s, o) { return s + (o.amountTotal || 0); }, 0);
-    var html = '<p><strong>' + list.length + ' items · ' + priceLabel(total) + ' · paid in one payment.</strong></p>';
+    var html = '<p><strong>' + t('download.itemsPaid').replace('{n}', list.length).replace('{amount}', priceLabel(total)) + '</strong></p>';
     list.forEach(function (order) {
       var ids = orderFileIds(order);
       var files = ids.map(findStickerRecord).filter(Boolean);
@@ -2168,12 +2295,12 @@
         ' · Order ' + esc(order.id) + ' · ' + esc(order.status) + '</p>';
       if (files.length) {
         html += '<ul class="download-list">' + files.map(function (f) {
-          return '<li><a href="' + esc(f.file) + '" download>' + esc(f.title) + ' — Download PNG</a></li>';
+          return '<li><a href="' + esc(f.file) + '" download>' + esc(f.title) + t('download.pngSuffix') + '</a></li>';
         }).join('') + '</ul>';
       }
-      html += '<p class="meta"><a href="#/download?order_id=' + encodeURIComponent(order.id) + '">Order page</a> — invoice requests and print shipping for this item live there.</p></div>';
+      html += '<p class="meta"><a href="#/download?order_id=' + encodeURIComponent(order.id) + '">' + t('download.orderPage') + '</a>' + t('download.orderPageHint') + '</p></div>';
     });
-    html += '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>';
+    html += '<p class="meta">' + t('download.keepFiles') + '</p>';
     html += refundLineHtml();
     body.innerHTML = html;
     if (sessionId && list.some(function (o) { return o.status === 'paid'; })) {
@@ -2185,13 +2312,13 @@
   function renderOrderDownload(order, sessionId) {
     var body = $('downloadBody');
     if (!order) {
-      body.innerHTML = '<p>No order found.</p>';
+      body.innerHTML = '<p>' + t('download.noOrder') + '</p>';
       return;
     }
     // The file list needs the index data; it may still be loading on a
     // direct landing, so wait for it briefly instead of showing nothing.
     if (!state.sets.length) {
-      body.innerHTML = '<p>Payment confirmed — loading your files…</p>';
+      body.innerHTML = '<p>' + t('download.loadingFiles') + '</p>';
       setTimeout(function () { renderOrderDownload(order, sessionId); }, 500);
       return;
     }
@@ -2201,22 +2328,22 @@
       '<p class="meta">' + priceLabel(order.amountTotal) + ' · ' + esc(order.currency.toUpperCase()) +
       ' · Order ' + esc(order.id) + ' · ' + esc(order.status) + '</p></div>';
     if (!files.length) {
-      html += '<p>We have your payment but could not match it to a sticker file. Write in via the feedback form on the About page with order id ' + esc(order.id) + ' and it will be sorted out.</p>';
+      html += '<p>' + t('download.noFileMatch').replace('{id}', esc(order.id)) + '</p>';
     } else {
-      html += '<p>' + (files.length === 1 ? 'Your sticker:' : 'Your stickers:') + '</p><ul class="download-list">' +
+      html += '<p>' + (files.length === 1 ? t('download.yourSticker') : t('download.yourStickers')) + '</p><ul class="download-list">' +
         files.map(function (f) {
-          return '<li><a href="' + esc(f.file) + '" download>' + esc(f.title) + ' — Download PNG</a></li>';
+          return '<li><a href="' + esc(f.file) + '" download>' + esc(f.title) + t('download.pngSuffix') + '</a></li>';
         }).join('') + '</ul>' +
-        '<p class="meta">The files are yours to keep. A copy of the link was also sent to your email.</p>' +
+        '<p class="meta">' + t('download.keepFiles') + '</p>' +
         refundLineHtml();
     }
     // Fulfilment: print status + tracking, formal invoice, print
     // shipping address. The buyer proves the order with the email
     // they used at checkout (the page never shows it back).
     if (order.printStatus && order.printStatus !== 'none') {
-      html += '<p><strong>Print:</strong> ' + esc(order.printStatus) + '</p>';
+      html += '<p><strong>' + t('download.print') + '</strong> ' + esc(order.printStatus) + '</p>';
       if (order.trackingNumber) {
-        html += '<p class="meta">Tracking: ' + esc((order.trackingCourier || '') + ' ' + order.trackingNumber) + '</p>';
+        html += '<p class="meta">' + t('download.tracking').replace('{text}', esc((order.trackingCourier || '') + ' ' + order.trackingNumber)) + '</p>';
       }
     }
     if (order.invoiceNumber) {
@@ -2230,18 +2357,18 @@
       html += '<p class="meta">Invoice requested — the shop will send it to your email.</p>';
     }
     if (order.hasShippingAddress) {
-      html += '<p class="meta">Shipping address on file — this order is in the print queue.</p>';
+      html += '<p class="meta">' + t('download.shippingOnFile') + '</p>';
     } else {
-      html += '<div class="order-card"><p><strong>Want this printed?</strong> Add your shipping address and the order joins the print queue.</p>' +
+      html += '<div class="order-card"><p><strong>' + t('download.wantPrintedTitle') + '</strong> ' + t('download.wantPrintedBody') + '</p>' +
         '<form id="shippingForm" class="comment-form" onsubmit="return false;">' +
-        '<input id="shipEmail" type="email" placeholder="Email used at checkout" required aria-label="Email used at checkout">' +
-        '<input id="shipName" type="text" placeholder="Full name" required aria-label="Full name">' +
-        '<input id="shipLine1" type="text" placeholder="Street address" required aria-label="Street address">' +
-        '<input id="shipLine2" type="text" placeholder="Apt / unit (optional)" aria-label="Apt or unit">' +
-        '<input id="shipCity" type="text" placeholder="City" required aria-label="City">' +
-        '<input id="shipPostal" type="text" placeholder="Postal code" required aria-label="Postal code">' +
-        '<input id="shipCountry" type="text" placeholder="Country" value="Singapore" required aria-label="Country">' +
-        '<button type="submit">Add shipping address</button> <span id="shipMsg" class="comment-msg" aria-live="polite"></span></form></div>';
+        '<input id="shipEmail" type="email" placeholder="' + t('download.emailPlaceholder') + '" required aria-label="' + t('download.emailPlaceholder') + '">' +
+        '<input id="shipName" type="text" placeholder="' + t('download.fullName') + '" required aria-label="' + t('download.fullName') + '">' +
+        '<input id="shipLine1" type="text" placeholder="' + t('download.street') + '" required aria-label="' + t('download.street') + '">' +
+        '<input id="shipLine2" type="text" placeholder="' + t('download.apt') + '" aria-label="' + t('download.apt') + '">' +
+        '<input id="shipCity" type="text" placeholder="' + t('download.city') + '" required aria-label="' + t('download.city') + '">' +
+        '<input id="shipPostal" type="text" placeholder="' + t('download.postal') + '" required aria-label="' + t('download.postal') + '">' +
+        '<input id="shipCountry" type="text" placeholder="' + t('download.country') + '" value="Singapore" required aria-label="' + t('download.country') + '">' +
+        '<button type="submit">' + t('download.addShipping') + '</button> <span id="shipMsg" class="comment-msg" aria-live="polite"></span></form></div>';
     }
     state.downloadOrder = order;
     state.downloadSessionId = sessionId || null;
@@ -2304,13 +2431,13 @@
       .then(function (x) {
         if (!msg) return;
         if (x.status === 200) {
-          msg.textContent = 'Added — your order is in the print queue.';
+          msg.textContent = t('download.shippingAdded');
           if (state.downloadOrder) { state.downloadOrder.hasShippingAddress = true; state.downloadOrder.printStatus = 'queued'; }
         }
-        else if (x.status === 403) msg.textContent = 'That email does not match this order.';
-        else msg.textContent = 'Could not save that address right now.';
+        else if (x.status === 403) msg.textContent = t('download.emailMismatch');
+        else msg.textContent = t('download.shippingFailed');
       })
-      .catch(function () { if (msg) msg.textContent = 'Could not save that address right now.'; });
+      .catch(function () { if (msg) msg.textContent = t('download.shippingFailed'); });
   }
 
   function findOrder(e) {
@@ -2321,7 +2448,7 @@
     if (id) { location.hash = '#/download?order_id=' + encodeURIComponent(id); return; }
     if (email) { location.hash = '#/download?email=' + encodeURIComponent(email); return; }
     if (msg) {
-      msg.textContent = 'Enter an email or an order id.';
+      msg.textContent = t('download.enterEmailOrId');
       setTimeout(function () { msg.textContent = ''; }, 2500);
     }
   }
@@ -2765,6 +2892,21 @@
     renderGrid();
   });
 
+  // The UI-language toggle: a separate control from the content
+  // filter above, with its own variable (state.uiLang), its own
+  // localStorage key, and its own data attribute (data-uilang).
+  // It never touches state.lang — switching the UI to Chinese
+  // does not narrow the catalogue. There are two of them (the
+  // controls row on the home view, and the reader's crumbs line),
+  // so bind every .ui-lang-toggle on the page.
+  document.querySelectorAll('.ui-lang-toggle').forEach(function (group) {
+    group.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-uilang]');
+      if (!b) return;
+      setLang(b.dataset.uilang);
+    });
+  });
+
   $('chips').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-batch]');
     if (!b) return;
@@ -2871,10 +3013,10 @@
     // The researched brief follows under its own heading.
     var body = '';
     if (rec.column_source) {
-      body += '<h3>专栏原文</h3>' + mdToHtml(rec.column_source);
-      if (rec.column_md) body += '<h3>调研简报</h3>' + mdToHtml(rec.column_md);
+      body += '<h3>' + t('reader.column') + '</h3>' + mdToHtml(rec.column_source);
+      if (rec.column_md) body += '<h3>' + t('column.brief') + '</h3>' + mdToHtml(rec.column_md);
     } else {
-      body = mdToHtml(rec.column_md || '（暂无专栏内容）');
+      body = mdToHtml(rec.column_md || t('column.empty'));
     }
     $('columnModalBody').innerHTML = body;
     $('columnModal').hidden = false;
@@ -3156,9 +3298,9 @@
   function renderStickerLike(count, liked) {
     var btn = $('stickerLikeBtn'), countEl = $('stickerLikeCount');
     if (!btn) return;
-    btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? 'Liked' : 'Like');
+    btn.innerHTML = '<i class="fi fi-br-heart"></i> ' + (liked ? t('reader.liked') : t('reader.like'));
     btn.setAttribute('aria-pressed', String(liked));
-    if (countEl) countEl.textContent = count > 0 ? count + (count === 1 ? ' like' : ' likes') : 'No likes yet';
+    if (countEl) countEl.textContent = count > 0 ? (count === 1 ? t('reader.likes.one') : t('reader.likes.other').replace('{n}', count)) : t('reader.noLikes');
   }
 
   function loadStickerLike(id) {
@@ -3222,7 +3364,7 @@
   function renderStickerBookmark(bookmarked) {
     var btn = $('stickerBookmarkBtn');
     if (!btn) return;
-    btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? 'Collected' : 'Collect');
+    btn.innerHTML = '<i class="fi fi-br-bookmark"></i> ' + (bookmarked ? t('sticker.collected') : t('sticker.collect'));
     btn.setAttribute('aria-pressed', String(bookmarked));
     btn.setAttribute('data-bookmarked', String(bookmarked));
   }
@@ -3278,7 +3420,7 @@
         updateSavedBadges();
         if (e.message === 'signed out') return;
         var msg = $('stickerShareMsg');
-        if (msg) { msg.textContent = 'Could not save it. Try again.'; setTimeout(function () { msg.textContent = ''; }, 2500); }
+        if (msg) { msg.textContent = t('sticker.saveError'); setTimeout(function () { msg.textContent = ''; }, 2500); }
       });
   }
 
@@ -3288,7 +3430,7 @@
   function markShared(btn, originalHtml) {
     if (!btn || btn.classList.contains('shared')) return; // already showing Shared
     btn.classList.add('shared');
-    btn.innerHTML = '<i class="fi fi-br-share"></i> Shared';
+    btn.innerHTML = '<i class="fi fi-br-share"></i> ' + t('sticker.shared');
     setTimeout(function () {
       btn.classList.remove('shared');
       btn.innerHTML = originalHtml;
@@ -3313,16 +3455,16 @@
         var file = new File([blob], s.id + '.png', { type: blob.type || 'image/png' });
         if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error('files unsupported');
         return navigator.share({ files: [file], title: title, text: text });
-      }).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> Share'); done('Shared.'); }).catch(function (e) {
+      }).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> ' + t('reader.shareShort')); done(t('share.shared')); }).catch(function (e) {
         if (e && e.name === 'AbortError') return; // user dismissed the sheet
         var payload = { title: title, url: url };
         if (text) payload.text = text;
-        navigator.share(payload).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> Share'); done('Shared.'); }, function () { /* dismissed */ });
+        navigator.share(payload).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> ' + t('reader.shareShort')); done(t('share.shared')); }, function () { /* dismissed */ });
       });
       return;
     }
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> Share'); done('Link copied.'); }, function () { done(url); });
+      navigator.clipboard.writeText(url).then(function () { markShared($('stickerShareBtn'), '<i class="fi fi-br-share"></i> ' + t('reader.shareShort')); done(t('share.copied')); }, function () { done(url); });
       return;
     }
     done(url);
@@ -3350,9 +3492,9 @@
     if (navigator.share) {
       var payload = { title: title, url: url };
       if (text) payload.text = text;
-      navigator.share(payload).then(function () { if (btn) markShared(btn, original); done('Shared.'); }, function () { /* dismissed */ });
+      navigator.share(payload).then(function () { if (btn) markShared(btn, original); done(t('share.shared')); }, function () { /* dismissed */ });
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () { if (btn) markShared(btn, original); done('Link copied.'); }, function () { done(url); });
+      navigator.clipboard.writeText(url).then(function () { if (btn) markShared(btn, original); done(t('share.copied')); }, function () { done(url); });
     } else {
       done(url);
     }

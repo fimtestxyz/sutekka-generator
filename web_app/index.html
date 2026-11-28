@@ -5,77 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#faf7f0">
 <title>Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸</title>
-<meta name="description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
+<meta name="description" data-i18n-content="meta.description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Sticker Showcase">
-<meta property="og:title" content="Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸">
-<meta property="og:description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
+<meta property="og:title" data-i18n-content="meta.title" content="Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸">
+<meta property="og:description" data-i18n-content="meta.description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
 <meta property="og:url" content="https://sutekka.gobblemon.com/">
 <meta property="og:image" content="https://sutekka.gobblemon.com/og/site.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="604">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸">
-<meta name="twitter:description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
+<meta name="twitter:title" data-i18n-content="meta.title" content="Sticker Showcase — 贴纸展 · 时事专栏变成的贴纸">
+<meta name="twitter:description" data-i18n-content="meta.description" content="Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.">
 <meta name="twitter:image" content="https://sutekka.gobblemon.com/og/site.jpg">
 <link rel="canonical" href="https://sutekka.gobblemon.com/">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=37">
+<link rel="stylesheet" href="styles.css?v=38">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
 <header class="top">
   <div class="top-inner">
     <a class="brand" href="#/">Sticker Showcase</a>
-    <nav class="topnav" aria-label="Main navigation">
-      <a href="#/" data-nav="home"><i class="fi fi-br-home"></i><span class="nav-label">Latest</span></a>
-      <a href="#/bookmarks" data-nav="bookmarks"><i class="fi fi-br-bookmark"></i><span class="nav-label">Bookmarks</span><span id="bookmarksCount" class="nav-count" hidden>0</span></a>
-      <a href="#/collections" data-nav="collections"><i class="fi fi-br-folder"></i><span class="nav-label">Collections</span><span id="collectionsCount" class="nav-count" hidden>0</span></a>
-      <a href="#/gallery" data-nav="gallery"><i class="fi fi-br-images"></i><span class="nav-label">Gallery</span></a>
-      <button type="button" id="cartBtn" class="nav-cart-btn" aria-label="Cart"><i class="fi fi-br-shopping-bag"></i><span class="nav-label">Cart</span><span id="cartCount" class="cart-count" hidden>0</span></button>
-      <a href="#/about" data-nav="about"><i class="fi fi-br-info"></i><span class="nav-label">About</span></a>
+    <nav class="topnav" aria-label="Main navigation" data-i18n-aria="nav.main">
+      <a href="#/" data-nav="home"><i class="fi fi-br-home"></i><span class="nav-label" data-i18n="nav.home">Latest</span></a>
+      <a href="#/bookmarks" data-nav="bookmarks"><i class="fi fi-br-bookmark"></i><span class="nav-label" data-i18n="nav.bookmarks">Bookmarks</span><span id="bookmarksCount" class="nav-count" hidden>0</span></a>
+      <a href="#/collections" data-nav="collections"><i class="fi fi-br-folder"></i><span class="nav-label" data-i18n="nav.collections">Collections</span><span id="collectionsCount" class="nav-count" hidden>0</span></a>
+      <a href="#/gallery" data-nav="gallery"><i class="fi fi-br-images"></i><span class="nav-label" data-i18n="nav.gallery">Gallery</span></a>
+      <button type="button" id="cartBtn" class="nav-cart-btn" aria-label="Cart"><i class="fi fi-br-shopping-bag"></i><span class="nav-label" data-i18n="nav.cart">Cart</span><span id="cartCount" class="cart-count" hidden>0</span></button>
+      <a href="#/about" data-nav="about"><i class="fi fi-br-info"></i><span class="nav-label" data-i18n="nav.about">About</span></a>
     </nav>
-    <span id="authArea" class="user-area"><a href="#/login"><i class="fi fi-br-user"></i><span class="nav-label">Sign in</span></a></span>
+    <span id="authArea" class="user-area"><a href="#/login"><i class="fi fi-br-user"></i><span class="nav-label" data-i18n="nav.signIn">Sign in</span></a></span>
   </div>
 </header>
 
 <main id="home" class="view">
   <section class="intro">
-    <h1>时事专栏，变成贴纸。</h1>
+    <h1 data-i18n="intro.title">时事专栏，变成贴纸。</h1>
     <p id="announcement" class="announcement" hidden></p>
-    <p>一张贴纸讲一个点。每一套先从一篇调研过的专栏出发，核实事实，找到角度，再画出来——贴纸里的每个事实都先被查过。</p>
+    <p data-i18n="intro.body">一张贴纸讲一个点。每一套先从一篇调研过的专栏出发，核实事实，找到角度，再画出来——贴纸里的每个事实都先被查过。</p>
   </section>
 
   <section class="controls">
-    <input id="search" type="search" placeholder="搜索标题、角度、标签…" autocomplete="off" aria-label="Search sticker sets">
-    <div class="lang-toggle" role="group" aria-label="Language">
-      <button data-lang="all" class="active">All</button>
+    <input id="search" type="search" placeholder="搜索标题、角度、标签…" autocomplete="off" aria-label="Search sticker sets" data-i18n-placeholder="search.placeholder" data-i18n-aria="search.aria">
+    <div class="lang-toggle" role="group" aria-label="Language" data-i18n-aria="filter.groupAria">
+      <button data-lang="all" class="active" data-i18n="filter.all">All</button>
       <button data-lang="zh">中文</button>
       <button data-lang="en">EN</button>
     </div>
+    <div class="ui-lang-toggle" role="group" aria-label="UI language" data-i18n-aria="ui.groupAria">
+      <span class="ui-lang-label" data-i18n="ui.prefix">UI:</span>
+      <button data-uilang="en" class="active" aria-pressed="true">EN</button>
+      <button data-uilang="zh" aria-pressed="false">中文</button>
+    </div>
   </section>
 
-  <section id="chips" class="chips" aria-label="Series"></section>
-  <section id="topics" class="topics" aria-label="Topics"></section>
+  <section id="chips" class="chips" aria-label="Series" data-i18n-aria="chips.groupAria"></section>
+  <section id="topics" class="topics" aria-label="Topics" data-i18n-aria="topics.groupAria"></section>
 
   <p id="count" class="count"></p>
   <section id="grid" class="grid" aria-live="polite"></section>
-  <p id="empty" class="empty" hidden>Nothing matches. Try a different word, or clear the search.</p>
-  <div class="more"><button id="loadMore" hidden>Load more</button></div>
+  <p id="empty" class="empty" hidden data-i18n="grid.empty">Nothing matches. Try a different word, or clear the search.</p>
+  <div class="more"><button id="loadMore" hidden data-i18n="grid.loadMore">Load more</button></div>
   <section id="packCard" class="pack-card" hidden>
-    <h2>Complete Pack — 30 stickers</h2>
+    <h2 data-i18n="pack.heading">Complete Pack — 30 stickers</h2>
     <p id="packCardText"></p>
-    <button id="packBuyBtn"><i class="fi fi-br-credit-card"></i> Buy the pack</button>
+    <button id="packBuyBtn"><i class="fi fi-br-credit-card"></i> <span data-i18n="pack.buy">Buy the pack</span></button>
     <span class="add-cart-group"><span class="add-cart-label" id="packAddLabel" hidden><i class="fi fi-br-shopping-bag"></i> Add to cart</span>
-    <span class="qty-stepper" id="packCartStepper"><button type="button" data-step="dec" aria-label="One fewer">−</button><span class="qty-count">0</span><button type="button" data-step="inc" aria-label="One more">+</button></span></span>
-    <p class="meta">One-time purchase · PayNow &amp; cards · Download right after payment</p>
+    <span class="qty-stepper" id="packCartStepper"><button type="button" data-step="dec" aria-label="One fewer" data-i18n-aria="cart.oneFewer">−</button><span class="qty-count">0</span><button type="button" data-step="inc" aria-label="One more" data-i18n-aria="cart.oneMore">+</button></span></span>
+    <p class="meta" data-i18n="pack.meta">One-time purchase · PayNow &amp; cards · Download right after payment</p>
   </section>
 </main>
 
 <main id="reader" class="view" hidden>
-  <p class="crumbs"><a href="#/" id="backLink">← All sticker sets</a> <span id="crumbBatch"></span></p>
+  <p class="crumbs"><a href="#/" id="backLink" data-i18n="reader.back">← All sticker sets</a> <span id="crumbBatch"></span><span class="ui-lang-toggle ui-lang-toggle--reader" role="group" aria-label="UI language" data-i18n-aria="ui.groupAria"><button data-uilang="en" class="active" aria-pressed="true">EN</button><button data-uilang="zh" aria-pressed="false">中文</button></span></p>
   <h1 id="setTitle"></h1>
   <p id="setMeta" class="meta"></p>
   <figure id="stage" class="stage">
@@ -83,30 +88,30 @@
     <div id="sheetLens" class="sheet-lens" hidden aria-hidden="true"></div>
   </figure>
   <div class="reader-tools">
-    <button id="zoomBtn"><i class="fi fi-br-zoom-in"></i> Zoom in</button>
-    <button id="magnifyBtn" aria-pressed="false"><i class="fi fi-br-search"></i> Magnify</button>
+    <button id="zoomBtn"><i class="fi fi-br-zoom-in"></i> <span data-i18n="reader.zoomIn">Zoom in</span></button>
+    <button id="magnifyBtn" aria-pressed="false"><i class="fi fi-br-search"></i> <span data-i18n="reader.magnify">Magnify</span></button>
     <div id="magnifyControls" class="magnify-controls" hidden>
-      <span class="magnify-ctl"><span class="magnify-ctl-label">Zoom</span>
-        <button type="button" id="magnifyZoomDec" aria-label="Less zoom">−</button>
+      <span class="magnify-ctl"><span class="magnify-ctl-label" data-i18n="reader.magnifyZoom">Zoom</span>
+        <button type="button" id="magnifyZoomDec" aria-label="Less zoom" data-i18n-aria="reader.magnifyZoomDec">−</button>
         <span id="magnifyZoomVal" aria-live="polite">0.8×</span>
-        <button type="button" id="magnifyZoomInc" aria-label="More zoom">+</button></span>
-      <span class="magnify-ctl"><span class="magnify-ctl-label">Lens</span>
-        <span class="magnify-size" role="group" aria-label="Lens size">
+        <button type="button" id="magnifyZoomInc" aria-label="More zoom" data-i18n-aria="reader.magnifyZoomInc">+</button></span>
+      <span class="magnify-ctl"><span class="magnify-ctl-label" data-i18n="reader.magnifyLens">Lens</span>
+        <span class="magnify-size" role="group" aria-label="Lens size" data-i18n-aria="reader.magnifyLensSize">
           <button type="button" id="magnifySizeS" data-mag-size="S" aria-pressed="false">S</button>
           <button type="button" id="magnifySizeM" data-mag-size="M" aria-pressed="false">M</button>
           <button type="button" id="magnifySizeL" data-mag-size="L" aria-pressed="true">L</button>
         </span></span>
     </div>
-    <button id="shareBtn"><i class="fi fi-br-share"></i> Share this set</button>
+    <button id="shareBtn"><i class="fi fi-br-share"></i> <span data-i18n="reader.share">Share this set</span></button>
     <button id="bookmarkBtn" aria-pressed="false"><i class="fi fi-br-bookmark"></i> Bookmark</button>
     <button id="buySetBtn"><i class="fi fi-br-credit-card"></i> Buy this set</button>
     <span class="add-cart-group"><span class="add-cart-label" id="setAddLabel" hidden><i class="fi fi-br-shopping-bag"></i> Add to cart</span>
-    <span class="qty-stepper" id="cartSetStepper"><button type="button" data-step="dec" aria-label="One fewer">−</button><span class="qty-count">0</span><button type="button" data-step="inc" aria-label="One more">+</button></span></span>
-    <button id="columnBtn" class="tap-me"><i class="fi fi-br-newspaper"></i> 专栏原文</button>
+    <span class="qty-stepper" id="cartSetStepper"><button type="button" data-step="dec" aria-label="One fewer" data-i18n-aria="cart.oneFewer">−</button><span class="qty-count">0</span><button type="button" data-step="inc" aria-label="One more" data-i18n-aria="cart.oneMore">+</button></span></span>
+    <button id="columnBtn" class="tap-me"><i class="fi fi-br-newspaper"></i> <span data-i18n="reader.column">专栏原文</span></button>
     <span id="shareMsg" class="share-msg" aria-live="polite"></span>
   </div>
   <details id="charSheet" class="char-sheet">
-    <summary><i class="fi fi-br-users"></i> 角色介绍 · Character sheet</summary>
+    <summary><i class="fi fi-br-users"></i> <span data-i18n="reader.charSheet">角色介绍 · Character sheet</span></summary>
     <figure>
       <img id="charSheetImg" alt="Character sheet" decoding="async">
       <figcaption id="charSheetCast"></figcaption>
@@ -120,13 +125,13 @@
       <span id="likeNote" class="like-note" aria-live="polite"></span>
     </div>
     <div id="comments" class="comments">
-      <h2><i class="fi fi-br-comment"></i> Comments</h2>
+      <h2><i class="fi fi-br-comment"></i> <span data-i18n="comments.heading">Comments</span></h2>
       <div id="commentList" class="comment-list"></div>
       <p id="commentMsg" class="comment-msg" aria-live="polite"></p>
       <p id="replyHint" class="reply-hint" hidden></p>
       <form id="commentForm" class="comment-form" onsubmit="return false;">
-        <textarea id="commentText" rows="3" maxlength="1000" placeholder="Say something about this sticker set…" required aria-label="Your comment"></textarea>
-        <button type="submit">Post comment</button>
+        <textarea id="commentText" rows="3" maxlength="1000" placeholder="Say something about this sticker set…" required aria-label="Your comment" data-i18n-placeholder="comments.textPlaceholder" data-i18n-aria="comments.textPlaceholder"></textarea>
+        <button type="submit" data-i18n="comments.post">Post comment</button>
       </form>
     </div>
   </section>
@@ -135,72 +140,72 @@
     <a id="nextLink" href="#">Next →</a>
   </nav>
   <details id="behind" class="behind">
-    <summary>The story behind it</summary>
+    <summary data-i18n="reader.behindHeading">The story behind it</summary>
     <p id="behindAngle"></p>
     <p id="behindFacts" class="facts"></p>
     <p class="qa-line" id="behindQa"></p>
   </details>
   <section class="more-series">
-    <h2>More from this series</h2>
+    <h2 data-i18n="reader.moreSeries">More from this series</h2>
     <div id="seriesStrip" class="strip"></div>
   </section>
   <div class="mobile-actions" id="mobileActions">
     <button id="mobileSaveBtn" aria-pressed="false" data-bookmarked="false"><i class="fi fi-br-bookmark"></i> Save</button>
-    <button id="mobileShareBtn"><i class="fi fi-br-share"></i> Share</button>
+    <button id="mobileShareBtn"><i class="fi fi-br-share"></i> <span data-i18n="reader.shareShort">Share</span></button>
   </div>
 </main>
 
 <main id="about" class="view" hidden>
-  <h1>About</h1>
-  <p>gobblemon.com turns current-affairs columns into sticker sets — a different way to learn what's happening in the world, and a fun one. One sticker, one point: each set takes a big story and breaks it into eight small pictures you can actually remember.</p>
-  <p>Every fact on a sticker is checked before it's drawn. If something is reported but not confirmed, the sticker says so — a picture never states an unconfirmed claim as fact.</p>
-  <h2>How to enjoy it</h2>
-  <p>Browse a set, tap any sticker to read the point behind it, and collect the ones you like. Share a sticker with a friend when it explains something better than a paragraph could. Each set is walked through by a small cast of animal friends — a rabbit with a pencil, a frog with a magnifying glass, an owl with a scarf, and more.</p>
-  <h2>Feedback</h2>
-  <p>Something broken, a sticker that missed, an idea for a series? Tell me here.</p>
+  <h1 data-i18n="about.heading">About</h1>
+  <p data-i18n="about.p1">gobblemon.com turns current-affairs columns into sticker sets — a different way to learn what's happening in the world, and a fun one. One sticker, one point: each set takes a big story and breaks it into eight small pictures you can actually remember.</p>
+  <p data-i18n="about.p2">Every fact on a sticker is checked before it's drawn. If something is reported but not confirmed, the sticker says so — a picture never states an unconfirmed claim as fact.</p>
+  <h2 data-i18n="about.howHeading">How to enjoy it</h2>
+  <p data-i18n="about.howBody">Browse a set, tap any sticker to read the point behind it, and collect the ones you like. Share a sticker with a friend when it explains something better than a paragraph could. Each set is walked through by a small cast of animal friends — a rabbit with a pencil, a frog with a magnifying glass, an owl with a scarf, and more.</p>
+  <h2 data-i18n="about.feedbackHeading">Feedback</h2>
+  <p data-i18n="about.feedbackBody">Something broken, a sticker that missed, an idea for a series? Tell me here.</p>
   <form id="feedbackForm" class="comment-form" onsubmit="return false;">
-    <input id="feedbackName" type="text" maxlength="40" placeholder="Name (optional)" autocomplete="nickname" aria-label="Your name">
-    <textarea id="feedbackText" rows="4" maxlength="500" placeholder="Your feedback…" required aria-label="Your feedback"></textarea>
-    <button type="submit">Send feedback</button>
+    <input id="feedbackName" type="text" maxlength="40" placeholder="Name (optional)" autocomplete="nickname" aria-label="Your name" data-i18n-placeholder="feedback.namePlaceholder" data-i18n-aria="feedback.namePlaceholder">
+    <textarea id="feedbackText" rows="4" maxlength="500" placeholder="Your feedback…" required aria-label="Your feedback" data-i18n-placeholder="feedback.textPlaceholder" data-i18n-aria="feedback.textPlaceholder"></textarea>
+    <button type="submit" data-i18n="feedback.send">Send feedback</button>
     <span id="feedbackMsg" class="comment-msg" aria-live="polite"></span>
   </form>
 </main>
 
 <main id="login" class="view" hidden>
-  <h1>Sign in</h1>
+  <h1 data-i18n="login.heading">Sign in</h1>
   <div id="loginBody"><p>Checking sign-in…</p></div>
 </main>
 
 <main id="profile" class="view" hidden>
-  <h1>Profile</h1>
-  <div id="profileBody"><p>Loading…</p></div>
+  <h1 data-i18n="profile.heading">Profile</h1>
+  <div id="profileBody"><p data-i18n="common.loading">Loading…</p></div>
 </main>
 
 <main id="bookmarks" class="view" hidden>
-  <h1>Bookmarks</h1>
-  <div id="bookmarksBody"><p>Loading…</p></div>
+  <h1 data-i18n="saved.bookmarksHeading">Bookmarks</h1>
+  <div id="bookmarksBody"><p data-i18n="common.loading">Loading…</p></div>
 </main>
 
 <main id="collections" class="view" hidden>
-  <h1>Collections</h1>
-  <div id="collectionsBody"><p>Loading…</p></div>
+  <h1 data-i18n="saved.collectionsHeading">Collections</h1>
+  <div id="collectionsBody"><p data-i18n="common.loading">Loading…</p></div>
 </main>
 
 <main id="gallery" class="view" hidden>
-  <h1>Your gallery</h1>
-  <div id="galleryBody"><p>Loading…</p></div>
+  <h1 data-i18n="gallery.heading">Your gallery</h1>
+  <div id="galleryBody"><p data-i18n="common.loading">Loading…</p></div>
 </main>
 
 <main id="download" class="view" hidden>
-  <h1>Your download</h1>
-  <div id="downloadBody"><p>Loading…</p></div>
+  <h1 data-i18n="download.heading">Your download</h1>
+  <div id="downloadBody"><p data-i18n="common.loading">Loading…</p></div>
   <section class="find-order">
-    <h2>Find your order</h2>
-    <p class="meta">Bought a sticker and lost the download page? Look it up by the email you used at checkout, or by the order id.</p>
+    <h2 data-i18n="download.findHeading">Find your order</h2>
+    <p class="meta" data-i18n="download.findHelp">Bought a sticker and lost the download page? Look it up by the email you used at checkout, or by the order id.</p>
     <form id="findOrderForm" class="comment-form" onsubmit="return false;">
-      <input id="findOrderEmail" type="email" placeholder="Email used at checkout" aria-label="Email used at checkout">
-      <input id="findOrderId" type="text" placeholder="Order id (optional)" aria-label="Order id">
-      <button type="submit">Find order</button>
+      <input id="findOrderEmail" type="email" placeholder="Email used at checkout" aria-label="Email used at checkout" data-i18n-placeholder="download.emailPlaceholder" data-i18n-aria="download.emailPlaceholder">
+      <input id="findOrderId" type="text" placeholder="Order id (optional)" aria-label="Order id" data-i18n-placeholder="download.orderIdPlaceholder" data-i18n-aria="download.orderIdPlaceholder">
+      <button type="submit" data-i18n="download.findOrder">Find order</button>
       <span id="findOrderMsg" class="comment-msg" aria-live="polite"></span>
     </form>
   </section>
@@ -212,15 +217,15 @@
 </main>
 
 <footer class="foot">
-  <p>Sticker Showcase · gobblemon.com — current affairs, in stickers. · <a href="#/about">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
+  <p>Sticker Showcase · gobblemon.com — <span data-i18n="foot.tagline">current affairs, in stickers.</span> · <a href="#/about" data-i18n="foot.feedback">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=44" defer></script>
+<script src="app.js?v=45" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>
   <div class="modal-box">
-    <button id="columnModalClose" class="modal-close" aria-label="Close">×</button>
+    <button id="columnModalClose" class="modal-close" aria-label="Close" data-i18n-aria="common.close">×</button>
     <h2 id="columnModalTitle"></h2>
     <div id="columnModalBody" class="modal-body"></div>
   </div>
@@ -229,23 +234,23 @@
 <div id="stickerModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="stickerModalTitle">
   <div class="modal-backdrop" id="stickerModalBackdrop"></div>
   <div class="modal-box">
-    <button id="stickerModalClose" class="modal-close" aria-label="Close">×</button>
-    <button id="stickerModalPrev" class="modal-nav modal-prev" aria-label="Previous sticker"><i class="fi fi-br-angle-left"></i></button>
-    <button id="stickerModalNext" class="modal-nav modal-next" aria-label="Next sticker"><i class="fi fi-br-angle-right"></i></button>
+    <button id="stickerModalClose" class="modal-close" aria-label="Close" data-i18n-aria="common.close">×</button>
+    <button id="stickerModalPrev" class="modal-nav modal-prev" aria-label="Previous sticker" data-i18n-aria="sticker.prevAria"><i class="fi fi-br-angle-left"></i></button>
+    <button id="stickerModalNext" class="modal-nav modal-next" aria-label="Next sticker" data-i18n-aria="sticker.nextAria"><i class="fi fi-br-angle-right"></i></button>
     <h2 id="stickerModalTitle"></h2>
     <img id="stickerModalImg" alt="" class="sticker-modal-img">
     <p class="sticker-modal-ja" id="stickerModalJa"></p>
     <p class="sticker-modal-zh" id="stickerModalZh"></p>
-    <p><strong>这张讲什么：</strong><span id="stickerModalPoint"></span></p>
-    <p><strong>画面：</strong><span id="stickerModalScene"></span></p>
+    <p><strong data-i18n="sticker.what">这张讲什么：</strong><span id="stickerModalPoint"></span></p>
+    <p><strong data-i18n="sticker.scene">画面：</strong><span id="stickerModalScene"></span></p>
     <div class="sticker-actions">
       <button id="stickerLikeBtn" aria-pressed="false"><i class="fi fi-br-heart"></i> Like</button>
       <span id="stickerLikeCount" class="meta"></span>
       <button id="stickerBookmarkBtn" aria-pressed="false" data-bookmarked="false"><i class="fi fi-br-bookmark"></i> Collect</button>
       <button id="stickerBuyBtn"><i class="fi fi-br-credit-card"></i> Buy</button>
       <span class="add-cart-group"><span class="add-cart-label" id="stickerAddLabel" hidden><i class="fi fi-br-shopping-bag"></i> Add to cart</span>
-      <span class="qty-stepper" id="stickerCartStepper"><button type="button" data-step="dec" aria-label="One fewer">−</button><span class="qty-count">0</span><button type="button" data-step="inc" aria-label="One more">+</button></span></span>
-      <button id="stickerShareBtn"><i class="fi fi-br-share"></i> Share</button>
+      <span class="qty-stepper" id="stickerCartStepper"><button type="button" data-step="dec" aria-label="One fewer" data-i18n-aria="cart.oneFewer">−</button><span class="qty-count">0</span><button type="button" data-step="inc" aria-label="One more" data-i18n-aria="cart.oneMore">+</button></span></span>
+      <button id="stickerShareBtn"><i class="fi fi-br-share"></i> <span data-i18n="reader.shareShort">Share</span></button>
       <span id="stickerShareMsg" class="comment-msg" aria-live="polite"></span>
     </div>
   </div>
@@ -253,7 +258,7 @@
 <div id="imageModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
   <div class="modal-backdrop" id="imageModalBackdrop"></div>
   <div class="modal-box image-modal-box">
-    <button id="imageModalClose" class="modal-close" aria-label="Close">×</button>
+    <button id="imageModalClose" class="modal-close" aria-label="Close" data-i18n-aria="common.close">×</button>
     <h2 id="imageModalTitle"></h2>
     <img id="imageModalImg" alt="" class="image-modal-img">
   </div>
@@ -261,16 +266,16 @@
 <div id="cartDrawerBackdrop" class="drawer-backdrop"></div>
 <aside id="cartDrawer" class="drawer" aria-label="Your cart">
   <div class="drawer-head">
-    <h2>Your cart</h2>
-    <button id="cartDrawerClose" class="modal-close" aria-label="Close cart">×</button>
+    <h2 data-i18n="cart.title">Your cart</h2>
+    <button id="cartDrawerClose" class="modal-close" aria-label="Close cart" data-i18n-aria="cart.closeAria">×</button>
   </div>
-  <div id="cartBody" class="drawer-body"><p>Loading…</p></div>
+  <div id="cartBody" class="drawer-body"><p data-i18n="common.loading">Loading…</p></div>
 </aside>
 <div id="removeModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="removeModalTitle">
   <div class="modal-backdrop" id="removeModalBackdrop"></div>
   <div class="modal-box remove-modal-box">
-    <button id="removeModalClose" class="modal-close" aria-label="Close">×</button>
-    <img id="removeModalImg" src="thumbs/riemann-rashomon-01.jpg" alt="Lili the rabbit" class="remove-modal-img">
+    <button id="removeModalClose" class="modal-close" aria-label="Close" data-i18n-aria="common.close">×</button>
+    <img id="removeModalImg" src="thumbs/riemann-rashomon-01.jpg" alt="Lili the rabbit" class="remove-modal-img" data-i18n-alt="remove.imgAlt">
     <h2 id="removeModalTitle">Wait — let me ask first?</h2>
     <p id="removeModalText"></p>
     <div class="remove-modal-actions">

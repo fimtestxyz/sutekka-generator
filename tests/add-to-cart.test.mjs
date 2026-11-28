@@ -19,6 +19,12 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_SRC = fs.readFileSync(path.join(__dirname, "..", "web_app", "app.js"), "utf8");
+// The app's UI strings live in the dictionaries (data/i18n/*.json),
+// fetched by loadDicts() at boot. The mock fetch serves the real
+// files, exactly as the browser would — without them t() falls back
+// to the dictionary key and every label assertion sees 'cart.addToCart'.
+const I18N_EN = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "web_app", "data", "i18n", "en.json"), "utf8"));
+const I18N_ZH = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "web_app", "data", "i18n", "zh.json"), "utf8"));
 
 function makeElement() {
   const el = {
@@ -168,6 +174,8 @@ function boot({ session = true, settings = {}, hash = "#/", indexSets = [], seed
     if (url.startsWith("data/index.json")) data = { sets: indexSets };
     else if (url === "data/series.json") data = { batches: [] };
     else if (url === "data/config.json") data = {};
+    else if (url === "data/i18n/en.json") data = I18N_EN;
+    else if (url === "data/i18n/zh.json") data = I18N_ZH;
     else if (url.startsWith("data/payment-links.json")) data = LINKS;
     else if (url === "/api/auth/session") data = session ? { user: { id: "u1", name: "Test", email: "t@example.com" } } : {};
     else if (url === "/api/settings") data = settings;

@@ -56,15 +56,24 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--border); border-radius: var(--radius);
   background: var(--surface); color: var(--text);
 }
-.lang-toggle { display: flex; gap: 6px; }
-.lang-toggle button, .chips button, .topics button, .more button, .reader-tools button {
+.lang-toggle, .ui-lang-toggle { display: flex; gap: 6px; align-items: center; }
+.lang-toggle button, .ui-lang-toggle button, .chips button, .topics button, .more button, .reader-tools button {
   padding: 8px 14px; font-size: 0.95rem; cursor: pointer;
   border: 1px solid var(--border); border-radius: 999px;
   background: var(--surface); color: var(--text);
 }
-.lang-toggle button.active, .chips button.active, .topics button.active {
+.lang-toggle button.active, .ui-lang-toggle button.active, .chips button.active, .topics button.active {
   background: var(--text); color: var(--bg); border-color: var(--text);
 }
+/* The UI-language toggle carries a small "UI:" / "界面：" label
+   so it is never confused with the content-language filter
+   (All / 中文 / EN) beside it. */
+.ui-lang-label { font-size: 0.85rem; font-weight: 700; color: var(--muted); }
+/* The reader's copy of the toggle sits in the crumbs line (top
+   right): same control, smaller buttons, no label — the crumbs
+   line already says where you are. */
+.ui-lang-toggle--reader { display: inline-flex; float: right; }
+.ui-lang-toggle--reader button { padding: 4px 10px; font-size: 0.85rem; }
 .chips, .topics { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .topics button { font-size: 0.85rem; padding: 5px 11px; }
 .count { color: var(--muted); font-size: 0.9rem; margin: 8px 0 12px; }
