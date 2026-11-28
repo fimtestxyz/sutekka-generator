@@ -22,7 +22,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":"Sticker Showcase","description":"Sticker sets made from current-affairs columns. One sticker, one point — researched, checked, then drawn.","url":"https://sutekka.gobblemon.com/","inLanguage":"zh-CN"}
 </script>
-<link rel="stylesheet" href="styles.css?v=38">
+<link rel="stylesheet" href="styles.css?v=39">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/bold/rounded.css">
 </head>
 <body>
@@ -30,6 +30,7 @@
   <div class="top-inner">
     <a class="brand" href="#/">Sticker Showcase</a>
     <nav class="topnav" aria-label="Main navigation" data-i18n-aria="nav.main">
+      <a href="https://gobblemon.com"><i class="fi fi-br-home"></i><span class="nav-label">Gobblemon</span></a>
       <a href="#/" data-nav="home"><i class="fi fi-br-home"></i><span class="nav-label" data-i18n="nav.home">Latest</span></a>
       <a href="#/bookmarks" data-nav="bookmarks"><i class="fi fi-br-bookmark"></i><span class="nav-label" data-i18n="nav.bookmarks">Bookmarks</span><span id="bookmarksCount" class="nav-count" hidden>0</span></a>
       <a href="#/collections" data-nav="collections"><i class="fi fi-br-folder"></i><span class="nav-label" data-i18n="nav.collections">Collections</span><span id="collectionsCount" class="nav-count" hidden>0</span></a>
@@ -38,6 +39,10 @@
       <a href="#/about" data-nav="about"><i class="fi fi-br-info"></i><span class="nav-label" data-i18n="nav.about">About</span></a>
     </nav>
     <span id="authArea" class="user-area"><a href="#/login"><i class="fi fi-br-user"></i><span class="nav-label" data-i18n="nav.signIn">Sign in</span></a></span>
+    <div class="ui-lang-toggle" role="group" aria-label="UI language" data-i18n-aria="ui.groupAria">
+      <button type="button" data-uilang="en" class="active" aria-pressed="true">EN</button>
+      <button type="button" data-uilang="zh" aria-pressed="false">中文</button>
+    </div>
   </div>
 </header>
 
@@ -54,11 +59,6 @@
       <button data-lang="all" class="active" data-i18n="filter.all">All</button>
       <button data-lang="zh">中文</button>
       <button data-lang="en">EN</button>
-    </div>
-    <div class="ui-lang-toggle" role="group" aria-label="UI language" data-i18n-aria="ui.groupAria">
-      <span class="ui-lang-label" data-i18n="ui.prefix">UI:</span>
-      <button data-uilang="en" class="active" aria-pressed="true">EN</button>
-      <button data-uilang="zh" aria-pressed="false">中文</button>
     </div>
   </section>
 
@@ -80,7 +80,7 @@
 </main>
 
 <main id="reader" class="view" hidden>
-  <p class="crumbs"><a href="#/" id="backLink" data-i18n="reader.back">← All sticker sets</a> <span id="crumbBatch"></span><span class="ui-lang-toggle ui-lang-toggle--reader" role="group" aria-label="UI language" data-i18n-aria="ui.groupAria"><button data-uilang="en" class="active" aria-pressed="true">EN</button><button data-uilang="zh" aria-pressed="false">中文</button></span></p>
+  <p class="crumbs"><a href="#/" id="backLink" data-i18n="reader.back">← All sticker sets</a> <span id="crumbBatch"></span></p>
   <h1 id="setTitle"></h1>
   <p id="setMeta" class="meta"></p>
   <figure id="stage" class="stage">
@@ -220,7 +220,7 @@
   <p>Sticker Showcase · gobblemon.com — <span data-i18n="foot.tagline">current affairs, in stickers.</span> · <a href="#/about" data-i18n="foot.feedback">Send feedback</a> · Icons: Uicons by <a href="https://www.flaticon.com/uicons">Flaticon</a> · Decorative stickers by <a href="https://www.flaticon.com/authors/stickers">Stickers</a> on Flaticon</p>
 </footer>
 
-<script src="app.js?v=45" defer></script>
+<script src="app.js?v=46" defer></script>
 
 <div id="columnModal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="columnModalTitle">
   <div class="modal-backdrop" id="columnModalBackdrop"></div>

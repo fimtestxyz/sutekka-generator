@@ -75,8 +75,40 @@
   // attribute, then re-renders the dynamic text via
   // renderDynamicText(). The language resolves, in order:
   //   1. ?lang=en|zh — a one-time override, then persisted
-  //   2. localStorage "sutekka-ui-lang-v1"
-  //   3. navigator.language (zh-* → zh, anything else → en)
+  //   2. shared cookie "gobblemon-ui-lang" (Domain=.gobblemon.com)
+  //   3. localStorage "sutekka-ui-lang-v1"
+  //   4. navigator.language (zh-* → zh, anything else → en)
+  // The cookie is the cross-subdomain mechanism: localStorage is
+  // per-origin, so a choice saved on sutekka.gobblemon.com would
+  // never reach gobblemon.com or comics.gobblemon.com. The cookie
+  // is written and read in JS only — no server is involved — and
+  // localStorage stays as the per-site fallback (e.g. when cookies
+  // are blocked, or on a host that cannot set the shared domain).
+  var LS_UI_LANG_KEY = 'sutekka-ui-lang-v1';
+  var COOKIE_UI_LANG_NAME = 'gobblemon-ui-lang';
+  var COOKIE_UI_LANG_ATTRS = '; Domain=.gobblemon.com; Path=/; Max-Age=31536000; SameSite=Lax; Secure';
+  function readSharedLangCookie() {
+    try {
+      var parts = document.cookie.split(';');
+      for (var i = 0; i < parts.length; i++) {
+        var kv = parts[i].split('=');
+        if (kv[0] && kv[0].trim() === COOKIE_UI_LANG_NAME) {
+          var v = (kv[1] || '').trim();
+          if (v === 'en' || v === 'zh') return v;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+  function writeSharedLangCookie(lang) {
+    try { document.cookie = COOKIE_UI_LANG_NAME + '=' + lang + COOKIE_UI_LANG_ATTRS; } catch (e) {}
+  }
+  function persistLang(lang) {
+    // Both stores, every time: the cookie carries the choice
+    // across *.gobblemon.com, localStorage is the fallback.
+    writeSharedLangCookie(lang);
+    try { localStorage.setItem(LS_UI_LANG_KEY, lang); } catch (e) {}
+  }
   // UI-only: the sticker art, the columns and the set/sticker
   // titles stay Chinese. The admin (#/kangle) stays English-only,
   // and so do the transactional/legal strings (the refund-policy
@@ -84,7 +116,6 @@
   // (state.lang) is untouched — an English UI does NOT narrow the
   // catalogue; the reader chooses that with the All / 中文 / EN
   // filter.
-  var LS_UI_LANG_KEY = 'sutekka-ui-lang-v1';
   var dicts = { en: null, zh: null };
   function t(key) {
     if (dicts[state.uiLang] && dicts[state.uiLang][key] != null) return dicts[state.uiLang][key];
@@ -128,9 +159,11 @@
     var q = null;
     try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
     if (q === 'en' || q === 'zh') {
-      try { localStorage.setItem(LS_UI_LANG_KEY, q); } catch (e) {}
+      persistLang(q);
       return q;
     }
+    var shared = readSharedLangCookie();
+    if (shared) return shared;
     try {
       var saved = localStorage.getItem(LS_UI_LANG_KEY);
       if (saved === 'en' || saved === 'zh') return saved;
@@ -139,7 +172,7 @@
     return nav.indexOf('zh') === 0 ? 'zh' : 'en';
   }
   function setLang(lang) {
-    try { localStorage.setItem(LS_UI_LANG_KEY, lang); } catch (e) {}
+    persistLang(lang);
     applyLang(lang);
   }
   function loadDicts() {
